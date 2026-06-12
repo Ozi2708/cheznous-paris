@@ -1,0 +1,85 @@
+/* ──────────────────────────────────────────────────
+   CHEZ NOUS À PARIS — Color Tokens (updated from logo)
+   Brand: olive green + warm gold. Belgian tricolor accent.
+   ────────────────────────────────────────────────── */
+
+:root {
+
+  /* ─── BRAND GREEN (tour Eiffel / fourchette / plante) ── */
+  --color-brand-50:    #EDF1E7;
+  --color-brand-100:   #CDDBB5;
+  --color-brand-200:   #ADCA87;
+  --color-brand-300:   #8DB56A;
+  --color-brand:       #506741;   /* PRIMARY */
+  --color-brand-500:   #506741;
+  --color-brand-700:   #374B2D;
+  --color-brand-dark:  #2C3C22;
+
+  /* ─── WARM GOLD (molecule / dividers / accent feuille) ── */
+  --color-gold-50:     #F9F1E7;
+  --color-gold-100:    #EDDFC4;
+  --color-gold-200:    #DCBE98;
+  --color-gold-300:    #CBA578;
+  --color-gold:        #B89268;   /* ACCENT */
+  --color-gold-500:    #B89268;
+  --color-gold-700:    #8A6B4A;
+  --color-gold-dark:   #6B5138;
+
+  /* ─── NEUTRALS ───────────────────────────────────────── */
+  --color-cream:        #FAFAF8;
+  --color-cream-warm:   #F5F0E8;
+  --color-cream-dark:   #EEE8DC;
+  --color-cream-mid:    #E8E1D6;
+  --color-separator:    #E4DDD2;
+  --color-charcoal:     #1A1918;
+  --color-charcoal-mid: #3C3830;
+  --color-muted:        #8C8780;
+  --color-muted-light:  #B8B3AA;
+  --color-white:        #FFFFFF;
+
+  /* ─── BELGIAN TRICOLOR (accent identitaire) ─────────── */
+  --color-belgian-black:  #1C1C1C;
+  --color-belgian-yellow: #FAE042;
+  --color-belgian-red:    #EF3340;
+
+  /* ─── NUTRITION DATA COLORS (from recipe page) ──────── */
+  --color-nutrition-kcal:      #E07534;   /* orange   — calories */
+  --color-nutrition-lipides:   #D4952A;   /* amber    — lipides  */
+  --color-nutrition-glucides:  #2E8B85;   /* teal     — glucides */
+  --color-nutrition-proteines: #3E7852;   /* vert foncé — protéines */
+
+  /* ─── AMBER (pantry / info warning) ─────────────────── */
+  --color-amber-50:    #FFFBEB;
+  --color-amber-100:   #FEF1C0;
+  --color-amber-300:   #F0C35A;
+  --color-amber-500:   #D4952A;
+  --color-amber-700:   #A67018;
+
+  /* ─── BLUE-VIOLET (conseil / info box) ──────────────── */
+  --color-blue-50:     #EEF1FB;
+  --color-blue-100:    #D0D9F5;
+  --color-blue-200:    #AAB8EC;
+  --color-blue-300:    #8EA0E0;
+  --color-blue-500:    #5C6FAE;
+  --color-blue-700:    #3D4E8A;
+
+  /* ─── RED (variante carnée / warning) ───────────────── */
+  --color-red-50:      #FDECEA;
+  --color-red-100:     #F9CECA;
+  --color-red-200:     #F2A09A;
+  --color-red-300:     #E87B72;
+  --color-red-500:     #C0392B;
+  --color-red-700:     #8E2219;
+
+  /* ─── SEMANTIC ALIASES ───────────────────────────────── */
+  --color-bg:               var(--color-cream);
+  --color-bg-card:          var(--color-white);
+  --color-bg-section:       var(--color-cream-dark);
+  --color-border:           var(--color-cream-mid);
+  --color-border-strong:    #D5CEBE;
+  --color-text-primary:     var(--color-charcoal);
+  --color-text-secondary:   var(--color-muted);
+  --color-text-tertiary:    var(--color-muted-light);
+  --color-accent:           var(--color-brand);
+  --color-accent-hover:     var(--color-brand-700);
+}

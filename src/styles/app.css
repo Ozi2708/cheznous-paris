@@ -1,0 +1,12 @@
+html, body { margin: 0; padding: 0; }
+body { background: var(--color-cream-warm, #F5F0E8); }
+::-webkit-scrollbar { width: 0; height: 0; }
+* { scrollbar-width: none; }
+input[type="range"] { -webkit-appearance: none; appearance: auto; height: 4px; }
+button { -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .cn-step-in { animation: cnStepIn .3s ease both; }
+  @keyframes cnStepIn { from { transform: translateY(10px); } to { transform: none; } }
+  .cn-timer-done { animation: cnPulse 1.1s ease-in-out infinite; }
+  @keyframes cnPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(224,117,52,.22); } }
+}

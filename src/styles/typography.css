@@ -1,0 +1,54 @@
+/* ──────────────────────────────────────────────────
+   CHEZ NOUS À PARIS — Typography Tokens
+   
+   Font substitutions (provide brand files to override):
+   • Cormorant Garamond → brand serif (logo & covers)
+   • Bricolage Grotesque → bold display (recipe titles)  
+   • DM Sans → body (ingrédients, étapes)
+   • DM Mono → mono (quantités, timers)
+   ────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ─── Font Families ─────────────────────────────── */
+  --font-brand:    'Cormorant Garamond', Georgia, serif;   /* Logo, covers, elegant */
+  --font-display:  'Bricolage Grotesque', system-ui, sans-serif;  /* Recipe titles  */
+  --font-body:     'DM Sans', system-ui, sans-serif;       /* Corps, ingrédients    */
+  --font-mono:     'DM Mono', 'Courier New', monospace;    /* Quantités, timers     */
+
+  /* ─── Type Scale ────────────────────────────────── */
+  --text-2xs:  0.625rem;   /* 10px — micro labels */
+  --text-xs:   0.6875rem;  /* 11px — caps labels  */
+  --text-sm:   0.8125rem;  /* 13px — secondaire   */
+  --text-base: 0.9375rem;  /* 15px — corps        */
+  --text-md:   1.0625rem;  /* 17px — corps large  */
+  --text-lg:   1.25rem;    /* 20px — sous-titre   */
+  --text-xl:   1.5rem;     /* 24px — titre carte  */
+  --text-2xl:  2rem;       /* 32px — titre section */
+  --text-3xl:  2.5rem;     /* 40px — titre page   */
+  --text-4xl:  3rem;       /* 48px — héro         */
+  --text-5xl:  3.75rem;    /* 60px — display      */
+
+  /* ─── Font Weights ──────────────────────────────── */
+  --font-light:     300;
+  --font-regular:   400;
+  --font-medium:    500;
+  --font-semibold:  600;
+  --font-bold:      700;
+  --font-extrabold: 800;
+
+  /* ─── Line Heights ──────────────────────────────── */
+  --leading-tight:   1.15;
+  --leading-snug:    1.30;
+  --leading-normal:  1.50;
+  --leading-relaxed: 1.65;
+
+  /* ─── Letter Spacing ────────────────────────────── */
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0em;
+  --tracking-wide:    0.04em;
+  --tracking-wider:   0.08em;
+  --tracking-widest:  0.14em;
+  --tracking-caps:    0.11em;
+}
