@@ -42,7 +42,7 @@ export function CNCookScreen({ recipe, portions, onExit, theme = 'olive', textSi
 
   return (
     <div data-screen-label={'Mode Cuisine — ' + recipe.title} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: T.bg, position: 'relative', transition: 'background .3s ease' }}>
-      <div style={{ flexShrink: 0, padding: '58px 18px 0' }}>
+      <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 18px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={onExit} aria-label="Quitter le mode cuisine" style={{
             width: 44, height: 44, borderRadius: 9999, border: `1.5px solid ${T.ghostBd}`, background: 'transparent',
@@ -150,7 +150,7 @@ export function CNCookScreen({ recipe, portions, onExit, theme = 'olive', textSi
         )}
       </div>
 
-      <div style={{ flexShrink: 0, display: 'flex', gap: 12, alignItems: 'center', padding: '12px 20px 40px' }}>
+      <div style={{ flexShrink: 0, display: 'flex', gap: 12, alignItems: 'center', padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         {phase < n ? (
           <React.Fragment>
             {navBtn(-1, phase <= -1)}

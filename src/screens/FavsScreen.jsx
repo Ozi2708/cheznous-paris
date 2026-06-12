@@ -8,7 +8,7 @@ export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
 
   return (
     <div data-screen-label="Favoris" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8' }}>
-      <div style={{ flexShrink: 0, padding: '68px 20px 4px' }}>
+      <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 20px 4px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Favoris</span>
           {list.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{list.length} recette{list.length > 1 ? 's' : ''}</span>}

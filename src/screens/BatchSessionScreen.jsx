@@ -36,7 +36,7 @@ export function CNBatchCookScreen({ sel, onExit }) {
 
   return (
     <div data-screen-label="Session batch — 2h chrono" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: T.bg, position: 'relative' }}>
-      <div style={{ flexShrink: 0, padding: '58px 18px 0' }}>
+      <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 18px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={onExit} aria-label="Quitter la session" style={{
             width: 44, height: 44, borderRadius: 9999, border: `1.5px solid ${T.ghostBd}`, background: 'transparent',
@@ -163,7 +163,7 @@ export function CNBatchCookScreen({ sel, onExit }) {
         )}
       </div>
 
-      <div style={{ flexShrink: 0, display: 'flex', gap: 12, alignItems: 'center', padding: '12px 20px 40px' }}>
+      <div style={{ flexShrink: 0, display: 'flex', gap: 12, alignItems: 'center', padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <button onClick={() => go(phase - 1)} disabled={phase <= -1} aria-label="Étape précédente" style={{
           width: 54, height: 54, borderRadius: 9999, flexShrink: 0,
           border: `1.5px solid ${T.ghostBd}`, background: 'transparent', cursor: phase <= -1 ? 'default' : 'pointer',

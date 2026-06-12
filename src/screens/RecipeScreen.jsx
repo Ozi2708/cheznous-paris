@@ -133,7 +133,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
 
   return (
     <div data-screen-label={'Fiche — ' + recipe.title} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
-      <div style={{ paddingTop: 56, flexShrink: 0 }}>
+      <div style={{ paddingTop: 'var(--screen-top, 34px)', flexShrink: 0 }}>
         <CNTopBar onBack={onBack} label={`${m.label} · Recette ${String(recipe.num).padStart(2, '0')}`} color={m.color} onPrev={onPrev} onNext={onNext} pos={pos} fav={fav} onFav={onFav} />
       </div>
 
@@ -226,7 +226,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
           <div style={{
             position: 'absolute', left: 0, right: 0, bottom: 0, background: '#FAFAF8', borderRadius: '24px 24px 0 0',
             transform: planOpen ? 'translateY(0)' : 'translateY(105%)', transition: 'transform .3s cubic-bezier(.32,.72,.25,1)',
-            padding: '14px 22px 34px', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
+            padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 16px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
           }}>
             <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 14px' }}></div>
             <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918', marginBottom: 4 }}>Ajouter à ma semaine</div>

@@ -1,8 +1,7 @@
 import React from 'react';
-import { CN_FONTS, CNIcon, CNBelgianDots } from './helpers.jsx';
+import { CN_FONTS, CNIcon } from './helpers.jsx';
 import { CN_EMPTY_FILTERS, cnNextFreeSlot, cnBatchList } from './utils.js';
 import { CHEZNOUS_DATA } from './data.js';
-import { IOSDevice } from './ios-frame.jsx';
 import { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakRadio } from './tweaks-panel.jsx';
 import { CNHomeScreen } from './screens/HomeScreen.jsx';
 import { CNLibraryScreen } from './screens/LibraryScreen.jsx';
@@ -36,8 +35,11 @@ function CNTabBar({ tab, onTab, weekCount }) {
     <div style={{
       position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 60,
       display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
-      background: 'rgba(250,250,248,.92)', backdropFilter: 'blur(12px)',
-      borderTop: '1px solid #E4DDD2', padding: '8px 8px 26px',
+      background: 'rgba(250,250,248,.96)', backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderTop: '1px solid #E4DDD2',
+      paddingTop: 8, paddingLeft: 8, paddingRight: 8,
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
     }}>
       {CN_TABS.map(t => {
         const active = tab === t.id;
@@ -55,21 +57,6 @@ function CNTabBar({ tab, onTab, weekCount }) {
           </button>
         );
       })}
-    </div>
-  );
-}
-
-function CNDeviceScaler({ children }) {
-  const [scale, setScale] = React.useState(1);
-  React.useEffect(() => {
-    const upd = () => setScale(Math.min(1, (window.innerHeight - 90) / 874, (window.innerWidth - 40) / 402));
-    upd();
-    window.addEventListener('resize', upd);
-    return () => window.removeEventListener('resize', upd);
-  }, []);
-  return (
-    <div style={{ width: 402 * scale, height: 874 * scale }}>
-      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>{children}</div>
     </div>
   );
 }
@@ -128,72 +115,81 @@ export function CNApp() {
   const ctxIdx = ctx.indexOf(recipeId);
   const goCtx = (d) => { const id = ctx[ctxIdx + d]; if (id) { setRecipeId(id); setPortions(2); } };
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '24px 0' }}>
-      <CNDeviceScaler>
-        <IOSDevice dark={isDark}>
-          {screen === 'tab' && (
-            <div style={{ height: '100%', position: 'relative' }}>
-              {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
-                onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); setTab('library'); }} onGoBatch={() => setTab('batch')} />}
-              {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
-              {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe} />}
-              {tab === 'batch' && <CNBatchScreen sel={batchSel} setSel={setBatchSel} onOpen={openRecipe} onStart={() => setScreen('batchcook')} />}
-              {tab === 'favs' && <CNFavsScreen favs={favs} onToggleFav={toggleFav} onQuickAdd={quickAddWeek} onOpen={(r) => openRecipe(r, favs)} />}
-              <CNTabBar tab={tab} onTab={setTab} weekCount={weekCount} />
-            </div>
-          )}
-          {screen === 'recipe' && recipe && (
-            <div style={{ height: '100%', position: 'relative' }}>
-              <CNRecipeScreen key={recipe.id} recipe={recipe} portions={portions} setPortions={setPortions}
-                week={week} bottomInset={78}
-                fav={favs.includes(recipe.id)} onFav={() => toggleFav(recipe.id)}
-                onPrev={ctxIdx > 0 ? () => goCtx(-1) : null}
-                onNext={ctxIdx >= 0 && ctxIdx < ctx.length - 1 ? () => goCtx(1) : null}
-                pos={ctxIdx >= 0 ? { i: ctxIdx, n: ctx.length } : null}
-                onPlanWeek={(slotKey) => setWeek({ ...week, [slotKey]: { id: recipe.id, done: false } })}
-                onBack={() => setScreen('tab')}
-                onCook={() => { setCookPhase(-1); setScreen('cook'); }} />
-              <CNTabBar tab={tab} onTab={(tb) => { setTab(tb); setScreen('tab'); }} weekCount={weekCount} />
-            </div>
-          )}
-          {screen === 'cook' && recipe && (
-            <CNCookScreen recipe={recipe} portions={portions} theme={t.cookTheme} textSize={t.cookTextSize}
-              initialPhase={cookPhase} onPhaseChange={setCookPhase}
-              onExit={() => setScreen('recipe')} />
-          )}
-          {screen === 'batchcook' && batchSel.length >= 2 && (
-            <CNBatchCookScreen sel={batchSel} onExit={() => { setScreen('tab'); setTab('batch'); }} />
-          )}
-          {(((screen === 'recipe' || screen === 'cook') && !recipe) || (screen === 'batchcook' && batchSel.length < 2)) && (
-            <div style={{ paddingTop: 140, textAlign: 'center' }}>
-              <button onClick={() => { setScreen('tab'); setTab('home'); }} style={{ border: 'none', background: '#506741', color: '#fff', borderRadius: 9999, padding: '12px 24px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600 }}>Retour à l'accueil</button>
-            </div>
-          )}
-          {toast && (
-            <div style={{
-              position: 'absolute', left: 24, right: 24, bottom: 104, zIndex: 90,
-              background: '#1A1918', color: '#FAFAF8', borderRadius: 9999, padding: '11px 18px',
-              display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 24px rgba(26,25,24,.3)',
-            }}>
-              <CNIcon name="check" size={15} color="#DCBE98" strokeWidth={2.5} />
-              <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{toast}</span>
-            </div>
-          )}
-        </IOSDevice>
-      </CNDeviceScaler>
+  /* Hauteur de la barre d'onglets pour les écrans qui ont un CTA sticky */
+  const tabBarH = 'calc(64px + env(safe-area-inset-bottom, 0px))';
 
-      <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: '#B8B3AA', textAlign: 'center' }}>
-        Accueil · Recettes · Semaine · Batch · Favoris — tout est mémorisé
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: isDark ? '#2C3C22' : '#FAFAF8',
+      overflow: 'hidden',
+      /* Variables CSS accessibles par tous les écrans enfants */
+      '--screen-top': 'calc(env(safe-area-inset-top, 20px) + 14px)',
+      '--screen-bottom': 'env(safe-area-inset-bottom, 0px)',
+    }}>
+      <div style={{ height: '100%', position: 'relative' }}>
+
+        {screen === 'tab' && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
+              onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); setTab('library'); }} onGoBatch={() => setTab('batch')} />}
+            {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
+            {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe} />}
+            {tab === 'batch' && <CNBatchScreen sel={batchSel} setSel={setBatchSel} onOpen={openRecipe} onStart={() => setScreen('batchcook')} />}
+            {tab === 'favs' && <CNFavsScreen favs={favs} onToggleFav={toggleFav} onQuickAdd={quickAddWeek} onOpen={(r) => openRecipe(r, favs)} />}
+            <CNTabBar tab={tab} onTab={setTab} weekCount={weekCount} />
+          </div>
+        )}
+
+        {screen === 'recipe' && recipe && (
+          <div style={{ height: '100%', position: 'relative' }}>
+            <CNRecipeScreen key={recipe.id} recipe={recipe} portions={portions} setPortions={setPortions}
+              week={week} bottomInset={tabBarH}
+              fav={favs.includes(recipe.id)} onFav={() => toggleFav(recipe.id)}
+              onPrev={ctxIdx > 0 ? () => goCtx(-1) : null}
+              onNext={ctxIdx >= 0 && ctxIdx < ctx.length - 1 ? () => goCtx(1) : null}
+              pos={ctxIdx >= 0 ? { i: ctxIdx, n: ctx.length } : null}
+              onPlanWeek={(slotKey) => setWeek({ ...week, [slotKey]: { id: recipe.id, done: false } })}
+              onBack={() => setScreen('tab')}
+              onCook={() => { setCookPhase(-1); setScreen('cook'); }} />
+            <CNTabBar tab={tab} onTab={(tb) => { setTab(tb); setScreen('tab'); }} weekCount={weekCount} />
+          </div>
+        )}
+
+        {screen === 'cook' && recipe && (
+          <CNCookScreen recipe={recipe} portions={portions} theme={t.cookTheme} textSize={t.cookTextSize}
+            initialPhase={cookPhase} onPhaseChange={setCookPhase}
+            onExit={() => setScreen('recipe')} />
+        )}
+
+        {screen === 'batchcook' && batchSel.length >= 2 && (
+          <CNBatchCookScreen sel={batchSel} onExit={() => { setScreen('tab'); setTab('batch'); }} />
+        )}
+
+        {(((screen === 'recipe' || screen === 'cook') && !recipe) || (screen === 'batchcook' && batchSel.length < 2)) && (
+          <div style={{ paddingTop: 140, textAlign: 'center' }}>
+            <button onClick={() => { setScreen('tab'); setTab('home'); }} style={{ border: 'none', background: '#506741', color: '#fff', borderRadius: 9999, padding: '12px 24px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600 }}>Retour à l'accueil</button>
+          </div>
+        )}
+
+        {toast && (
+          <div style={{
+            position: 'absolute', left: 16, right: 16,
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+            zIndex: 90,
+            background: '#1A1918', color: '#FAFAF8', borderRadius: 9999, padding: '11px 18px',
+            display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 24px rgba(26,25,24,.3)',
+          }}>
+            <CNIcon name="check" size={15} color="#DCBE98" strokeWidth={2.5} />
+            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{toast}</span>
+          </div>
+        )}
       </div>
 
       <TweaksPanel>
         <TweakSection label="Mode cuisine" />
-        <TweakRadio label="Ambiance" value={t.cookTheme}
-          options={['olive', 'creme']}
-          onChange={(v) => setTweak('cookTheme', v)} />
-        <TweakSlider label="Taille du texte" value={t.cookTextSize} min={20} max={32} unit="px"
-          onChange={(v) => setTweak('cookTextSize', v)} />
+        <TweakRadio label="Ambiance" value={t.cookTheme} options={['olive', 'creme']} onChange={(v) => setTweak('cookTheme', v)} />
+        <TweakSlider label="Taille du texte" value={t.cookTextSize} min={20} max={32} unit="px" onChange={(v) => setTweak('cookTextSize', v)} />
       </TweaksPanel>
     </div>
   );

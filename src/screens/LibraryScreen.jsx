@@ -54,7 +54,7 @@ function CNFilterSheet({ open, onClose, f, setF, results }) {
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, background: '#FAFAF8', borderRadius: '24px 24px 0 0',
         transform: open ? 'translateY(0)' : 'translateY(105%)', transition: 'transform .3s cubic-bezier(.32,.72,.25,1)',
-        padding: '14px 22px 30px', maxHeight: '78%', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
+        padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 16px)', maxHeight: '78%', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
       }}>
         <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 16px' }}></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
@@ -168,7 +168,7 @@ export function CNLibraryScreen({ filters, setFilters, onOpen, onQuickAdd }) {
   const open = (r) => onOpen(r, results.map(x => x.id));
   return (
     <div data-screen-label="Bibliothèque" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
-      <div style={{ paddingTop: 62, flexShrink: 0 }}>
+      <div style={{ paddingTop: 'var(--screen-top, 34px)', flexShrink: 0 }}>
         <div style={{ padding: '6px 20px 14px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Bibliothèque</span>
           <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{results.length} / {all.length}</span>

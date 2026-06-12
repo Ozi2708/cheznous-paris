@@ -1,0 +1,10 @@
+{
+  "name": "Chez nous à Paris",
+  "short_name": "Chez nous",
+  "description": "60 recettes fitness par Manon & Valentin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#506741",
+  "orientation": "portrait"
+}

@@ -59,7 +59,7 @@ export function CNWeekScreen({ week, setWeek, onOpen }) {
 
   return (
     <div data-screen-label="Ma semaine" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
-      <div style={{ paddingTop: 62, flexShrink: 0, padding: '62px 20px 4px' }}>
+      <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 20px 4px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Ma semaine</span>
           {entries.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', whiteSpace: 'nowrap', flexShrink: 0 }}>{nDone} / {entries.length} cuisinés</span>}

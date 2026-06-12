@@ -51,7 +51,7 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
 
   return (
     <div data-screen-label="Accueil — Le marché" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8' }}>
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 62 }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 'var(--screen-top, 34px)' }}>
         <div style={{ padding: '8px 20px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

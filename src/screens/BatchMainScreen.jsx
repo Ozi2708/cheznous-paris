@@ -62,7 +62,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
 
   return (
     <div data-screen-label="Batch cooking" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 62 }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 'var(--screen-top, 34px)' }}>
         <div style={{ padding: '10px 20px 18px', background: '#F9F1E7', borderBottom: '1.5px solid #EFE3D0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <CNIcon name="pot" size={18} color="#8A6B4A" />
@@ -379,7 +379,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
       </div>
 
       {selected.length > 0 && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 86, padding: '14px 20px 10px', background: 'linear-gradient(to top, #FAFAF8 70%, rgba(250,250,248,0))' }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))', padding: '14px 20px 10px', background: 'linear-gradient(to top, #FAFAF8 70%, rgba(250,250,248,0))' }}>
           <button onClick={onStart} disabled={selected.length < 2} style={{
             width: '100%', height: 54, borderRadius: 9999, border: 'none',
             cursor: selected.length < 2 ? 'default' : 'pointer',
