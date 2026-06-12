@@ -1,0 +1,418 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/core/**",
+              "components/recipe/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Cormorant Garamond|Bricolage Grotesque|DM Sans|DM Mono))/i]",
+        "message": "Font not provided by the design system. Available: Cormorant Garamond, Bricolage Grotesque, DM Sans, DM Mono."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|size|icon|key|ref|className|style|children)$/]",
+        "message": "<Badge> doesn't accept that prop. Declared props: children, variant, size, icon."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:default|vegan|vegetalien|low-carb|outline|info|gold|tag)$/]",
+        "message": "<Badge> variant must be one of 'default' | 'vegan' | 'vegetalien' | 'low-carb' | 'outline' | 'info' | 'gold' | 'tag'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md)$/]",
+        "message": "<Badge> size must be one of 'sm' | 'md'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|size|disabled|onClick|icon|type|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: children, variant, size, disabled, onClick, icon, type."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:primary|secondary|ghost|gold)$/]",
+        "message": "<Button> variant must be one of 'primary' | 'secondary' | 'ghost' | 'gold'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg)$/]",
+        "message": "<Button> size must be one of 'sm' | 'md' | 'lg'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='type'] > Literal[value!=/^(?:button|submit|reset)$/]",
+        "message": "<Button> type must be one of 'button' | 'submit' | 'reset'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='InfoCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:advisor|text|subtitle|key|ref|className|style|children)$/]",
+        "message": "<InfoCard> doesn't accept that prop. Declared props: advisor, text, subtitle."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='IngredientItem'] > JSXAttribute > JSXIdentifier[name!=/^(?:quantity|unit|name|highlight|note|key|ref|className|style|children)$/]",
+        "message": "<IngredientItem> doesn't accept that prop. Declared props: quantity, unit, name, highlight, note."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='NutritionBar'] > JSXAttribute > JSXIdentifier[name!=/^(?:kcal|lipides|glucides|proteines|key|ref|className|style|children)$/]",
+        "message": "<NutritionBar> doesn't accept that prop. Declared props: kcal, lipides, glucides, proteines."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PrepStep'] > JSXAttribute > JSXIdentifier[name!=/^(?:number|text|html|key|ref|className|style|children)$/]",
+        "message": "<PrepStep> doesn't accept that prop. Declared props: number, text, html."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='RecipeCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:number|title|portions|tags|kcal|prepTime|cookTime|key|ref|className|style|children)$/]",
+        "message": "<RecipeCard> doesn't accept that prop. Declared props: number, title, portions, tags, kcal, prepTime, cookTime."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='RecipeHeader'] > JSXAttribute > JSXIdentifier[name!=/^(?:number|portions|title|dietTags|featureBadges|key|ref|className|style|children)$/]",
+        "message": "<RecipeHeader> doesn't accept that prop. Declared props: number, portions, title, dietTags, featureBadges."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TipBox'] > JSXAttribute > JSXIdentifier[name!=/^(?:type|title|text|compact|key|ref|className|style|children)$/]",
+        "message": "<TipBox> doesn't accept that prop. Declared props: type, title, text, compact."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TipBox'] > JSXAttribute[name.name='type'] > Literal[value!=/^(?:variante|astuce|conseil|conservation|suggestion)$/]",
+        "message": "<TipBox> type must be one of 'variante' | 'astuce' | 'conseil' | 'conservation' | 'suggestion'."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "Badge": {
+        "replaces": []
+      },
+      "Button": {
+        "replaces": []
+      },
+      "InfoCard": {
+        "replaces": []
+      },
+      "IngredientItem": {
+        "replaces": []
+      },
+      "NutritionBar": {
+        "replaces": []
+      },
+      "PrepStep": {
+        "replaces": []
+      },
+      "RecipeCard": {
+        "replaces": []
+      },
+      "RecipeHeader": {
+        "replaces": []
+      },
+      "TipBox": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--card-padding",
+      "--color-accent",
+      "--color-accent-hover",
+      "--color-amber-100",
+      "--color-amber-300",
+      "--color-amber-50",
+      "--color-amber-500",
+      "--color-amber-700",
+      "--color-belgian-black",
+      "--color-belgian-red",
+      "--color-belgian-yellow",
+      "--color-bg",
+      "--color-bg-card",
+      "--color-bg-section",
+      "--color-blue-100",
+      "--color-blue-200",
+      "--color-blue-300",
+      "--color-blue-50",
+      "--color-blue-500",
+      "--color-blue-700",
+      "--color-border",
+      "--color-border-strong",
+      "--color-brand",
+      "--color-brand-100",
+      "--color-brand-200",
+      "--color-brand-300",
+      "--color-brand-50",
+      "--color-brand-500",
+      "--color-brand-700",
+      "--color-brand-dark",
+      "--color-charcoal",
+      "--color-charcoal-mid",
+      "--color-cream",
+      "--color-cream-dark",
+      "--color-cream-mid",
+      "--color-cream-warm",
+      "--color-gold",
+      "--color-gold-100",
+      "--color-gold-200",
+      "--color-gold-300",
+      "--color-gold-50",
+      "--color-gold-500",
+      "--color-gold-700",
+      "--color-gold-dark",
+      "--color-muted",
+      "--color-muted-light",
+      "--color-nutrition-glucides",
+      "--color-nutrition-kcal",
+      "--color-nutrition-lipides",
+      "--color-nutrition-proteines",
+      "--color-red-100",
+      "--color-red-200",
+      "--color-red-300",
+      "--color-red-50",
+      "--color-red-500",
+      "--color-red-700",
+      "--color-separator",
+      "--color-text-primary",
+      "--color-text-secondary",
+      "--color-text-tertiary",
+      "--color-white",
+      "--font-body",
+      "--font-bold",
+      "--font-brand",
+      "--font-display",
+      "--font-extrabold",
+      "--font-light",
+      "--font-medium",
+      "--font-mono",
+      "--font-regular",
+      "--font-semibold",
+      "--ingredient-row-h",
+      "--leading-normal",
+      "--leading-relaxed",
+      "--leading-snug",
+      "--leading-tight",
+      "--nutrition-col-h",
+      "--page-max-width",
+      "--page-padding-x",
+      "--page-padding-y",
+      "--radius-2xl",
+      "--radius-full",
+      "--radius-lg",
+      "--radius-md",
+      "--radius-sm",
+      "--radius-xl",
+      "--radius-xs",
+      "--recipe-col-gap",
+      "--recipe-col-left",
+      "--section-header-h",
+      "--shadow-badge",
+      "--shadow-card",
+      "--shadow-card-hover",
+      "--shadow-inset-md",
+      "--shadow-inset-sm",
+      "--shadow-lg",
+      "--shadow-md",
+      "--shadow-page",
+      "--shadow-sm",
+      "--shadow-tip-box",
+      "--shadow-xl",
+      "--shadow-xs",
+      "--space-1",
+      "--space-10",
+      "--space-12",
+      "--space-16",
+      "--space-2",
+      "--space-20",
+      "--space-24",
+      "--space-3",
+      "--space-4",
+      "--space-5",
+      "--space-6",
+      "--space-8",
+      "--step-gap",
+      "--text-2xl",
+      "--text-2xs",
+      "--text-3xl",
+      "--text-4xl",
+      "--text-5xl",
+      "--text-base",
+      "--text-lg",
+      "--text-md",
+      "--text-sm",
+      "--text-xl",
+      "--text-xs",
+      "--tracking-caps",
+      "--tracking-normal",
+      "--tracking-tight",
+      "--tracking-wide",
+      "--tracking-wider",
+      "--tracking-widest"
+    ],
+    "tokenKinds": {
+      "--color-brand-50": "color",
+      "--color-brand-100": "color",
+      "--color-brand-200": "color",
+      "--color-brand-300": "color",
+      "--color-brand": "color",
+      "--color-brand-500": "color",
+      "--color-brand-700": "color",
+      "--color-brand-dark": "color",
+      "--color-gold-50": "color",
+      "--color-gold-100": "color",
+      "--color-gold-200": "color",
+      "--color-gold-300": "color",
+      "--color-gold": "color",
+      "--color-gold-500": "color",
+      "--color-gold-700": "color",
+      "--color-gold-dark": "color",
+      "--color-cream": "color",
+      "--color-cream-warm": "color",
+      "--color-cream-dark": "color",
+      "--color-cream-mid": "color",
+      "--color-separator": "color",
+      "--color-charcoal": "color",
+      "--color-charcoal-mid": "color",
+      "--color-muted": "color",
+      "--color-muted-light": "color",
+      "--color-white": "color",
+      "--color-belgian-black": "color",
+      "--color-belgian-yellow": "color",
+      "--color-belgian-red": "color",
+      "--color-nutrition-kcal": "color",
+      "--color-nutrition-lipides": "color",
+      "--color-nutrition-glucides": "color",
+      "--color-nutrition-proteines": "color",
+      "--color-amber-50": "color",
+      "--color-amber-100": "color",
+      "--color-amber-300": "color",
+      "--color-amber-500": "color",
+      "--color-amber-700": "color",
+      "--color-blue-50": "color",
+      "--color-blue-100": "color",
+      "--color-blue-200": "color",
+      "--color-blue-300": "color",
+      "--color-blue-500": "color",
+      "--color-blue-700": "color",
+      "--color-red-50": "color",
+      "--color-red-100": "color",
+      "--color-red-200": "color",
+      "--color-red-300": "color",
+      "--color-red-500": "color",
+      "--color-red-700": "color",
+      "--color-bg": "color",
+      "--color-bg-card": "color",
+      "--color-bg-section": "color",
+      "--color-border": "color",
+      "--color-border-strong": "color",
+      "--color-text-primary": "font",
+      "--color-text-secondary": "font",
+      "--color-text-tertiary": "font",
+      "--color-accent": "color",
+      "--color-accent-hover": "color",
+      "--font-brand": "font",
+      "--font-display": "font",
+      "--font-body": "font",
+      "--font-mono": "font",
+      "--text-2xs": "font",
+      "--text-xs": "font",
+      "--text-sm": "font",
+      "--text-base": "font",
+      "--text-md": "font",
+      "--text-lg": "font",
+      "--text-xl": "font",
+      "--text-2xl": "font",
+      "--text-3xl": "font",
+      "--text-4xl": "font",
+      "--text-5xl": "font",
+      "--font-light": "font",
+      "--font-regular": "font",
+      "--font-medium": "font",
+      "--font-semibold": "font",
+      "--font-bold": "font",
+      "--font-extrabold": "font",
+      "--leading-tight": "font",
+      "--leading-snug": "font",
+      "--leading-normal": "font",
+      "--leading-relaxed": "font",
+      "--tracking-tight": "font",
+      "--tracking-normal": "font",
+      "--tracking-wide": "font",
+      "--tracking-wider": "font",
+      "--tracking-widest": "font",
+      "--tracking-caps": "font",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-5": "spacing",
+      "--space-6": "spacing",
+      "--space-8": "spacing",
+      "--space-10": "spacing",
+      "--space-12": "spacing",
+      "--space-16": "spacing",
+      "--space-20": "spacing",
+      "--space-24": "spacing",
+      "--radius-xs": "radius",
+      "--radius-sm": "radius",
+      "--radius-md": "radius",
+      "--radius-lg": "radius",
+      "--radius-xl": "radius",
+      "--radius-2xl": "radius",
+      "--radius-full": "radius",
+      "--page-max-width": "spacing",
+      "--page-padding-x": "spacing",
+      "--page-padding-y": "spacing",
+      "--recipe-col-gap": "spacing",
+      "--recipe-col-left": "spacing",
+      "--card-padding": "spacing",
+      "--section-header-h": "spacing",
+      "--ingredient-row-h": "spacing",
+      "--step-gap": "spacing",
+      "--nutrition-col-h": "spacing",
+      "--shadow-xs": "shadow",
+      "--shadow-sm": "shadow",
+      "--shadow-md": "shadow",
+      "--shadow-lg": "shadow",
+      "--shadow-xl": "shadow",
+      "--shadow-card": "shadow",
+      "--shadow-card-hover": "shadow",
+      "--shadow-badge": "shadow",
+      "--shadow-tip-box": "shadow",
+      "--shadow-page": "shadow",
+      "--shadow-inset-sm": "shadow",
+      "--shadow-inset-md": "shadow"
+    },
+    "fontFamilies": [
+      "Bricolage Grotesque",
+      "Cormorant Garamond",
+      "DM Mono",
+      "DM Sans"
+    ]
+  }
+}

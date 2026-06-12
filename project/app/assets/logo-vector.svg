@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 540" fill="none">
+  
+  
+  
+
+  
+  <line x1="244" y1="38" x2="244" y2="96" stroke="#506741" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="255" y1="36" x2="255" y2="96" stroke="#506741" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="266" y1="36" x2="266" y2="96" stroke="#506741" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="277" y1="38" x2="277" y2="96" stroke="#506741" stroke-width="5" stroke-linecap="round"></line>
+
+  
+  <path d="M244,96 Q247,114 260,120" stroke="#506741" stroke-width="4.8" stroke-linecap="round" fill="none"></path>
+  <path d="M255,96 Q256,112 260,120" stroke="#506741" stroke-width="4" stroke-linecap="round" fill="none"></path>
+  <path d="M266,96 Q265,112 260,120" stroke="#506741" stroke-width="4" stroke-linecap="round" fill="none"></path>
+  <path d="M277,96 Q274,114 260,120" stroke="#506741" stroke-width="4.8" stroke-linecap="round" fill="none"></path>
+
+  
+  <line x1="260" y1="120" x2="260" y2="206" stroke="#506741" stroke-width="6.5" stroke-linecap="round"></line>
+
+  
+  <path d="M260,178 Q245,192 238,208" stroke="#506741" stroke-width="4" stroke-linecap="round" fill="none"></path>
+  <path d="M260,178 Q275,192 282,208" stroke="#506741" stroke-width="4" stroke-linecap="round" fill="none"></path>
+  <path d="M238,208 Q249,216 260,217" stroke="#506741" stroke-width="3.8" stroke-linecap="round" fill="none"></path>
+  <path d="M282,208 Q271,216 260,217" stroke="#506741" stroke-width="3.8" stroke-linecap="round" fill="none"></path>
+
+  
+  <path d="M260,217 Q226,252 196,282" stroke="#506741" stroke-width="5" stroke-linecap="round" fill="none"></path>
+  <path d="M260,217 Q294,252 324,282" stroke="#506741" stroke-width="5" stroke-linecap="round" fill="none"></path>
+
+  
+  <path d="M196,295 Q260,254 324,295" stroke="#506741" stroke-width="4" stroke-linecap="round" fill="none"></path>
+
+  
+  <ellipse cx="260" cy="306" rx="103" ry="18" stroke="#506741" stroke-width="3"></ellipse>
+  
+  <ellipse cx="260" cy="307" rx="87" ry="13" stroke="#B89268" stroke-width="1.6"></ellipse>
+
+  
+  
+  
+  <path d="M194,302 Q174,274 165,244 Q154,212 160,186" stroke="#506741" stroke-width="2.8" stroke-linecap="round" fill="none"></path>
+
+  
+  <path d="M160,186 Q138,174 132,158 Q154,165 160,186 Z" fill="#506741" fill-opacity="0.75"></path>
+
+  
+  <path d="M157,228 Q137,216 132,202 Q152,208 157,228 Z" fill="#506741" fill-opacity="0.52"></path>
+
+  
+  <path d="M170,265 Q154,258 149,246 Q167,251 170,265 Z" fill="#B89268" fill-opacity="0.72"></path>
+
+  
+  
+  
+
+  
+  <line x1="364" y1="244" x2="396" y2="210" stroke="#B89268" stroke-width="1.8"></line>
+  <line x1="364" y1="244" x2="414" y2="250" stroke="#B89268" stroke-width="1.8"></line>
+  <line x1="364" y1="244" x2="392" y2="280" stroke="#B89268" stroke-width="1.8"></line>
+  <line x1="364" y1="244" x2="330" y2="216" stroke="#B89268" stroke-width="1.8"></line>
+  <line x1="364" y1="244" x2="332" y2="274" stroke="#B89268" stroke-width="1.8"></line>
+
+  
+  <circle cx="396" cy="210" r="8.5" stroke="#B89268" stroke-width="2" fill="none"></circle>
+  <circle cx="414" cy="250" r="8.5" stroke="#B89268" stroke-width="2" fill="none"></circle>
+  <circle cx="392" cy="280" r="8.5" stroke="#B89268" stroke-width="2" fill="none"></circle>
+  <circle cx="330" cy="216" r="8.5" stroke="#B89268" stroke-width="2" fill="none"></circle>
+  <circle cx="332" cy="274" r="8.5" stroke="#B89268" stroke-width="2" fill="none"></circle>
+
+  
+  <circle cx="364" cy="244" r="14" fill="#B89268"></circle>
+
+  
+  <circle cx="424" cy="276" r="5.5" fill="#B89268" fill-opacity="0.48"></circle>
+  <circle cx="426" cy="218" r="3.5" fill="#B89268" fill-opacity="0.32"></circle>
+
+  
+  
+  
+  <circle cx="334" cy="172" r="7.5" fill="#1C1C1C"></circle>
+  <circle cx="350" cy="172" r="7.5" fill="#FAE042"></circle>
+  <circle cx="366" cy="172" r="7.5" fill="#EF3340"></circle>
+
+  
+  
+  
+
+  
+  <text x="270" y="374" font-family="&#39;Cormorant Garamond&#39;, Georgia, &#39;Times New Roman&#39;, serif" font-size="48" font-weight="400" fill="#1A1918" text-anchor="middle" letter-spacing="-0.4">Chez nous à Paris</text>
+
+  
+  <line x1="90" y1="396" x2="216" y2="396" stroke="#B89268" stroke-width="1.3"></line>
+  <line x1="324" y1="396" x2="450" y2="396" stroke="#B89268" stroke-width="1.3"></line>
+
+  
+  <path d="M266,388 Q270,380 274,388 Q270,400 266,388 Z" fill="#506741"></path>
+  <path d="M264,391 Q268,383 272,391 Q268,403 264,391 Z" fill="#506741" fill-opacity="0.54" transform="rotate(-24 268 391)"></path>
+
+  
+  <text x="270" y="422" font-family="&#39;Cormorant Garamond&#39;, Georgia, &#39;Times New Roman&#39;, serif" font-size="21" font-weight="400" fill="#506741" text-anchor="middle" letter-spacing="3.5">By Manon &amp; Valentin</text>
+</svg>
