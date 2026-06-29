@@ -789,7 +789,7 @@ export const CHEZNOUS_DATA = {
    ],
    "steps": [
     "Préchauffez le four à <strong>200 °C</strong>.",
-    "Détaillez la tortilla en triangles. Étalez-les sur une plaque avec un filet d'huile. Faites dorer <strong>10 min</strong>. Réservez.",
+    "Détaillez la tortilla en triangles. Étalez-les sur une plaque avec un filet d'huile. Faites dorer <strong>4 min</strong>. Réservez.",
     "Émincez finement l'oignon et l'ail. Faites-les dorer dans l'huile restante.",
     "Ajoutez le bœuf haché, la pulpe de tomates, les haricots rouges, les épices et le sel. Mijotez <strong>20 min</strong>.",
     "Disposez dans un plat allant au four. Ajoutez le cheddar et faites fondre quelques minutes sous le grill.",
