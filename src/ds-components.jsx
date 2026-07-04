@@ -1,5 +1,47 @@
 import React from 'react';
 import { CN_FONTS } from './helpers.jsx';
+import { CN_DAYS } from './utils.js';
+
+/* Bottom-sheet de choix du jour + créneau pour ajouter une recette à la semaine.
+   Partagé entre la fiche recette et le quick-add (Bibliothèque / Favoris). */
+export function CNPlanWeekSheet({ open, onClose, recipe, week, onPlan }) {
+  const [justPlanned, setJustPlanned] = React.useState(null);
+  React.useEffect(() => { if (!open) setJustPlanned(null); }, [open]);
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 200, pointerEvents: open ? 'auto' : 'none' }} aria-hidden={!open}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,25,24,.4)', opacity: open ? 1 : 0, transition: 'opacity .25s ease' }}></div>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0, background: '#FAFAF8', borderRadius: '24px 24px 0 0',
+        transform: open ? 'translateY(0)' : 'translateY(105%)', transition: 'transform .3s cubic-bezier(.32,.72,.25,1)',
+        padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 16px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
+      }}>
+        <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 14px' }}></div>
+        <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918', marginBottom: 4 }}>Ajouter à ma semaine</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginBottom: 14 }}>{recipe && recipe.title}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {CN_DAYS.map(day => (
+            <div key={day} style={{ display: 'grid', gridTemplateColumns: '76px 1fr 1fr', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: '#8C8780' }}>{day}</span>
+              {['midi', 'soir'].map(slot => {
+                const key = day + '-' + slot;
+                const taken = week && week[key];
+                const isHere = justPlanned === key;
+                return (
+                  <button key={slot} onClick={() => { onPlan(key); setJustPlanned(key); setTimeout(onClose, 450); }} style={{
+                    height: 38, borderRadius: 9999, cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12,
+                    border: `1.5px solid ${isHere ? '#506741' : taken ? '#EEE8DC' : '#D5CEBE'}`,
+                    background: isHere ? '#506741' : taken ? '#F5F2EC' : '#FFFFFF',
+                    color: isHere ? '#FFFFFF' : taken ? '#B8B3AA' : '#3C3830', transition: 'all .15s ease',
+                  }}>{isHere ? '✓ ' + slot : taken ? slot + ' · pris' : slot}</button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function NutritionBar({ kcal, lipides, glucides, proteines }) {
   const items = [

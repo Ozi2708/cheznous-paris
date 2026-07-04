@@ -1,7 +1,8 @@
 import React from 'react';
 import { CN_FONTS, CNIcon } from './helpers.jsx';
-import { CN_EMPTY_FILTERS, cnNextFreeSlot, cnBatchList } from './utils.js';
+import { CN_EMPTY_FILTERS, cnBatchList } from './utils.js';
 import { CHEZNOUS_DATA } from './data.js';
+import { CNPlanWeekSheet } from './ds-components.jsx';
 import { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakRadio } from './tweaks-panel.jsx';
 import { CNHomeScreen } from './screens/HomeScreen.jsx';
 import { CNLibraryScreen } from './screens/LibraryScreen.jsx';
@@ -75,6 +76,7 @@ export function CNApp() {
   const [favs, setFavsRaw] = React.useState(() => cnLoad(CN_FAVS_KEY, []));
   const [toast, setToast] = React.useState(null);
   const [ctxIds, setCtxIds] = React.useState(null);
+  const [planRecipe, setPlanRecipe] = React.useState(null);
 
   const setWeek = (w) => { setWeekRaw(w); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(w)); };
   const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); };
@@ -86,12 +88,7 @@ export function CNApp() {
     clearTimeout(window.__cnToastT);
     window.__cnToastT = setTimeout(() => setToast(null), 2200);
   };
-  const quickAddWeek = (r) => {
-    const slot = cnNextFreeSlot(week);
-    if (!slot) { showToast('Semaine complète — libérez un créneau'); return; }
-    setWeek({ ...week, [slot.key]: { id: r.id, done: false } });
-    showToast(`${r.title.length > 24 ? r.title.slice(0, 23) + '…' : r.title} → ${slot.label}`);
-  };
+  const quickAddWeek = (r) => setPlanRecipe(r);
 
   React.useEffect(() => {
     localStorage.setItem(CN_NAV_KEY, JSON.stringify({ tab, screen, recipeId, portions, cookPhase }));
@@ -184,6 +181,15 @@ export function CNApp() {
             <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{toast}</span>
           </div>
         )}
+
+        <CNPlanWeekSheet open={!!planRecipe} onClose={() => setPlanRecipe(null)} recipe={planRecipe} week={week}
+          onPlan={(slotKey) => {
+            if (!planRecipe) return;
+            setWeek({ ...week, [slotKey]: { id: planRecipe.id, done: false } });
+            const label = slotKey.replace('-', ' ').toLowerCase();
+            const title = planRecipe.title.length > 24 ? planRecipe.title.slice(0, 23) + '…' : planRecipe.title;
+            showToast(`${title} → ${label}`);
+          }} />
       </div>
 
       <TweaksPanel>
