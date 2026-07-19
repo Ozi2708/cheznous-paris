@@ -188,3 +188,129 @@ export function cnSynergies(selected) {
 
 export const CN_B_DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 export const CN_B_DAYS_FULL = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+/* ── Générateur de menu de la semaine ──
+   Objectifs combinés : équilibre entre chapitres (jamais « que du low-carb »)
+   + cohérence des ingrédients frais (mutualiser les courses, éviter le gâchis). */
+export const CN_MAIN_CHAPTERS = ['Low-Carb', 'High-Carb', 'Post Training'];
+
+/* Clés des ingrédients frais (section « À Acheter ») d'une recette — base du score de partage. */
+function cnFreshKeys(r) {
+  const s = new Set();
+  (r.ingredients || []).forEach(sec => {
+    if (sec.section === 'À Acheter') sec.items.forEach(it => s.add(cnIngKey(it.name)));
+  });
+  return s;
+}
+
+/* Nombre d'ingrédients frais partagés entre une recette et un ensemble de clés déjà retenues. */
+function cnOverlap(chosenKeys, r) {
+  let n = 0;
+  cnFreshKeys(r).forEach(k => { if (chosenKeys.has(k)) n++; });
+  return n;
+}
+
+/* Choisit la meilleure recette : score = partage d'ingrédients ×2 + aléatoire,
+   puis tirage parmi le top 3 pour varier à chaque relance. */
+function cnPickBest(cands, chosenKeys) {
+  if (!cands.length) return null;
+  const scored = cands.map(r => ({ r, s: cnOverlap(chosenKeys, r) * 2 + Math.random() }));
+  scored.sort((a, b) => b.s - a.s);
+  const top = scored.slice(0, Math.min(3, scored.length));
+  return top[Math.floor(Math.random() * top.length)].r;
+}
+
+/* Séquence de chapitres en round-robin pour garantir la diversité. */
+function cnChapterSequence(pool, count) {
+  const present = CN_MAIN_CHAPTERS.filter(c => pool.some(r => r.chapter === c));
+  if (!present.length) return [];
+  const seq = [];
+  for (let i = 0; i < count; i++) seq.push(present[i % present.length]);
+  return seq;
+}
+
+/* Génère un menu de `count` recettes, équilibré et cohérent. */
+export function cnGenerateMenu(recipes, count, opts = {}) {
+  const exclude = new Set(opts.exclude || []);
+  const pool = recipes.filter(r => CN_MAIN_CHAPTERS.includes(r.chapter) && !exclude.has(r.id));
+  const seq = cnChapterSequence(pool, count);
+  const chosen = [];
+  const chosenKeys = new Set();
+  const usedIds = new Set();
+  for (const ch of seq) {
+    let cands = pool.filter(r => r.chapter === ch && !usedIds.has(r.id));
+    if (!cands.length) cands = pool.filter(r => !usedIds.has(r.id));
+    const pick = cnPickBest(cands, chosenKeys);
+    if (!pick) break;
+    chosen.push(pick);
+    usedIds.add(pick.id);
+    cnFreshKeys(pick).forEach(k => chosenKeys.add(k));
+  }
+  return chosen;
+}
+
+/* Relance une seule recette du menu : garde son chapitre (préserve l'équilibre),
+   maximise le partage avec les recettes conservées, évite les doublons. */
+export function cnRerollMenuItem(recipes, selected, index) {
+  const replaced = selected[index];
+  if (!replaced) return replaced;
+  const keep = selected.filter((_, i) => i !== index);
+  const keepIds = new Set(keep.map(r => r.id));
+  const keepKeys = new Set();
+  keep.forEach(r => cnFreshKeys(r).forEach(k => keepKeys.add(k)));
+  let cands = recipes.filter(r => r.chapter === replaced.chapter && !keepIds.has(r.id) && r.id !== replaced.id);
+  if (!cands.length) cands = recipes.filter(r => CN_MAIN_CHAPTERS.includes(r.chapter) && !keepIds.has(r.id) && r.id !== replaced.id);
+  return cnPickBest(cands, keepKeys) || replaced;
+}
+
+/* ── Liste de courses de la semaine ──
+   Consolide les ingrédients de tous les plats, additionne les quantités par unité,
+   et ordonne les sections : À Acheter (courses) → Placard → Épices (déjà au placard). */
+export const CN_SHOP_SECTIONS = ['À Acheter', 'Placard', 'Épices'];
+
+export function cnShoppingList(recipes) {
+  const secOrder = { 'À Acheter': 0, 'Placard': 1, 'Épices': 2 };
+  const map = {};
+  recipes.forEach(r => (r.ingredients || []).forEach(sec => sec.items.forEach(it => {
+    const k = cnIngKey(it.name);
+    if (!map[k]) map[k] = { key: k, name: it.name, section: sec.section, uses: [] };
+    if ((secOrder[sec.section] ?? 0) < (secOrder[map[k].section] ?? 0)) map[k].section = sec.section;
+    map[k].uses.push({ title: r.title, q: it.q });
+  })));
+  const entries = Object.values(map).map(e => {
+    const byUnit = {};
+    e.uses.forEach(u => {
+      const { n, unit } = parseQty(u.q);
+      if (n == null && !unit) return;            // sel / poivre sans quantité
+      const key = unit || '';
+      if (n != null) byUnit[key] = (byUnit[key] || 0) + n;
+      else if (!(key in byUnit)) byUnit[key] = null;
+    });
+    const parts = Object.entries(byUnit).map(([unit, n]) =>
+      n != null ? `${fmtNum(n)}${unit ? ' ' + unit : ''}` : unit).filter(Boolean);
+    e.total = parts.join(' + ');
+    e.count = e.uses.length;
+    return e;
+  });
+  const groups = { 'À Acheter': [], 'Placard': [], 'Épices': [] };
+  entries.forEach(e => (groups[e.section] || groups['À Acheter']).push(e));
+  Object.values(groups).forEach(g => g.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)));
+  return groups;
+}
+
+/* Nettoie un nom d'ingrédient pour le presse-papier (ex : « carotte(s) » → « carottes »). */
+export function cnCleanName(name) {
+  return (name || '').replace(/\(s\)/g, 's').replace(/\s+/g, ' ').trim();
+}
+
+/* Construit le texte à copier. Par défaut : section « À Acheter » uniquement. */
+export function cnShoppingText(groups, sections = ['À Acheter']) {
+  const lines = [];
+  sections.forEach(sec => {
+    const g = groups[sec] || [];
+    if (!g.length) return;
+    if (sections.length > 1) lines.push(`— ${sec} —`);
+    g.forEach(e => lines.push(`${e.total ? e.total + ' ' : ''}${cnCleanName(e.name)}`));
+  });
+  return lines.join('\n');
+}

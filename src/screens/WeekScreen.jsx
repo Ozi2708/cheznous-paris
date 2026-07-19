@@ -46,7 +46,7 @@ function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
   );
 }
 
-export function CNWeekScreen({ week, setWeek, onOpen }) {
+export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMenu, onPlanPending, onRemovePending }) {
   const [picking, setPicking] = React.useState(null);
   const [cleaning, setCleaning] = React.useState(false);
   const all = CHEZNOUS_DATA.recipes;
@@ -54,6 +54,7 @@ export function CNWeekScreen({ week, setWeek, onOpen }) {
   const entries = Object.values(week).filter(Boolean);
   const nDone = entries.filter(e => e.done).length;
   const todayIdx = (new Date().getDay() + 6) % 7;
+  const pendingRecipes = pending.map(id => byId[id]).filter(Boolean);
 
   const setSlot = (day, slot, val) => setWeek({ ...week, [day + '-' + slot]: val });
 
@@ -99,6 +100,49 @@ export function CNWeekScreen({ week, setWeek, onOpen }) {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 20px 120px' }}>
+        {onComposeMenu && (
+          <button onClick={onComposeMenu} style={{
+            width: '100%', marginBottom: pendingRecipes.length ? 14 : 18, height: 50, borderRadius: 12, cursor: 'pointer',
+            border: '1.5px solid #506741', background: '#EEF3E8', color: '#3C5030',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+            fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14,
+          }}>
+            <CNIcon name="sparkles" size={18} color="#506741" /> Composer un menu de la semaine
+          </button>
+        )}
+
+        {pendingRecipes.length > 0 && (
+          <div style={{ marginBottom: 20, background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 14, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#B89268' }}>À planifier</span>
+              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA' }}>comptés dans les courses</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {pendingRecipes.map((r, i) => {
+                const m = chMeta(r.chapter);
+                return (
+                  <div key={r.id + '-' + i} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color, flexShrink: 0 }}></span>
+                    <button onClick={() => onOpen(r)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: '#1A1918', lineHeight: 1.3 }}>{r.title}</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                    </button>
+                    <button onClick={() => onPlanPending && onPlanPending(r, i)} style={{
+                      height: 34, borderRadius: 9999, padding: '0 13px', flexShrink: 0, cursor: 'pointer',
+                      border: '1.5px solid #506741', background: '#506741', color: '#FFFFFF',
+                      fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12,
+                    }}>Assigner</button>
+                    <button onClick={() => onRemovePending && onRemovePending(i)} aria-label="Retirer" style={{
+                      width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+                      border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}><CNIcon name="x" size={14} color="#B8B3AA" /></button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {CN_DAYS.map((day, di) => {
           const isToday = di === todayIdx;
           return (

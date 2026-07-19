@@ -12,6 +12,8 @@ import { CNBatchCookScreen } from './screens/BatchSessionScreen.jsx';
 import { CNFavsScreen } from './screens/FavsScreen.jsx';
 import { CNRecipeScreen } from './screens/RecipeScreen.jsx';
 import { CNCookScreen } from './screens/CookScreen.jsx';
+import { CNMenuGeneratorScreen } from './screens/MenuGeneratorScreen.jsx';
+import { CNShoppingScreen } from './screens/ShoppingScreen.jsx';
 
 const CN_TWEAK_DEFAULTS = { cookTheme: 'olive', cookTextSize: 25 };
 
@@ -19,6 +21,8 @@ const CN_NAV_KEY = 'cheznous_app_nav_v2';
 const CN_WEEK_KEY = 'cheznous_week_v1';
 const CN_BATCH_KEY = 'cheznous_batch_v1';
 const CN_FAVS_KEY = 'cheznous_favs_v1';
+const CN_PENDING_KEY = 'cheznous_pending_v1';
+const CN_SHOP_KEY = 'cheznous_shop_v1';
 function cnLoad(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
 }
@@ -27,6 +31,7 @@ const CN_TABS = [
   { id: 'home', label: 'Accueil', icon: 'home' },
   { id: 'library', label: 'Recettes', icon: 'book' },
   { id: 'week', label: 'Semaine', icon: 'cal' },
+  { id: 'shop', label: 'Courses', icon: 'cart' },
   { id: 'batch', label: 'Batch', icon: 'pot' },
   { id: 'favs', label: 'Favoris', icon: 'heart' },
 ];
@@ -35,7 +40,7 @@ function CNTabBar({ tab, onTab, weekCount }) {
   return (
     <div style={{
       position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 60,
-      display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
+      display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)',
       background: 'rgba(250,250,248,.96)', backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       borderTop: '1px solid #E4DDD2',
@@ -77,10 +82,15 @@ export function CNApp() {
   const [toast, setToast] = React.useState(null);
   const [ctxIds, setCtxIds] = React.useState(null);
   const [planRecipe, setPlanRecipe] = React.useState(null);
+  const [planPendingIdx, setPlanPendingIdx] = React.useState(null);
+  const [pending, setPendingRaw] = React.useState(() => cnLoad(CN_PENDING_KEY, []));
+  const [shopChecked, setShopCheckedRaw] = React.useState(() => new Set(cnLoad(CN_SHOP_KEY, [])));
 
   const setWeek = (w) => { setWeekRaw(w); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(w)); };
   const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); };
   const setFavs = (f) => { setFavsRaw(f); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(f)); };
+  const setPending = (p) => { setPendingRaw(p); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(p)); };
+  const setShopChecked = (s) => { setShopCheckedRaw(s); localStorage.setItem(CN_SHOP_KEY, JSON.stringify([...s])); };
   const toggleFav = (id) => setFavs(favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]);
 
   const showToast = (text) => {
@@ -88,7 +98,15 @@ export function CNApp() {
     clearTimeout(window.__cnToastT);
     window.__cnToastT = setTimeout(() => setToast(null), 2200);
   };
-  const quickAddWeek = (r) => setPlanRecipe(r);
+  const quickAddWeek = (r) => { setPlanPendingIdx(null); setPlanRecipe(r); };
+  const planPending = (r, idx) => { setPlanPendingIdx(idx); setPlanRecipe(r); };
+  const closePlan = () => { setPlanRecipe(null); setPlanPendingIdx(null); };
+  const removePending = (idx) => setPending(pending.filter((_, i) => i !== idx));
+  const commitMenu = (ids) => {
+    setPending([...pending, ...ids]);
+    setScreen('tab'); setTab('week');
+    showToast(`${ids.length} plat${ids.length > 1 ? 's' : ''} ajouté${ids.length > 1 ? 's' : ''} à la semaine`);
+  };
 
   React.useEffect(() => {
     localStorage.setItem(CN_NAV_KEY, JSON.stringify({ tab, screen, recipeId, portions, cookPhase }));
@@ -100,9 +118,14 @@ export function CNApp() {
   }, []);
 
   const recipes = CHEZNOUS_DATA.recipes;
+  const byId = React.useMemo(() => Object.fromEntries(recipes.map(r => [r.id, r])), [recipes]);
   const recipe = recipes.find(r => r.id === recipeId) || null;
+  const shopRecipes = [
+    ...Object.values(week).filter(Boolean).map(e => e.id),
+    ...pending,
+  ].map(id => byId[id]).filter(Boolean);
   const isDark = (screen === 'cook' && t.cookTheme === 'olive') || screen === 'batchcook';
-  const weekCount = Object.values(week).filter(e => e && !e.done).length;
+  const weekCount = Object.values(week).filter(e => e && !e.done).length + pending.length;
   const dayIndex = Math.floor(Date.now() / 86400000);
 
   const openRecipe = (r, ids) => { setCtxIds(ids && ids.length > 1 ? ids : null); setRecipeId(r.id); setPortions(2); setScreen('recipe'); };
@@ -131,7 +154,9 @@ export function CNApp() {
             {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
               onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); setTab('library'); }} onGoBatch={() => setTab('batch')} />}
             {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
-            {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe} />}
+            {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe}
+              pending={pending} onComposeMenu={() => setScreen('menu')} onPlanPending={planPending} onRemovePending={removePending} />}
+            {tab === 'shop' && <CNShoppingScreen recipes={shopRecipes} checked={shopChecked} setChecked={setShopChecked} showToast={showToast} bottomInset={tabBarH} />}
             {tab === 'batch' && <CNBatchScreen sel={batchSel} setSel={setBatchSel} onOpen={openRecipe} onStart={() => setScreen('batchcook')} />}
             {tab === 'favs' && <CNFavsScreen favs={favs} onToggleFav={toggleFav} onQuickAdd={quickAddWeek} onOpen={(r) => openRecipe(r, favs)} />}
             <CNTabBar tab={tab} onTab={setTab} weekCount={weekCount} />
@@ -163,6 +188,10 @@ export function CNApp() {
           <CNBatchCookScreen sel={batchSel} onExit={() => { setScreen('tab'); setTab('batch'); }} />
         )}
 
+        {screen === 'menu' && (
+          <CNMenuGeneratorScreen onBack={() => { setScreen('tab'); setTab('week'); }} onCommit={commitMenu} />
+        )}
+
         {(((screen === 'recipe' || screen === 'cook') && !recipe) || (screen === 'batchcook' && batchSel.length < 2)) && (
           <div style={{ paddingTop: 140, textAlign: 'center' }}>
             <button onClick={() => { setScreen('tab'); setTab('home'); }} style={{ border: 'none', background: '#506741', color: '#fff', borderRadius: 9999, padding: '12px 24px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600 }}>Retour à l'accueil</button>
@@ -182,10 +211,11 @@ export function CNApp() {
           </div>
         )}
 
-        <CNPlanWeekSheet open={!!planRecipe} onClose={() => setPlanRecipe(null)} recipe={planRecipe} week={week}
+        <CNPlanWeekSheet open={!!planRecipe} onClose={closePlan} recipe={planRecipe} week={week}
           onPlan={(slotKey) => {
             if (!planRecipe) return;
             setWeek({ ...week, [slotKey]: { id: planRecipe.id, done: false } });
+            if (planPendingIdx != null) setPending(pending.filter((_, i) => i !== planPendingIdx));
             const label = slotKey.replace('-', ' ').toLowerCase();
             const title = planRecipe.title.length > 24 ? planRecipe.title.slice(0, 23) + '…' : planRecipe.title;
             showToast(`${title} → ${label}`);

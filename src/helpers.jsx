@@ -41,6 +41,10 @@ export function CNIcon({ name, size = 20, color = 'currentColor', strokeWidth = 
     bolt: <path d="M13 3 5 13.5h5L10 21l9-11h-5.5L13 3z"/>,
     heart: <path d="M12 20.5C7.5 17.5 4.5 14.5 3.5 11.5 2.5 8.5 4.5 5.5 7.5 5.5c1.8 0 3.4 1 4.5 2.7 1.1-1.7 2.7-2.7 4.5-2.7 3 0 5 3 4 6-1 3-4 6-8.5 9z"/>,
     calplus: <><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4M12 12.5v5M9.5 15h5"/></>,
+    cart: <><path d="M3 4h2l2.2 11.5a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></>,
+    refresh: <><path d="M20 11A8 8 0 0 0 6.3 6.3L4 8.5M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 13.7 4.7L20 15.5M20 20v-4.5h-4.5"/></>,
+    copy: <><rect x="9" y="9" width="11.5" height="11.5" rx="2.5"/><path d="M5.5 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v.5"/></>,
+    sparkles: <><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z"/></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || 'none'} stroke={color}
