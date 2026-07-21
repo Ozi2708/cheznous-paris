@@ -12,3 +12,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <CNApp />
   </React.StrictMode>
 );
+
+/* Enregistrement du service worker (PWA installable + hors-ligne). */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* silencieux */ });
+  });
+}
