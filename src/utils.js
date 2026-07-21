@@ -268,10 +268,33 @@ export function cnRerollMenuItem(recipes, selected, index) {
    et ordonne les sections : À Acheter (courses) → Placard → Épices (déjà au placard). */
 export const CN_SHOP_SECTIONS = ['À Acheter', 'Placard', 'Épices'];
 
+/* Vrais fonds de placard : on ne les rachète pas à chaque recette (huiles,
+   vinaigres, sauces de fond, sucre/farine, bouillon…). Le reste des items
+   « Placard » des données (pâtes, riz, coulis de tomate, fromages, crèmes,
+   laits, tortillas…) est en réalité à acheter → on le bascule en « À Acheter ». */
+const CN_PANTRY_STAPLES = [
+  'huile', 'vinaigre', 'sauce soja', 'tamari', 'nuoc', 'sriracha', 'sauce poisson', 'sauce chili',
+  'moutarde', 'mayonnaise', 'ketchup', 'miel', 'sucre', 'farine', 'fecule', 'maizena', 'levure',
+  'chapelure', 'bouillon', 'tahini', 'laurier', "poudre d'amande", 'graines de sesame', 'graines de chia',
+];
+/* Épices rangées par erreur en « Placard » dans les données. */
+const CN_PLACARD_SPICES = [
+  'epice', 'curry', 'cumin', 'paprika', 'curcuma', 'cannelle', 'massala', 'zaatar', 'origan', 'herbes de provence', 'gingembre',
+];
+export function cnRemapSection(name, section) {
+  if (section === 'À Acheter') return 'À Acheter';
+  if (section === 'Épices') return 'Épices';
+  const n = cnNorm(name);
+  if (CN_PANTRY_STAPLES.some(k => n.includes(k))) return 'Placard';
+  if (CN_PLACARD_SPICES.some(k => n.includes(k))) return 'Épices';
+  return 'À Acheter';
+}
+
 export function cnShoppingList(recipes) {
   const secOrder = { 'À Acheter': 0, 'Placard': 1, 'Épices': 2 };
   const map = {};
   recipes.forEach(r => (r.ingredients || []).forEach(sec => sec.items.forEach(it => {
+    if (!it.name || !it.name.trim()) return;   // ignore les items sans nom (artefact de données)
     const k = cnIngKey(it.name);
     if (!map[k]) map[k] = { key: k, name: it.name, section: sec.section, uses: [] };
     if ((secOrder[sec.section] ?? 0) < (secOrder[map[k].section] ?? 0)) map[k].section = sec.section;
@@ -293,7 +316,7 @@ export function cnShoppingList(recipes) {
     return e;
   });
   const groups = { 'À Acheter': [], 'Placard': [], 'Épices': [] };
-  entries.forEach(e => (groups[e.section] || groups['À Acheter']).push(e));
+  entries.forEach(e => { const sec = cnRemapSection(e.name, e.section); (groups[sec] || groups['À Acheter']).push(e); });
   Object.values(groups).forEach(g => g.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)));
   return groups;
 }
@@ -303,14 +326,14 @@ export function cnCleanName(name) {
   return (name || '').replace(/\(s\)/g, 's').replace(/\s+/g, ' ').trim();
 }
 
-/* Construit le texte à copier. Par défaut : section « À Acheter » uniquement. */
-export function cnShoppingText(groups, sections = ['À Acheter']) {
+/* Texte à copier : tous les « À Acheter », plus les items du Placard et des
+   Épices que l'utilisateur a cochés (ceux qu'il faut racheter cette fois). */
+export function cnShoppingCopyText(groups, checked) {
+  const line = (e) => `${e.total ? e.total + ' ' : ''}${cnCleanName(e.name)}`;
   const lines = [];
-  sections.forEach(sec => {
-    const g = groups[sec] || [];
-    if (!g.length) return;
-    if (sections.length > 1) lines.push(`— ${sec} —`);
-    g.forEach(e => lines.push(`${e.total ? e.total + ' ' : ''}${cnCleanName(e.name)}`));
-  });
+  (groups['À Acheter'] || []).forEach(e => lines.push(line(e)));
+  ['Placard', 'Épices'].forEach(sec => (groups[sec] || []).forEach(e => {
+    if (checked && checked.has(e.key)) lines.push(line(e));
+  }));
   return lines.join('\n');
 }
