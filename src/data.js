@@ -57,23 +57,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "407 g",
+       "q": "400 g",
        "name": "filet mignon de bœuf"
       },
       {
-       "q": "178 g",
+       "q": "1,5",
        "name": "carotte(s)"
       },
       {
-       "q": "178 g",
+       "q": "1",
        "name": "panais"
       },
       {
-       "q": "127 g",
+       "q": "1",
        "name": "poire(s)"
       },
       {
-       "q": "77 g",
+       "q": "80 g",
        "name": "gorgonzola"
       },
       {
@@ -184,11 +184,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "haché végétal"
       },
       {
-       "q": "62 g",
+       "q": "60 g",
        "name": "tofu fumé"
       },
       {
@@ -213,7 +213,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "quinoa"
       },
       {
@@ -320,27 +320,27 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "saucisses végétales"
       },
       {
-       "q": "204 g",
+       "q": "1",
        "name": "courgette(s)"
       },
       {
-       "q": "204 g",
+       "q": "0,5",
        "name": "aubergine(s)"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "gnocchis de p. de terre"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "tomates cerises"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -455,15 +455,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "bœuf émincé"
       },
       {
-       "q": "204 g",
+       "q": "1,5",
        "name": "poivron(s)"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -484,7 +484,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "haricots rouges cuits"
       },
       {
@@ -583,27 +583,27 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "203 g",
+       "q": "200 g",
        "name": "épi de maïs cuit"
       },
       {
-       "q": "153 g",
+       "q": "150 g",
        "name": "yaourt à la grecque"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "tomates cerises"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "chou kale"
       },
       {
-       "q": "51 g",
+       "q": "0,5",
        "name": "oignon(s) rouge(s)"
       },
       {
@@ -715,11 +715,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "203 g",
+       "q": "200 g",
        "name": "bœuf haché"
       },
       {
-       "q": "61 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -736,15 +736,15 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "407 g",
+       "q": "400 g",
        "name": "pulpe de tomates"
       },
       {
-       "q": "153 g",
+       "q": "150 g",
        "name": "haricots rouges cuits"
       },
       {
-       "q": "41 g",
+       "q": "40 g",
        "name": "cheddar râpé"
       },
       {
@@ -853,7 +853,7 @@ export const CHEZNOUS_DATA = {
        "name": "œuf(s)"
       },
       {
-       "q": "112 g",
+       "q": "110 g",
        "name": "dés de jambon blanc"
       }
      ]
@@ -971,7 +971,7 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "blanc de dinde (tranché)"
       },
       {
@@ -979,7 +979,7 @@ export const CHEZNOUS_DATA = {
        "name": "roquette"
       },
       {
-       "q": "40 g",
+       "q": "0,5",
        "name": "oignon(s) rouge(s)"
       },
       {
@@ -996,7 +996,7 @@ export const CHEZNOUS_DATA = {
        "name": "galettes de sarrasin"
       },
       {
-       "q": "152 g",
+       "q": "150 g",
        "name": "fromage à tartiner -20% MG"
       },
       {
@@ -1087,11 +1087,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "saumon frais"
       },
       {
-       "q": "610 g",
+       "q": "600 g",
        "name": "haricots verts"
       },
       {
@@ -1210,15 +1210,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "306 g",
+       "q": "1",
        "name": "aubergine(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "jambon blanc"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "champignons de Paris"
       },
       {
@@ -1231,7 +1231,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "coulis de tomates"
       },
       {
@@ -1341,19 +1341,19 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "508 g",
+       "q": "2,5",
        "name": "courgette(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "haché végétal"
       },
       {
-       "q": "204 g",
+       "q": "1,5",
        "name": "carotte(s)"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -1370,7 +1370,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "366 g",
+       "q": "375 g",
        "name": "pulpe de tomates"
       },
       {
@@ -1471,19 +1471,19 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "1018 g",
+       "q": "3,5",
        "name": "aubergine(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "haché végétal"
       },
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "lentilles vertes cuites"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -1598,11 +1598,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "712 g",
+       "q": "6",
        "name": "tomate(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "dés de jambon blanc"
       },
       {
@@ -1610,7 +1610,7 @@ export const CHEZNOUS_DATA = {
        "name": "œuf(s)"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -1627,7 +1627,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "184 g",
+       "q": "180 g",
        "name": "skyr"
       },
       {
@@ -1732,15 +1732,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "bœuf (steak)"
       },
       {
-       "q": "244 g",
+       "q": "1",
        "name": "patate(s) douce(s)"
       },
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "haricots verts"
       },
       {
@@ -1858,15 +1858,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "72 g",
+       "q": "70 g",
        "name": "jambon cru"
       },
       {
-       "q": "142 g",
+       "q": "1",
        "name": "poivron(s)"
       },
       {
-       "q": "62 g",
+       "q": "60 g",
        "name": "tomates cerises"
       },
       {
@@ -1887,7 +1887,7 @@ export const CHEZNOUS_DATA = {
        "name": "wraps (tortillas)"
       },
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "houmous"
       },
       {
@@ -1974,11 +1974,11 @@ export const CHEZNOUS_DATA = {
        "name": "œuf(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "champignons de Paris"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -2092,15 +2092,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "509 g",
+       "q": "2,5",
        "name": "courgette(s)"
       },
       {
-       "q": "203 g",
+       "q": "200 g",
        "name": "haché végétal"
       },
       {
-       "q": "41 g",
+       "q": "40 g",
        "name": "mozzarella râpée"
       }
      ]
@@ -2109,7 +2109,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "407 g",
+       "q": "400 g",
        "name": "coulis de tomates"
       },
       {
@@ -2208,11 +2208,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "pavé(s) de cabillaud"
       },
       {
-       "q": "306 g",
+       "q": "1,5",
        "name": "courgette(s)"
       },
       {
@@ -2220,7 +2220,7 @@ export const CHEZNOUS_DATA = {
        "name": "herbes fraîches"
       },
       {
-       "q": "92 g",
+       "q": "90 g",
        "name": "skyr"
       },
       {
@@ -2352,23 +2352,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "508 g",
+       "q": "2,5",
        "name": "courgette(s)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "bœuf haché"
       },
       {
-       "q": "162 g",
+       "q": "1,5",
        "name": "tomate(s)"
       },
       {
-       "q": "62 g",
+       "q": "60 g",
        "name": "mozzarella"
       },
       {
-       "q": "30 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -2478,15 +2478,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "214 g",
+       "q": "225 g",
        "name": "bœuf haché"
       },
       {
-       "q": "407 g",
+       "q": "2",
        "name": "courgette(s)"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -2499,7 +2499,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "31 g",
+       "q": "30 g",
        "name": "gruyère râpé"
       },
       {
@@ -2734,7 +2734,7 @@ export const CHEZNOUS_DATA = {
        "name": "avocat"
       },
       {
-       "q": "100 g",
+       "q": "1",
        "name": "carotte(s)"
       },
       {
@@ -3112,23 +3112,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "346 g",
+       "q": "350 g",
        "name": "pulpe de tomates"
       },
       {
-       "q": "122 g",
+       "q": "1",
        "name": "poivron(s)"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "pois chiches cuits"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
-       "q": "62 g",
+       "q": "60 g",
        "name": "mozzarella"
       },
       {
@@ -3258,11 +3258,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "épinards frais"
       },
       {
@@ -3279,7 +3279,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "riz basmati"
       },
       {
@@ -3367,11 +3367,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "bœuf (steak émincé)"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "champignons de Paris"
       },
       {
@@ -3392,7 +3392,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "riz basmati"
       },
       {
@@ -3518,7 +3518,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "340 g",
+       "q": "350 g",
        "name": "linguine"
       },
       {
@@ -3744,11 +3744,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "508 g",
+       "q": "1,5",
        "name": "aubergine(s)"
       },
       {
-       "q": "284 g",
+       "q": "275 g",
        "name": "bœuf haché"
       },
       {
@@ -3764,7 +3764,7 @@ export const CHEZNOUS_DATA = {
        "name": "gingembre frais râpé"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "riz basmati"
       }
      ]
@@ -3892,27 +3892,27 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "406 g",
+       "q": "1,5",
        "name": "patate(s) douce(s)"
       },
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "bœuf haché"
       },
       {
-       "q": "162 g",
+       "q": "1,5",
        "name": "carotte(s)"
       },
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "maïs cuit"
       },
       {
-       "q": "66 g",
+       "q": "70 g",
        "name": "yaourt à la grecque"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -4022,15 +4022,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "tomates cerises"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s) rouge(s)"
       },
       {
@@ -4055,7 +4055,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "riz basmati"
       },
       {
@@ -4163,23 +4163,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "204 g",
+       "q": "0,5",
        "name": "aubergine(s)"
       },
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "shitakés"
       },
       {
-       "q": "142 g",
+       "q": "140 g",
        "name": "champignons de Paris"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -4192,7 +4192,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "riz basmati"
       },
       {
@@ -4284,23 +4284,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "172 g",
+       "q": "170 g",
        "name": "fromage blanc"
       },
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "coulis de tomates"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "champignons de Paris"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "oignon(s)"
       }
      ]
@@ -4309,7 +4309,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "orzo (ou pâtes)"
       },
       {
@@ -4410,15 +4410,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "366 g",
+       "q": "1,5",
        "name": "patate(s) douce(s)"
       },
       {
-       "q": "184 g",
+       "q": "180 g",
        "name": "jambon blanc"
       },
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "gruyère râpé"
       },
       {
@@ -4520,11 +4520,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "152 g",
+       "q": "150 g",
        "name": "gros champignons de Paris"
       },
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "jambon blanc"
       },
       {
@@ -4532,7 +4532,7 @@ export const CHEZNOUS_DATA = {
        "name": "bacon"
       },
       {
-       "q": "50 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -4545,7 +4545,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "tagliatelles"
       },
       {
@@ -4642,7 +4642,7 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "264 g",
+       "q": "275 g",
        "name": "pavé(s) de cabillaud"
       },
       {
@@ -4655,7 +4655,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "142 g",
+       "q": "140 g",
        "name": "riz basmati"
       },
       {
@@ -4774,11 +4774,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "porc (émincé)"
       },
       {
-       "q": "244 g",
+       "q": "0,5",
        "name": "brocolis"
       },
       {
@@ -4795,7 +4795,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "riz basmati"
       },
       {
@@ -4803,7 +4803,7 @@ export const CHEZNOUS_DATA = {
        "name": "sauce soja salée"
       },
       {
-       "q": "16 g",
+       "q": "15 g",
        "name": "sucre de canne"
       },
       {
@@ -4904,19 +4904,19 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "bœuf haché"
       },
       {
-       "q": "406 g",
+       "q": "400 g",
        "name": "pommes de terre"
       },
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "haricots verts"
       },
       {
-       "q": "62 g",
+       "q": "2",
        "name": "échalote(s)"
       }
      ]
@@ -4929,7 +4929,7 @@ export const CHEZNOUS_DATA = {
        "name": "crème liquide 15%"
       },
       {
-       "q": "14 g",
+       "q": "15 g",
        "name": "chapelure de blé complet"
       },
       {
@@ -5024,15 +5024,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "122 g",
+       "q": "1",
        "name": "poireau(x)"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
-       "q": "122 g",
+       "q": "1",
        "name": "carotte(s)"
       },
       {
@@ -5040,11 +5040,11 @@ export const CHEZNOUS_DATA = {
        "name": "ail"
       },
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "allumettes de bacon"
       },
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "pain complet"
       }
      ]
@@ -5053,7 +5053,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "406 g",
+       "q": "400 g",
        "name": "haricots blancs cuits"
       },
       {
@@ -5147,11 +5147,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "254 g",
+       "q": "250 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "41 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -5159,7 +5159,7 @@ export const CHEZNOUS_DATA = {
        "name": "ail"
       },
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "yaourt à la grecque"
       },
       {
@@ -5271,11 +5271,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "saumon frais"
       },
       {
-       "q": "224 g",
+       "q": "2",
        "name": "carotte(s)"
       },
       {
@@ -5292,7 +5292,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "92 g",
+       "q": "90 g",
        "name": "riz basmati"
       },
       {
@@ -5389,15 +5389,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "bœuf haché"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
-       "q": "162 g",
+       "q": "1,5",
        "name": "carotte(s)"
       },
       {
@@ -5414,11 +5414,11 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "spaghettis"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "pulpe de tomates"
       },
       {
@@ -5513,15 +5513,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "blanc de poulet"
       },
       {
-       "q": "244 g",
+       "q": "1",
        "name": "courgette(s)"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -5538,7 +5538,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "82 g",
+       "q": "80 g",
        "name": "riz basmati"
       },
       {
@@ -5649,15 +5649,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "bœuf haché"
       },
       {
-       "q": "244 g",
+       "q": "1",
        "name": "courgette(s)"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -5674,11 +5674,11 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "72 g",
+       "q": "70 g",
        "name": "riz basmati"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "coulis de tomates"
       },
       {
@@ -5775,15 +5775,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "bœuf haché"
       },
       {
-       "q": "406 g",
+       "q": "1,5",
        "name": "aubergine(s)"
       },
       {
-       "q": "102 g",
+       "q": "1",
        "name": "oignon(s)"
       },
       {
@@ -5804,11 +5804,11 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "92 g",
+       "q": "90 g",
        "name": "quinoa"
       },
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "pulpe de tomates"
       },
       {
@@ -5904,11 +5904,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "crevettes décortiquées"
       },
       {
-       "q": "306 g",
+       "q": "1,5",
        "name": "courgette(s)"
       },
       {
@@ -5925,7 +5925,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "spaghettis"
       },
       {
@@ -6035,23 +6035,23 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "rôti de bœuf"
       },
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "céleri-rave"
       },
       {
-       "q": "122 g",
+       "q": "120 g",
        "name": "pommes de terre"
       },
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "champignons de Paris"
       },
       {
-       "q": "62 g",
+       "q": "2",
        "name": "échalote(s)"
       },
       {
@@ -6160,7 +6160,7 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "224 g",
+       "q": "225 g",
        "name": "blanc de poulet"
       },
       {
@@ -6172,7 +6172,7 @@ export const CHEZNOUS_DATA = {
        "name": "ail"
       },
       {
-       "q": "40 g",
+       "q": "0,5",
        "name": "oignon(s)"
       }
      ]
@@ -6181,7 +6181,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "162 g",
+       "q": "160 g",
        "name": "orzo (pâtes)"
       },
       {
@@ -6189,7 +6189,7 @@ export const CHEZNOUS_DATA = {
        "name": "parmesan râpé"
       },
       {
-       "q": "16 g",
+       "q": "15 g",
        "name": "pignons de pin"
       },
       {
@@ -6289,11 +6289,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "blanc de poulet (effiloché)"
       },
       {
-       "q": "82 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -6437,11 +6437,11 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "champignons de Paris"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "courge (butternut)"
       },
       {
@@ -6462,11 +6462,11 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "gnocchis de pomme de terre"
       },
       {
-       "q": "204 g",
+       "q": "200 g",
        "name": "tofu soyeux"
       },
       {
@@ -6561,19 +6561,19 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "bœuf haché"
       },
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "courge (butternut)"
       },
       {
-       "q": "306 g",
+       "q": "300 g",
        "name": "pommes de terre"
       },
       {
-       "q": "60 g",
+       "q": "0,5",
        "name": "oignon(s)"
       },
       {
@@ -6594,7 +6594,7 @@ export const CHEZNOUS_DATA = {
      "section": "Placard",
      "items": [
       {
-       "q": "102 g",
+       "q": "100 g",
        "name": "fromage blanc"
       },
       {
@@ -6840,7 +6840,7 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "240 g",
+       "q": "250 g",
        "name": "crevettes décortiquées"
       },
       {
@@ -7509,7 +7509,7 @@ export const CHEZNOUS_DATA = {
        "name": "courge"
       },
       {
-       "q": "200 g",
+       "q": "1",
        "name": "patate douce"
       },
       {
@@ -7637,15 +7637,15 @@ export const CHEZNOUS_DATA = {
      "section": "À Acheter",
      "items": [
       {
-       "q": "244 g",
+       "q": "250 g",
        "name": "steaks hachés"
       },
       {
-       "q": "102 g",
+       "q": "0,5",
        "name": "courgette(s)"
       },
       {
-       "q": "62 g",
+       "q": "0,5",
        "name": "tomate(s)"
       },
       {
