@@ -125,6 +125,17 @@ export function CNMacros({ n, size = 12, gap = 10 }) {
   );
 }
 
+/* Vignette photo d'un plat (liste). Ne rend rien si la recette n'a pas d'image. */
+export function CNThumb({ src, size = 46, radius = 11, alt = '' }) {
+  if (!src) return null;
+  return (
+    <img src={src} alt={alt} loading="lazy" width={size} height={size} style={{
+      width: size, height: size, borderRadius: radius, objectFit: 'cover',
+      flexShrink: 0, background: '#EEE8DC', display: 'block',
+    }} />
+  );
+}
+
 export function CNBelgianDots({ size = 5, gap = 4 }) {
   return (
     <span style={{ display: 'inline-flex', gap, alignItems: 'center' }}>

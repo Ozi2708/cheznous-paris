@@ -1,5 +1,5 @@
 import React from 'react';
-import { CN_FONTS, chMeta, CNIcon } from '../helpers.jsx';
+import { CN_FONTS, chMeta, CNIcon, CNThumb } from '../helpers.jsx';
 import { CHEZNOUS_DATA } from '../data.js';
 
 export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
@@ -37,8 +37,9 @@ export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
               <div key={r.id} style={{
                 display: 'flex', alignItems: 'center', gap: 8, minHeight: 60,
                 background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderLeft: `4px solid ${m.color}`,
-                borderRadius: 12, padding: '10px 10px 10px 14px',
+                borderRadius: 12, padding: '10px 10px 10px 12px',
               }}>
+                {r.image && <CNThumb src={r.image} size={48} radius={10} alt="" />}
                 <button onClick={() => onOpen(r)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                   <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase', color: m.color, marginBottom: 3 }}>{m.label}</span>
                   <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13.5, color: '#1A1918', lineHeight: 1.3 }}>{r.title}</span>

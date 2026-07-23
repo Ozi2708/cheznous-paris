@@ -1,5 +1,5 @@
 import React from 'react';
-import { CN_FONTS, CN_CHAPTERS, chMeta, CNIcon, CNChip, CNMacros } from '../helpers.jsx';
+import { CN_FONTS, CN_CHAPTERS, chMeta, CNIcon, CNChip, CNMacros, CNThumb } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, cnCountActive, CN_DIET_FILTERS } from '../utils.js';
 import { CHEZNOUS_DATA } from '../data.js';
 
@@ -132,14 +132,17 @@ function CNLibraryIndex({ recipes, onOpen, onQuickAdd }) {
               }}
                 onMouseEnter={e => e.currentTarget.style.background = '#FFFFFF'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <button onClick={() => onOpen(r)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: m.color, flexShrink: 0 }}>{String(r.num).padStart(2, '0')}</span>
-                    <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14.5, color: '#1A1918', lineHeight: 1.35, flex: 1 }}>{r.title}</span>
-                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', flexShrink: 0 }}>{r.totalMin}′</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, marginTop: 5, paddingLeft: 28 }}>
-                    <CNMacros n={r.nutrition} size={11} gap={8} />
+                <button onClick={() => onOpen(r)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 11 }}>
+                  {r.image && <CNThumb src={r.image} size={46} radius={11} alt="" />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: m.color, flexShrink: 0 }}>{String(r.num).padStart(2, '0')}</span>
+                      <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14.5, color: '#1A1918', lineHeight: 1.35, flex: 1 }}>{r.title}</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', flexShrink: 0 }}>{r.totalMin}′</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 5, paddingLeft: r.image ? 0 : 28 }}>
+                      <CNMacros n={r.nutrition} size={11} gap={8} />
+                    </div>
                   </div>
                 </button>
                 {onQuickAdd && (

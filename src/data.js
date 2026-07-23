@@ -2321,7 +2321,8 @@ export const CHEZNOUS_DATA = {
     "Poisson"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p18.jpg"
   },
   {
    "id": "p19",
@@ -3991,7 +3992,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf haché"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p31.jpg"
   },
   {
    "id": "p32",
