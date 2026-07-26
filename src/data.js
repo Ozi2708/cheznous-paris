@@ -555,7 +555,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p4.jpg"
   },
   {
    "id": "p5",
@@ -687,7 +688,8 @@ export const CHEZNOUS_DATA = {
     "Poulet"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p5.jpg"
   },
   {
    "id": "p6",
@@ -822,7 +824,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf haché"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p6.jpg"
   },
   {
    "id": "p7",
