@@ -137,7 +137,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
 
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px ${130 + bottomInset}px` }}>
         {recipe.image && (
-          <div style={{ position: 'relative', margin: '-4px -20px 16px', aspectRatio: '1 / 1' }}>
+          <div style={{ position: 'relative', margin: '-4px -20px 16px', aspectRatio: '5 / 4' }}>
             <img src={recipe.image} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 64, background: 'linear-gradient(to top, #FAFAF8, rgba(250,250,248,0))' }}></div>
           </div>
