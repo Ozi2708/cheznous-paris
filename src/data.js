@@ -946,7 +946,8 @@ export const CHEZNOUS_DATA = {
     "Jambon"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p7.jpg"
   },
   {
    "id": "p8",
@@ -1062,7 +1063,8 @@ export const CHEZNOUS_DATA = {
     "Dinde"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p8.jpg"
   },
   {
    "id": "p9",
