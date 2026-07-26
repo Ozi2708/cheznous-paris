@@ -424,7 +424,8 @@ export const CHEZNOUS_DATA = {
     "Végan"
    ],
    "isVegan": true,
-   "isVeggie": true
+   "isVeggie": true,
+   "image": "/plats/p3.jpg"
   },
   {
    "id": "p4",
