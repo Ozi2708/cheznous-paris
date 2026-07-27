@@ -197,7 +197,8 @@ export function CNApp() {
         {screen === 'tab' && (
           <div style={{ height: '100%', position: 'relative' }}>
             {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
-              onFoyer={() => setFoyerOpen(true)} syncStatus={sync.status}
+              onFoyer={() => setFoyerOpen(true)} syncStatus={sync.status} week={week} byId={byId}
+              onGoWeek={() => navigate({ tab: 'week', screen: 'tab' })}
               onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); navigate({ tab: 'library', screen: 'tab' }); }} onGoBatch={() => navigate({ tab: 'batch', screen: 'tab' })} />}
             {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
             {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe}

@@ -1,7 +1,70 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon, CNBelgianDots } from '../helpers.jsx';
-import { cnApplyFilters, CN_EMPTY_FILTERS } from '../utils.js';
+import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS } from '../utils.js';
 import { CHEZNOUS_DATA } from '../data.js';
+
+function CNTodayCard({ week, byId, onOpen, onGoWeek }) {
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const day = CN_DAYS[todayIdx];
+  const hour = new Date().getHours();
+  const slots = [
+    { id: 'midi', label: 'Midi' },
+    { id: 'soir', label: 'Soir' },
+  ];
+  const current = hour < 15 ? 'midi' : 'soir';
+  const entries = slots.map(s => {
+    const key = day + '-' + s.id;
+    const entry = week[key];
+    const r = entry && byId[entry.id];
+    return { ...s, r, done: entry && entry.done };
+  });
+  const anyPlanned = entries.some(e => e.r);
+  if (!anyPlanned) return null;
+
+  return (
+    <div style={{ padding: '0 20px', marginBottom: 22 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA' }}>Aujourd'hui</span>
+        <button onClick={onGoWeek} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#8C8780', textDecoration: 'underline' }}>Voir la semaine</button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {entries.map(e => {
+          if (!e.r) return (
+            <button key={e.id} onClick={onGoWeek} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 50,
+              background: 'transparent', border: '1.5px dashed #D5CEBE', borderRadius: 12, padding: '10px 14px',
+              cursor: 'pointer', textAlign: 'left',
+            }}>
+              <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, flexShrink: 0 }}>{e.label}</span>
+              <CNIcon name="plus" size={13} color="#B8B3AA" />
+              <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#B8B3AA' }}>Rien de prévu</span>
+            </button>
+          );
+          const m = chMeta(e.r.chapter);
+          const isNow = e.id === current;
+          return (
+            <button key={e.id} onClick={() => onOpen(e.r)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 58,
+              background: e.done ? '#F5F2EC' : '#FFFFFF', border: `1.5px solid ${e.done ? '#EEE8DC' : '#E4DDD2'}`,
+              borderLeft: `4px solid ${e.done ? '#D5CEBE' : m.color}`, borderRadius: 12, padding: '9px 12px',
+              cursor: 'pointer', textAlign: 'left', boxShadow: isNow && !e.done ? '0 3px 12px rgba(26,25,24,.08)' : 'none',
+            }}>
+              <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, flexShrink: 0 }}>{e.label}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13.5, color: e.done ? '#B8B3AA' : '#1A1918', lineHeight: 1.3, textDecoration: e.done ? 'line-through' : 'none' }}>{e.r.title}</span>
+                <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{e.r.totalMin}′ · {e.r.nutrition.kcal} kcal</span>
+              </span>
+              {isNow && !e.done && (
+                <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', color: m.color, background: m.soft, borderRadius: 9999, padding: '4px 9px', flexShrink: 0 }}>maintenant</span>
+              )}
+              {e.done && <CNIcon name="check" size={15} color="#B8B3AA" style={{ flexShrink: 0 }} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const CN_MOOD_CARDS = [
   { id: 'rapide', title: 'Rapide ce soir', meta: '≤ 25 min', icon: 'clock', color: '#2E8B85', soft: '#E7F1F0', preset: { maxTime: 25 } },
@@ -35,7 +98,7 @@ function CNMoodCard({ card, count, onClick }) {
   );
 }
 
-export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus }) {
+export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus, week, byId, onGoWeek }) {
   const all = CHEZNOUS_DATA.recipes;
   const daily = all[dayIndex % all.length];
   const dm = chMeta(daily.chapter);
@@ -86,6 +149,8 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
           </button>
         </div>
 
+        {week && byId && <CNTodayCard week={week} byId={byId} onOpen={onOpen} onGoWeek={onGoWeek} />}
+
         <div style={lbl}>Une envie ?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 20px', marginBottom: 26 }}>
           {CN_MOOD_CARDS.map(card => (
@@ -94,7 +159,7 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
           ))}
         </div>
 
-        <div style={lbl}>La recette du jour</div>
+        <div style={lbl}>Suggestion du jour</div>
         <div style={{ padding: '0 20px', marginBottom: 22 }}>
           <button onClick={() => onOpen(daily)} style={{
             width: '100%', textAlign: 'left', cursor: 'pointer', borderRadius: 14, overflow: 'hidden',
