@@ -13,8 +13,11 @@ import { CNFavsScreen } from './screens/FavsScreen.jsx';
 import { CNRecipeScreen } from './screens/RecipeScreen.jsx';
 import { CNCookScreen } from './screens/CookScreen.jsx';
 import { CNMenuGeneratorScreen } from './screens/MenuGeneratorScreen.jsx';
-import { CNShoppingScreen } from './screens/ShoppingScreen.jsx';
 import { CNFoyerSheet } from './screens/FoyerSheet.jsx';
+import { CNCoursesListScreen } from './screens/CoursesListScreen.jsx';
+import { CNCoursesRadarScreen } from './screens/CoursesRadarScreen.jsx';
+import { CNCoursesProductsScreen } from './screens/CoursesProductsScreen.jsx';
+import { CN_COURSES_EMPTY, CN_CART_EMPTY, cnCartLines, cnFinishTrip } from './courses.js';
 import { useFoyerSync } from './sync.js';
 
 const CN_TWEAK_DEFAULTS = { cookTheme: 'olive', cookTextSize: 25 };
@@ -23,43 +26,62 @@ const CN_WEEK_KEY = 'cheznous_week_v1';
 const CN_BATCH_KEY = 'cheznous_batch_v1';
 const CN_FAVS_KEY = 'cheznous_favs_v1';
 const CN_PENDING_KEY = 'cheznous_pending_v1';
-const CN_SHOP_KEY = 'cheznous_shop_v1';
+const CN_COURSES_KEY = 'cheznous_courses_v1';
+const CN_PURCHASES_KEY = 'cheznous_purchases_v1';
+const CN_CART_KEY = 'cheznous_cart_v1';
 function cnLoad(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
 }
+
+/* ── Deux applications dans une seule ──
+   « Cuisine » (les recettes) et « Le Panier » (les courses) ont chacune leur
+   barre d'onglets et leur couleur. Le mode vit dans l'historique : le retour
+   Android ramène du Panier vers la Cuisine sans quitter l'app. */
+const CN_MODES = {
+  cuisine: { accent: '#506741', label: 'Chez nous', icon: 'chef' },
+  courses: { accent: '#B85C38', label: 'Le Panier', icon: 'basket' },
+};
 
 const CN_TABS = [
   { id: 'home', label: 'Accueil', icon: 'home' },
   { id: 'library', label: 'Recettes', icon: 'book' },
   { id: 'week', label: 'Semaine', icon: 'cal' },
-  { id: 'shop', label: 'Courses', icon: 'cart' },
   { id: 'batch', label: 'Batch', icon: 'pot' },
   { id: 'favs', label: 'Favoris', icon: 'heart' },
 ];
+const CN_COURSES_TABS = [
+  { id: 'liste', label: 'Ma liste', icon: 'basket' },
+  { id: 'radar', label: 'À prévoir', icon: 'sparkles' },
+  { id: 'produits', label: 'Mes produits', icon: 'box' },
+];
 
-function CNTabBar({ tab, onTab, weekCount }) {
+function CNTabBar({ mode, tab, onTab, weekCount, cartCount }) {
+  const tabs = mode === 'courses' ? CN_COURSES_TABS : CN_TABS;
+  const accent = CN_MODES[mode].accent;
+  const badge = (t) => (mode === 'courses' ? (t.id === 'liste' ? cartCount : 0) : (t.id === 'week' ? weekCount : 0));
   return (
     <div style={{
       position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 60,
-      display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)',
+      display: 'grid', gridTemplateColumns: `repeat(${tabs.length}, 1fr)`,
       background: 'rgba(250,250,248,.96)', backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       borderTop: '1px solid #E4DDD2',
       paddingTop: 8, paddingLeft: 8, paddingRight: 8,
       paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
     }}>
-      {CN_TABS.map(t => {
+      {tabs.map(t => {
         const active = tab === t.id;
+        const n = badge(t);
         return (
           <button key={t.id} onClick={() => onTab(t.id)} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 2px',
             minHeight: 48, position: 'relative', transition: 'all .15s ease',
           }}>
-            <CNIcon name={t.icon} size={22} color={active ? '#506741' : '#B8B3AA'} strokeWidth={active ? 2.1 : 1.7} />
-            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.04em', color: active ? '#506741' : '#B8B3AA' }}>{t.label}</span>
-            {t.id === 'week' && weekCount > 0 && (
-              <span style={{ position: 'absolute', top: 2, right: 'calc(50% - 19px)', background: '#B89268', color: '#fff', borderRadius: '50%', minWidth: 15, height: 15, fontFamily: CN_FONTS.mono, fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{weekCount}</span>
+            <CNIcon name={t.icon} size={22} color={active ? accent : '#B8B3AA'} strokeWidth={active ? 2.1 : 1.7} />
+            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.04em', color: active ? accent : '#B8B3AA' }}>{t.label}</span>
+            {n > 0 && (
+              <span style={{ position: 'absolute', top: 2, right: 'calc(50% - 19px)', background: '#B89268', color: '#fff', borderRadius: '50%', minWidth: 15, height: 15, fontFamily: CN_FONTS.mono, fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{n}</span>
             )}
           </button>
         );
@@ -68,9 +90,30 @@ function CNTabBar({ tab, onTab, weekCount }) {
   );
 }
 
+/* Bascule d'une app à l'autre — affiche toujours la destination. */
+function CNModeSwitch({ mode, onSwitch, count }) {
+  const target = CN_MODES[mode === 'courses' ? 'cuisine' : 'courses'];
+  return (
+    <button onClick={onSwitch} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer', flexShrink: 0,
+      border: `1.5px solid ${target.accent}`, background: '#FFFFFF', borderRadius: 9999,
+      padding: '0 13px 0 9px', height: 38, transition: 'all .15s ease',
+    }}>
+      <span style={{ width: 22, height: 22, borderRadius: '50%', background: target.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <CNIcon name={target.icon} size={13} color="#FFFFFF" strokeWidth={2} />
+      </span>
+      <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: target.accent, whiteSpace: 'nowrap' }}>{target.label}</span>
+      {count > 0 && (
+        <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, color: '#FFFFFF', background: target.accent, borderRadius: 9999, padding: '1px 6px' }}>{count}</span>
+      )}
+    </button>
+  );
+}
+
 export function CNApp() {
   const [t, setTweak] = useTweaks(CN_TWEAK_DEFAULTS);
   /* Au lancement, on démarre toujours sur l'accueil (pas de restauration de la dernière page). */
+  const [mode, setMode] = React.useState('cuisine');
   const [tab, setTab] = React.useState('home');
   const [screen, setScreen] = React.useState('tab');
   const [recipeId, setRecipeId] = React.useState(null);
@@ -85,21 +128,25 @@ export function CNApp() {
   const [planRecipe, setPlanRecipe] = React.useState(null);
   const [planPendingIdx, setPlanPendingIdx] = React.useState(null);
   const [pending, setPendingRaw] = React.useState(() => cnLoad(CN_PENDING_KEY, []));
-  const [shopChecked, setShopCheckedRaw] = React.useState(() => new Set(cnLoad(CN_SHOP_KEY, [])));
+  const [courses, setCoursesRaw] = React.useState(() => cnLoad(CN_COURSES_KEY, CN_COURSES_EMPTY));
+  const [purchases, setPurchasesRaw] = React.useState(() => cnLoad(CN_PURCHASES_KEY, {}));
+  const [cart, setCartRaw] = React.useState(() => cnLoad(CN_CART_KEY, CN_CART_EMPTY));
   const [foyerOpen, setFoyerOpen] = React.useState(false);
 
   /* ── Synchronisation du foyer ──
      Les mises à jour venues de l'autre téléphone atterrissent ici : on écrit
      l'état local sans le re-pousser (sinon boucle d'écho). */
   const stateRef = React.useRef(null);
-  stateRef.current = { week, pending, favs, batch: batchSel, shop: [...shopChecked] };
+  stateRef.current = { week, pending, favs, batch: batchSel, courses, purchases, cart };
 
   const applyRemote = React.useCallback((key, value) => {
     if (key === 'week') { const v = value || {}; setWeekRaw(v); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(v)); }
     else if (key === 'pending') { const v = value || []; setPendingRaw(v); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(v)); }
     else if (key === 'favs') { const v = value || []; setFavsRaw(v); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(v)); }
     else if (key === 'batch') { const v = value || []; setBatchSelRaw(v); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(v)); }
-    else if (key === 'shop') { const v = value || []; setShopCheckedRaw(new Set(v)); localStorage.setItem(CN_SHOP_KEY, JSON.stringify(v)); }
+    else if (key === 'courses') { const v = value || CN_COURSES_EMPTY; setCoursesRaw(v); localStorage.setItem(CN_COURSES_KEY, JSON.stringify(v)); }
+    else if (key === 'purchases') { const v = value || {}; setPurchasesRaw(v); localStorage.setItem(CN_PURCHASES_KEY, JSON.stringify(v)); }
+    else if (key === 'cart') { const v = value || CN_CART_EMPTY; setCartRaw(v); localStorage.setItem(CN_CART_KEY, JSON.stringify(v)); }
   }, []);
 
   const sync = useFoyerSync({ onRemote: applyRemote, getLocal: () => stateRef.current });
@@ -108,7 +155,9 @@ export function CNApp() {
   const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); sync.push('batch', s); };
   const setFavs = (f) => { setFavsRaw(f); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(f)); sync.push('favs', f); };
   const setPending = (p) => { setPendingRaw(p); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(p)); sync.push('pending', p); };
-  const setShopChecked = (s) => { const a = [...s]; setShopCheckedRaw(s); localStorage.setItem(CN_SHOP_KEY, JSON.stringify(a)); sync.push('shop', a); };
+  const setCourses = (c) => { setCoursesRaw(c); localStorage.setItem(CN_COURSES_KEY, JSON.stringify(c)); sync.push('courses', c); };
+  const setPurchases = (p) => { setPurchasesRaw(p); localStorage.setItem(CN_PURCHASES_KEY, JSON.stringify(p)); sync.push('purchases', p); };
+  const setCart = (c) => { setCartRaw(c); localStorage.setItem(CN_CART_KEY, JSON.stringify(c)); sync.push('cart', c); };
   const toggleFav = (id) => setFavs(favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]);
 
   const showToast = (text) => {
@@ -140,12 +189,27 @@ export function CNApp() {
   const isDark = (screen === 'cook' && t.cookTheme === 'olive') || screen === 'batchcook';
   const weekCount = Object.values(week).filter(e => e && !e.done).length + pending.length;
   const dayIndex = Math.floor(Date.now() / 86400000);
+  const cartCount = React.useMemo(
+    () => cnCartLines(cart, shopRecipes, courses, purchases).total, [cart, shopRecipes, courses, purchases]);
+
+  /* Le geste unique qui nourrit l'apprentissage : tout ce qui est coché est
+     enregistré comme acheté aujourd'hui, et les ajouts libres deviennent des
+     produits suivis. */
+  const finishTrip = () => {
+    const res = cnFinishTrip({ cart, recipes: shopRecipes, courses, purchases });
+    if (!res.count) { showToast('Rien de coché'); return; }
+    setPurchases(res.purchases);
+    setCourses(res.courses);
+    setCart(res.cart);
+    showToast(`${res.count} article${res.count > 1 ? 's' : ''} enregistré${res.count > 1 ? 's' : ''} — rythmes mis à jour`);
+  };
 
   /* ── Navigation branchée sur l'History API ──
      Chaque navigation « en avant » empile une entrée d'historique ; le geste/bouton
      retour d'Android dépile (popstate) au lieu de fermer l'app. */
   const applyLoc = React.useCallback((loc) => {
-    const L = loc || { tab: 'home', screen: 'tab' };
+    const L = loc || { mode: 'cuisine', tab: 'home', screen: 'tab' };
+    setMode(L.mode || 'cuisine');
     setTab(L.tab || 'home');
     setScreen(L.screen || 'tab');
     setRecipeId(L.recipeId ?? null);
@@ -156,7 +220,7 @@ export function CNApp() {
 
   const navigate = (patch, opts = {}) => {
     const next = {
-      tab, screen, recipeId, ctxIds,
+      mode, tab, screen, recipeId, ctxIds,
       plan: planRecipe ? { id: planRecipe.id, pendingIdx: planPendingIdx } : null,
       ...patch,
     };
@@ -165,10 +229,14 @@ export function CNApp() {
     applyLoc(next);
   };
   const goBack = () => window.history.back();
+  const switchMode = () => navigate(mode === 'courses'
+    ? { mode: 'cuisine', tab: 'home', screen: 'tab', recipeId: null }
+    : { mode: 'courses', tab: 'liste', screen: 'tab', recipeId: null });
 
   React.useEffect(() => {
-    window.history.replaceState({ loc: { tab: 'home', screen: 'tab' } }, '');
-    const onPop = (e) => applyLoc(e.state && e.state.loc ? e.state.loc : { tab: 'home', screen: 'tab' });
+    const home = { mode: 'cuisine', tab: 'home', screen: 'tab' };
+    window.history.replaceState({ loc: home }, '');
+    const onPop = (e) => applyLoc(e.state && e.state.loc ? e.state.loc : home);
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, [applyLoc]);
@@ -194,19 +262,46 @@ export function CNApp() {
     }}>
       <div style={{ height: '100%', position: 'relative' }}>
 
-        {screen === 'tab' && (
+        {screen === 'tab' && mode === 'cuisine' && (
           <div style={{ height: '100%', position: 'relative' }}>
             {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
               onFoyer={() => setFoyerOpen(true)} syncStatus={sync.status} week={week} byId={byId}
               onGoWeek={() => navigate({ tab: 'week', screen: 'tab' })}
+              modeSwitch={<CNModeSwitch mode={mode} onSwitch={switchMode} count={cartCount} />}
               onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); navigate({ tab: 'library', screen: 'tab' }); }} onGoBatch={() => navigate({ tab: 'batch', screen: 'tab' })} />}
             {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
             {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe}
               pending={pending} onComposeMenu={() => navigate({ screen: 'menu' })} onPlanPending={planPending} onRemovePending={removePending} />}
-            {tab === 'shop' && <CNShoppingScreen recipes={shopRecipes} checked={shopChecked} setChecked={setShopChecked} showToast={showToast} bottomInset={tabBarH} />}
             {tab === 'batch' && <CNBatchScreen sel={batchSel} setSel={setBatchSel} onOpen={openRecipe} onStart={() => navigate({ screen: 'batchcook' })} />}
             {tab === 'favs' && <CNFavsScreen favs={favs} onToggleFav={toggleFav} onQuickAdd={quickAddWeek} onOpen={(r) => openRecipe(r, favs)} />}
-            <CNTabBar tab={tab} onTab={(tb) => navigate({ tab: tb, screen: 'tab', recipeId: null })} weekCount={weekCount} />
+            <CNTabBar mode={mode} tab={tab} onTab={(tb) => navigate({ tab: tb, screen: 'tab', recipeId: null })} weekCount={weekCount} cartCount={cartCount} />
+          </div>
+        )}
+
+        {screen === 'tab' && mode === 'courses' && (
+          <div style={{ height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div style={{
+              flexShrink: 0,
+              padding: 'var(--screen-top, 34px) 20px 0', display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: 10, background: '#FAFAF8',
+            }}>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                <span style={{ fontFamily: CN_FONTS.serif, fontSize: 21, color: '#1A1918', lineHeight: 1, whiteSpace: 'nowrap' }}>Le <span style={{ fontStyle: 'italic', color: '#B85C38' }}>Panier</span></span>
+                <span style={{ fontFamily: CN_FONTS.body, fontSize: 8.5, letterSpacing: '.22em', textTransform: 'uppercase', color: '#B89268' }}>Chez nous à Paris</span>
+              </span>
+              <CNModeSwitch mode={mode} onSwitch={switchMode} count={weekCount} />
+            </div>
+            <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+              {tab === 'liste' && <CNCoursesListScreen cart={cart} setCart={setCart} recipes={shopRecipes}
+                courses={courses} purchases={purchases} onFinish={finishTrip} showToast={showToast}
+                bottomInset={tabBarH} onGoRadar={() => navigate({ tab: 'radar', screen: 'tab' })} />}
+              {tab === 'radar' && <CNCoursesRadarScreen cart={cart} setCart={setCart} recipes={shopRecipes}
+                courses={courses} setCourses={setCourses} purchases={purchases} showToast={showToast}
+                bottomInset={tabBarH} onGoList={() => navigate({ tab: 'liste', screen: 'tab' })} />}
+              {tab === 'produits' && <CNCoursesProductsScreen courses={courses} setCourses={setCourses}
+                purchases={purchases} setPurchases={setPurchases} showToast={showToast} bottomInset={tabBarH} />}
+            </div>
+            <CNTabBar mode={mode} tab={tab} onTab={(tb) => navigate({ tab: tb, screen: 'tab', recipeId: null })} weekCount={weekCount} cartCount={cartCount} />
           </div>
         )}
 
@@ -221,7 +316,7 @@ export function CNApp() {
               onPlanWeek={(slotKey) => setWeek({ ...week, [slotKey]: { id: recipe.id, done: false } })}
               onBack={goBack}
               onCook={() => { setCookPhase(-1); navigate({ screen: 'cook' }); }} />
-            <CNTabBar tab={tab} onTab={(tb) => navigate({ tab: tb, screen: 'tab', recipeId: null })} weekCount={weekCount} />
+            <CNTabBar mode="cuisine" tab={tab} onTab={(tb) => navigate({ mode: 'cuisine', tab: tb, screen: 'tab', recipeId: null })} weekCount={weekCount} cartCount={cartCount} />
           </div>
         )}
 
@@ -241,7 +336,7 @@ export function CNApp() {
 
         {(((screen === 'recipe' || screen === 'cook') && !recipe) || (screen === 'batchcook' && batchSel.length < 2)) && (
           <div style={{ paddingTop: 140, textAlign: 'center' }}>
-            <button onClick={() => navigate({ tab: 'home', screen: 'tab', recipeId: null })} style={{ border: 'none', background: '#506741', color: '#fff', borderRadius: 9999, padding: '12px 24px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600 }}>Retour à l'accueil</button>
+            <button onClick={() => navigate({ mode: 'cuisine', tab: 'home', screen: 'tab', recipeId: null })} style={{ border: 'none', background: '#506741', color: '#fff', borderRadius: 9999, padding: '12px 24px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600 }}>Retour à l'accueil</button>
           </div>
         )}
 

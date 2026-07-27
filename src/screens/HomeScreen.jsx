@@ -110,7 +110,7 @@ function CNMoodCard({ card, count, onClick }) {
   );
 }
 
-export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus, week, byId, onGoWeek }) {
+export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus, week, byId, onGoWeek, modeSwitch }) {
   const all = CHEZNOUS_DATA.recipes;
   const daily = all[dayIndex % all.length];
   const dm = chMeta(daily.chapter);
@@ -148,7 +148,10 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
               )}
             </span>
           </div>
-          <div style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 24, color: '#1A1918', marginTop: 16, lineHeight: 1.2 }}>Qu'est-ce qu'on mange ?</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 16 }}>
+            <span style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 24, color: '#1A1918', lineHeight: 1.2 }}>Qu'est-ce qu'on mange ?</span>
+            {modeSwitch}
+          </div>
         </div>
 
         <div style={{ padding: '0 20px', marginBottom: 22 }}>

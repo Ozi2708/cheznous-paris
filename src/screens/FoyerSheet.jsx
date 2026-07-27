@@ -73,7 +73,11 @@ export function CNFoyerSheet({ open, onClose, sync, showToast }) {
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,25,24,.4)', opacity: open ? 1 : 0, transition: 'opacity .25s ease' }}></div>
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, background: '#FAFAF8', borderRadius: '24px 24px 0 0',
-        transform: open ? 'translateY(0)' : 'translateY(105%)', transition: 'transform .3s cubic-bezier(.32,.72,.25,1)',
+        transform: open ? 'translateY(0)' : 'translateY(105%)',
+        /* Fermé = invisible : rien de focusable, donc pas de défilement parasite du conteneur. */
+        visibility: open ? 'visible' : 'hidden',
+        transition: open ? 'transform .3s cubic-bezier(.32,.72,.25,1)'
+                         : 'transform .3s cubic-bezier(.32,.72,.25,1), visibility 0s linear .3s',
         padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 18px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
         maxHeight: '86%', overflowY: 'auto',
       }}>
