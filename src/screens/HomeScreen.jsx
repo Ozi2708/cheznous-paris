@@ -3,65 +3,77 @@ import { CN_FONTS, chMeta, CNIcon, CNBelgianDots } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS } from '../utils.js';
 import { CHEZNOUS_DATA } from '../data.js';
 
+/* Avant 14h -> le plat de midi ; après 14h -> celui du soir. Une seule
+   carte, celle du repas qui vient (ou qui vient de passer). */
 function CNTodayCard({ week, byId, onOpen, onGoWeek }) {
   const todayIdx = (new Date().getDay() + 6) % 7;
   const day = CN_DAYS[todayIdx];
   const hour = new Date().getHours();
-  const slots = [
-    { id: 'midi', label: 'Midi' },
-    { id: 'soir', label: 'Soir' },
-  ];
-  const current = hour < 15 ? 'midi' : 'soir';
-  const entries = slots.map(s => {
-    const key = day + '-' + s.id;
-    const entry = week[key];
-    const r = entry && byId[entry.id];
-    return { ...s, r, done: entry && entry.done };
-  });
-  const anyPlanned = entries.some(e => e.r);
-  if (!anyPlanned) return null;
+  const slot = hour < 14 ? { id: 'midi', label: 'Ce midi' } : { id: 'soir', label: 'Ce soir' };
+  const entry = week[day + '-' + slot.id];
+  const r = entry && byId[entry.id];
 
+  if (!r) {
+    return (
+      <div style={{ padding: '0 20px', marginBottom: 22 }}>
+        <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 10 }}>{slot.label}</div>
+        <button onClick={onGoWeek} style={{
+          display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 60,
+          background: 'transparent', border: '1.5px dashed #D5CEBE', borderRadius: 14, padding: '14px 16px',
+          cursor: 'pointer', textAlign: 'left',
+        }}>
+          <span style={{ width: 34, height: 34, borderRadius: '50%', background: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <CNIcon name="plus" size={16} color="#B89268" />
+          </span>
+          <span style={{ fontFamily: CN_FONTS.body, fontSize: 13.5, color: '#8C8780' }}>Rien de prévu — planifier la semaine</span>
+        </button>
+      </div>
+    );
+  }
+
+  const m = chMeta(r.chapter);
   return (
     <div style={{ padding: '0 20px', marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA' }}>Aujourd'hui</span>
+        <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA' }}>{slot.label}</span>
         <button onClick={onGoWeek} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#8C8780', textDecoration: 'underline' }}>Voir la semaine</button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {entries.map(e => {
-          if (!e.r) return (
-            <button key={e.id} onClick={onGoWeek} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 50,
-              background: 'transparent', border: '1.5px dashed #D5CEBE', borderRadius: 12, padding: '10px 14px',
-              cursor: 'pointer', textAlign: 'left',
-            }}>
-              <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, flexShrink: 0 }}>{e.label}</span>
-              <CNIcon name="plus" size={13} color="#B8B3AA" />
-              <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#B8B3AA' }}>Rien de prévu</span>
-            </button>
-          );
-          const m = chMeta(e.r.chapter);
-          const isNow = e.id === current;
-          return (
-            <button key={e.id} onClick={() => onOpen(e.r)} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 58,
-              background: e.done ? '#F5F2EC' : '#FFFFFF', border: `1.5px solid ${e.done ? '#EEE8DC' : '#E4DDD2'}`,
-              borderLeft: `4px solid ${e.done ? '#D5CEBE' : m.color}`, borderRadius: 12, padding: '9px 12px',
-              cursor: 'pointer', textAlign: 'left', boxShadow: isNow && !e.done ? '0 3px 12px rgba(26,25,24,.08)' : 'none',
-            }}>
-              <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, flexShrink: 0 }}>{e.label}</span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13.5, color: e.done ? '#B8B3AA' : '#1A1918', lineHeight: 1.3, textDecoration: e.done ? 'line-through' : 'none' }}>{e.r.title}</span>
-                <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{e.r.totalMin}′ · {e.r.nutrition.kcal} kcal</span>
-              </span>
-              {isNow && !e.done && (
-                <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', color: m.color, background: m.soft, borderRadius: 9999, padding: '4px 9px', flexShrink: 0 }}>maintenant</span>
-              )}
-              {e.done && <CNIcon name="check" size={15} color="#B8B3AA" style={{ flexShrink: 0 }} />}
-            </button>
-          );
-        })}
-      </div>
+      <button onClick={() => onOpen(r)} style={{
+        width: '100%', textAlign: 'left', cursor: 'pointer', borderRadius: 16, border: 'none', padding: 0,
+        position: 'relative', overflow: 'hidden', display: 'block',
+        background: r.image ? '#1A1918' : m.color,
+        transition: 'transform .15s ease, box-shadow .15s ease', boxShadow: '0 6px 20px rgba(26,25,24,.12)',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 26px rgba(26,25,24,.18)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(26,25,24,.12)'; }}>
+        {r.image && (
+          <img src={r.image} alt="" style={{
+            width: '100%', height: 190, objectFit: 'cover', display: 'block',
+            opacity: entry.done ? .5 : .92,
+          }} />
+        )}
+        <div style={{
+          position: r.image ? 'absolute' : 'static', left: 0, right: 0, bottom: 0,
+          height: r.image ? '72%' : 'auto',
+          background: r.image
+            ? 'linear-gradient(to top, rgba(10,9,7,.92) 0%, rgba(10,9,7,.55) 45%, rgba(10,9,7,0) 100%)'
+            : 'transparent',
+          padding: r.image ? '0 18px 16px' : '20px 20px 18px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 8,
+        }}>
+          <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.13em', textTransform: 'uppercase', color: r.image ? 'rgba(250,250,248,.8)' : 'rgba(250,250,248,.75)' }}>
+            {m.label} · {r.totalMin} min
+          </span>
+          <span style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 22, lineHeight: 1.15, color: '#FAFAF8' }}>{r.title}</span>
+          <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 12, color: '#DCBE98' }}>{r.nutrition.kcal} kcal</span>
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 12, color: 'rgba(250,250,248,.85)' }}>{r.nutrition.proteines}g prot</span>
+            <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#FAFAF8' }}>
+              {entry.done ? 'Déjà cuisiné' : 'Voir la recette'} <CNIcon name={entry.done ? 'check' : 'arrowR'} size={15} color="#FAFAF8" />
+            </span>
+          </span>
+        </div>
+      </button>
     </div>
   );
 }
