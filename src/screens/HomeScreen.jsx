@@ -35,7 +35,7 @@ function CNMoodCard({ card, count, onClick }) {
   );
 }
 
-export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex }) {
+export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus }) {
   const all = CHEZNOUS_DATA.recipes;
   const daily = all[dayIndex % all.length];
   const dm = chMeta(daily.chapter);
@@ -58,7 +58,20 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
               <span style={{ fontFamily: CN_FONTS.serif, fontSize: 24, color: '#1A1918', lineHeight: 1, whiteSpace: 'nowrap' }}>Chez nous <span style={{ fontStyle: 'italic', color: '#506741' }}>à Paris</span></span>
               <span style={{ fontFamily: CN_FONTS.body, fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: '#B89268' }}>By Manon &amp; Valentin</span>
             </div>
-            <CNBelgianDots />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+              <CNBelgianDots />
+              {onFoyer && (
+                <button onClick={onFoyer} aria-label="Mon foyer" title="Mon foyer" style={{
+                  width: 38, height: 38, borderRadius: 9999, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', flexShrink: 0,
+                }}>
+                  <CNIcon name="users" size={18} color="#506741" />
+                  {syncStatus === 'live' && (
+                    <span style={{ position: 'absolute', top: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#506741', border: '1.5px solid #FAFAF8' }}></span>
+                  )}
+                </button>
+              )}
+            </span>
           </div>
           <div style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 24, color: '#1A1918', marginTop: 16, lineHeight: 1.2 }}>Qu'est-ce qu'on mange ?</div>
         </div>

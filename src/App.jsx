@@ -14,6 +14,8 @@ import { CNRecipeScreen } from './screens/RecipeScreen.jsx';
 import { CNCookScreen } from './screens/CookScreen.jsx';
 import { CNMenuGeneratorScreen } from './screens/MenuGeneratorScreen.jsx';
 import { CNShoppingScreen } from './screens/ShoppingScreen.jsx';
+import { CNFoyerSheet } from './screens/FoyerSheet.jsx';
+import { useFoyerSync } from './sync.js';
 
 const CN_TWEAK_DEFAULTS = { cookTheme: 'olive', cookTextSize: 25 };
 
@@ -84,12 +86,29 @@ export function CNApp() {
   const [planPendingIdx, setPlanPendingIdx] = React.useState(null);
   const [pending, setPendingRaw] = React.useState(() => cnLoad(CN_PENDING_KEY, []));
   const [shopChecked, setShopCheckedRaw] = React.useState(() => new Set(cnLoad(CN_SHOP_KEY, [])));
+  const [foyerOpen, setFoyerOpen] = React.useState(false);
 
-  const setWeek = (w) => { setWeekRaw(w); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(w)); };
-  const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); };
-  const setFavs = (f) => { setFavsRaw(f); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(f)); };
-  const setPending = (p) => { setPendingRaw(p); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(p)); };
-  const setShopChecked = (s) => { setShopCheckedRaw(s); localStorage.setItem(CN_SHOP_KEY, JSON.stringify([...s])); };
+  /* ── Synchronisation du foyer ──
+     Les mises à jour venues de l'autre téléphone atterrissent ici : on écrit
+     l'état local sans le re-pousser (sinon boucle d'écho). */
+  const stateRef = React.useRef(null);
+  stateRef.current = { week, pending, favs, batch: batchSel, shop: [...shopChecked] };
+
+  const applyRemote = React.useCallback((key, value) => {
+    if (key === 'week') { const v = value || {}; setWeekRaw(v); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(v)); }
+    else if (key === 'pending') { const v = value || []; setPendingRaw(v); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(v)); }
+    else if (key === 'favs') { const v = value || []; setFavsRaw(v); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(v)); }
+    else if (key === 'batch') { const v = value || []; setBatchSelRaw(v); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(v)); }
+    else if (key === 'shop') { const v = value || []; setShopCheckedRaw(new Set(v)); localStorage.setItem(CN_SHOP_KEY, JSON.stringify(v)); }
+  }, []);
+
+  const sync = useFoyerSync({ onRemote: applyRemote, getLocal: () => stateRef.current });
+
+  const setWeek = (w) => { setWeekRaw(w); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(w)); sync.push('week', w); };
+  const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); sync.push('batch', s); };
+  const setFavs = (f) => { setFavsRaw(f); localStorage.setItem(CN_FAVS_KEY, JSON.stringify(f)); sync.push('favs', f); };
+  const setPending = (p) => { setPendingRaw(p); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(p)); sync.push('pending', p); };
+  const setShopChecked = (s) => { const a = [...s]; setShopCheckedRaw(s); localStorage.setItem(CN_SHOP_KEY, JSON.stringify(a)); sync.push('shop', a); };
   const toggleFav = (id) => setFavs(favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]);
 
   const showToast = (text) => {
@@ -178,6 +197,7 @@ export function CNApp() {
         {screen === 'tab' && (
           <div style={{ height: '100%', position: 'relative' }}>
             {tab === 'home' && <CNHomeScreen dayIndex={dayIndex} onPreset={applyPreset} onOpen={openRecipe}
+              onFoyer={() => setFoyerOpen(true)} syncStatus={sync.status}
               onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); navigate({ tab: 'library', screen: 'tab' }); }} onGoBatch={() => navigate({ tab: 'batch', screen: 'tab' })} />}
             {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
             {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe}
@@ -246,6 +266,8 @@ export function CNApp() {
             const title = planRecipe.title.length > 24 ? planRecipe.title.slice(0, 23) + '…' : planRecipe.title;
             showToast(`${title} → ${label}`);
           }} />
+
+        <CNFoyerSheet open={foyerOpen} onClose={() => setFoyerOpen(false)} sync={sync} showToast={showToast} />
       </div>
 
       <TweaksPanel>
