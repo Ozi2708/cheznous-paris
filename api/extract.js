@@ -6,6 +6,7 @@ import { CN_RECIPE_SCHEMA, CN_SYSTEM_PROMPT } from './recipe-schema.js';
 export const maxDuration = 60;
 
 const MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+export const MAX_PAGES = 6;
 
 /* Messages destinés à l'écran, pas au journal : l'utilisateur doit savoir
    quoi faire, pas ce qu'a répondu l'API. */
@@ -30,9 +31,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "L'extraction n'est pas configurée sur ce déploiement (clé absente)." });
   }
 
-  const { image, mediaType } = req.body || {};
-  if (!image) return res.status(400).json({ error: 'Aucune image reçue.' });
-  if (!MEDIA_TYPES.includes(mediaType)) return res.status(400).json({ error: 'Format d’image non pris en charge.' });
+  /* `images` est la forme courante (une recette peut tenir sur plusieurs
+     pages) ; `image` reste accepté pour les clients déjà installés. */
+  const body = req.body || {};
+  const pages = Array.isArray(body.images) && body.images.length
+    ? body.images
+    : (body.image ? [{ data: body.image, mediaType: body.mediaType }] : []);
+
+  if (!pages.length) return res.status(400).json({ error: 'Aucune image reçue.' });
+  if (pages.length > MAX_PAGES) return res.status(400).json({ error: `${MAX_PAGES} pages au maximum pour une recette.` });
+  if (pages.some(p => !p || !p.data || !MEDIA_TYPES.includes(p.mediaType))) {
+    return res.status(400).json({ error: 'Format d’image non pris en charge.' });
+  }
 
   const client = new Anthropic({ apiKey });
 
@@ -50,8 +60,16 @@ export default async function handler(req, res) {
       messages: [{
         role: 'user',
         content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-          { type: 'text', text: 'Transcris cette recette dans le format de la maison.' },
+          ...pages.flatMap((p, i) => [
+            ...(pages.length > 1 ? [{ type: 'text', text: `— Page ${i + 1} sur ${pages.length} —` }] : []),
+            { type: 'image', source: { type: 'base64', media_type: p.mediaType, data: p.data } },
+          ]),
+          {
+            type: 'text',
+            text: pages.length > 1
+              ? `Ces ${pages.length} images sont les pages successives d'une seule et même recette. Recoupe-les en une fiche unique : les ingrédients et les étapes peuvent être répartis entre les pages, et certains éléments peuvent apparaître deux fois — ne les duplique pas. Transcris le tout dans le format de la maison.`
+              : 'Transcris cette recette dans le format de la maison.',
+          },
         ],
       }],
     });

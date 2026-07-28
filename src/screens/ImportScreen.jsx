@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, CN_CHAPTERS, chMeta, CNIcon } from '../helpers.jsx';
 import { CNRecipeScreen } from './RecipeScreen.jsx';
-import { cnExtractRecipe, cnNormalizeRecipe, cnValidateRecipe } from '../recipe-import.js';
+import { cnExtractRecipe, cnNormalizeRecipe, cnValidateRecipe, CN_MAX_PAGES } from '../recipe-import.js';
 
 /* ── Ajouter une recette en photo ──
    Trois temps : capture → extraction → validation. L'aperçu de validation
@@ -29,90 +29,166 @@ function CNTopBar({ onBack, title, right }) {
   );
 }
 
-/* ── 1. Capture ── */
-function CNCaptureStep({ onFile, error, onRetry }) {
+/* ── 1. Capture ──
+   Une recette peut s'étaler sur plusieurs pages : on collecte les images
+   dans l'ordre, puis on les envoie ensemble en une seule analyse. */
+function CNCaptureStep({ pages, onAdd, onRemove, onAnalyze, error, bottomInset }) {
   const camera = React.useRef(null);
   const gallery = React.useRef(null);
-  const pick = (e) => { const f = e.target.files && e.target.files[0]; if (f) onFile(f); e.target.value = ''; };
+  const room = CN_MAX_PAGES - pages.length;
+  const pick = (e) => { if (e.target.files && e.target.files.length) onAdd(e.target.files); e.target.value = ''; };
+
+  const tile = {
+    position: 'relative', aspectRatio: '3 / 4', borderRadius: 12, overflow: 'hidden',
+    background: '#EEE8DC', border: '1.5px solid #E4DDD2',
+  };
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 20px 40px' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
       <input ref={camera} type="file" accept="image/*" capture="environment" onChange={pick} style={{ display: 'none' }} />
-      <input ref={gallery} type="file" accept="image/*" onChange={pick} style={{ display: 'none' }} />
+      <input ref={gallery} type="file" accept="image/*" multiple onChange={pick} style={{ display: 'none' }} />
 
-      {error && (
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `0 20px calc(${pages.length ? 110 : 40}px + ${bottomInset})` }}>
+        {error && (
+          <div style={{
+            background: '#FBEDE7', border: '1.5px solid #EBC3B2', borderRadius: 12, padding: '13px 15px', marginBottom: 18,
+            fontFamily: CN_FONTS.body, fontSize: 13, color: '#8E3B1C', lineHeight: 1.45,
+          }}>{error}</div>
+        )}
+
+        {pages.length === 0 ? (
+          <>
+            <div style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 21, color: '#1A1918', lineHeight: 1.3, marginBottom: 8 }}>
+              Photographiez une recette, elle se met au format de la maison.
+            </div>
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: 13, color: '#8C8780', lineHeight: 1.6, marginBottom: 24 }}>
+              Une page de livre, une capture d’écran, une fiche manuscrite. Si la recette tient sur plusieurs pages, ajoutez-les toutes — elles ne feront qu’une seule fiche.
+            </div>
+
+            <button onClick={() => camera.current.click()} style={{
+              width: '100%', height: 56, borderRadius: 9999, border: 'none', background: '#506741', color: '#FFFFFF',
+              cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10,
+              boxShadow: '0 6px 20px rgba(80,103,65,.28)',
+            }}>
+              <CNIcon name="camera" size={20} color="#FFFFFF" /> Prendre une photo
+            </button>
+            <button onClick={() => gallery.current.click()} style={{
+              width: '100%', height: 52, borderRadius: 9999, border: '1.5px solid #D5CEBE', background: '#FFFFFF',
+              cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14, color: '#3C3830',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            }}>
+              <CNIcon name="image" size={19} color="#8C8780" /> Choisir dans la galerie
+            </button>
+
+            <div style={{ marginTop: 30, borderTop: '1px solid #E4DDD2', paddingTop: 16 }}>
+              <div style={{ ...label, marginBottom: 10 }}>Pour un bon résultat</div>
+              {[
+                'Cadrez la recette entière : ingrédients et préparation.',
+                'Évitez les reflets et les pages trop courbées.',
+                'Les quantités sont converties pour 2 personnes.',
+              ].map((t, i) => (
+                <div key={i} style={{ display: 'flex', gap: 9, marginBottom: 8 }}>
+                  <span style={{ color: '#B89268', fontFamily: CN_FONTS.mono, fontSize: 12, flexShrink: 0 }}>{i + 1}.</span>
+                  <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8C8780', lineHeight: 1.5 }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={label}>{pages.length} page{pages.length > 1 ? 's' : ''}</span>
+              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, color: '#B8B3AA' }}>
+                {room > 0 ? `${room} de plus possible${room > 1 ? 's' : ''}` : 'maximum atteint'}
+              </span>
+            </div>
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, fontStyle: 'italic', color: '#8C8780', marginBottom: 14, lineHeight: 1.5 }}>
+              Elles seront lues dans cet ordre et fusionnées en une seule recette.
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              {pages.map((p, i) => (
+                <div key={p.url} style={tile}>
+                  <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <span style={{
+                    position: 'absolute', top: 6, left: 6, background: 'rgba(26,25,24,.72)', color: '#FAFAF8',
+                    borderRadius: 9999, minWidth: 20, height: 20, padding: '0 6px',
+                    fontFamily: CN_FONTS.mono, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{i + 1}</span>
+                  <button onClick={() => onRemove(i)} aria-label={`Retirer la page ${i + 1}`} style={{
+                    position: 'absolute', top: 4, right: 4, width: 26, height: 26, borderRadius: '50%',
+                    border: 'none', background: 'rgba(26,25,24,.72)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                  }}><CNIcon name="x" size={13} color="#FAFAF8" strokeWidth={2.4} /></button>
+                </div>
+              ))}
+
+              {room > 0 && (
+                <button onClick={() => camera.current.click()} aria-label="Ajouter une page" style={{
+                  ...tile, background: '#FAFAF8', borderStyle: 'dashed', borderColor: '#D5CEBE', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                  <CNIcon name="plus" size={22} color="#B89268" />
+                  <span style={{ fontFamily: CN_FONTS.body, fontSize: 10.5, fontWeight: 600, color: '#8C8780' }}>Page {pages.length + 1}</span>
+                </button>
+              )}
+            </div>
+
+            {room > 0 && (
+              <button onClick={() => gallery.current.click()} style={{
+                marginTop: 14, border: 'none', background: 'none', padding: 0, cursor: 'pointer',
+                fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#506741', textDecoration: 'underline',
+              }}>Ajouter depuis la galerie</button>
+            )}
+          </>
+        )}
+      </div>
+
+      {pages.length > 0 && (
         <div style={{
-          background: '#FBEDE7', border: '1.5px solid #EBC3B2', borderRadius: 12, padding: '13px 15px', marginBottom: 18,
-          fontFamily: CN_FONTS.body, fontSize: 13, color: '#8E3B1C', lineHeight: 1.45,
+          position: 'absolute', left: 0, right: 0, bottom: 0, padding: '12px 20px 16px', zIndex: 55,
+          background: 'linear-gradient(to top, #FAFAF8 72%, rgba(250,250,248,0))',
         }}>
-          {error}
-          {onRetry && (
-            <button onClick={onRetry} style={{
-              display: 'block', marginTop: 8, border: 'none', background: 'none', padding: 0, cursor: 'pointer',
-              fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#B85C38', textDecoration: 'underline',
-            }}>Réessayer avec la même photo</button>
-          )}
+          <button onClick={onAnalyze} style={{
+            width: '100%', height: 54, borderRadius: 9999, border: 'none', background: '#506741', color: '#FFFFFF',
+            cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            boxShadow: '0 6px 20px rgba(80,103,65,.28)',
+          }}>
+            <CNIcon name="sparkles" size={19} color="#FFFFFF" />
+            Analyser {pages.length > 1 ? `les ${pages.length} pages` : 'la recette'}
+          </button>
         </div>
       )}
-
-      <div style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 21, color: '#1A1918', lineHeight: 1.3, marginBottom: 8 }}>
-        Photographiez une recette, elle se met au format de la maison.
-      </div>
-      <div style={{ fontFamily: CN_FONTS.body, fontSize: 13, color: '#8C8780', lineHeight: 1.6, marginBottom: 24 }}>
-        Une page de livre, une capture d’écran, une fiche manuscrite. Vous relirez tout avant l’enregistrement.
-      </div>
-
-      <button onClick={() => camera.current.click()} style={{
-        width: '100%', height: 56, borderRadius: 9999, border: 'none', background: '#506741', color: '#FFFFFF',
-        cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10,
-        boxShadow: '0 6px 20px rgba(80,103,65,.28)',
-      }}>
-        <CNIcon name="camera" size={20} color="#FFFFFF" /> Prendre une photo
-      </button>
-      <button onClick={() => gallery.current.click()} style={{
-        width: '100%', height: 52, borderRadius: 9999, border: '1.5px solid #D5CEBE', background: '#FFFFFF',
-        cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14, color: '#3C3830',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-      }}>
-        <CNIcon name="image" size={19} color="#8C8780" /> Choisir dans la galerie
-      </button>
-
-      <div style={{ marginTop: 30, borderTop: '1px solid #E4DDD2', paddingTop: 16 }}>
-        <div style={{ ...label, marginBottom: 10 }}>Pour un bon résultat</div>
-        {[
-          'Cadrez la recette entière : ingrédients et préparation.',
-          'Évitez les reflets et les pages trop courbées.',
-          'Les quantités sont converties pour 2 personnes.',
-        ].map((t, i) => (
-          <div key={i} style={{ display: 'flex', gap: 9, marginBottom: 8 }}>
-            <span style={{ color: '#B89268', fontFamily: CN_FONTS.mono, fontSize: 12, flexShrink: 0 }}>{i + 1}.</span>
-            <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8C8780', lineHeight: 1.5 }}>{t}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 /* ── 2. Extraction ── */
-function CNWorkingStep({ preview }) {
+function CNWorkingStep({ pages }) {
   const [dots, setDots] = React.useState(1);
   React.useEffect(() => { const iv = setInterval(() => setDots(d => (d % 3) + 1), 500); return () => clearInterval(iv); }, []);
+  const shown = pages.slice(0, 3);
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px 60px', gap: 22 }}>
-      {preview && (
-        <img src={preview} alt="" style={{
-          width: 168, height: 168, objectFit: 'cover', borderRadius: 18,
-          boxShadow: '0 10px 30px rgba(26,25,24,.18)', opacity: .85,
-        }} />
-      )}
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 30px 60px', gap: 24 }}>
+      {/* Les pages en éventail : on voit ce qui est en train d'être lu. */}
+      <div style={{ position: 'relative', width: 168, height: 190 }}>
+        {shown.map((p, i) => (
+          <img key={p.url} src={p.url} alt="" style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 16,
+            boxShadow: '0 10px 30px rgba(26,25,24,.18)', opacity: .9,
+            transform: `rotate(${(i - (shown.length - 1) / 2) * 6}deg) translateY(${i * 2}px)`,
+            zIndex: shown.length - i,
+          }} />
+        ))}
+      </div>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: CN_FONTS.serif, fontStyle: 'italic', fontSize: 20, color: '#1A1918' }}>
-          Lecture de la recette{'.'.repeat(dots)}
+          Lecture {pages.length > 1 ? `des ${pages.length} pages` : 'de la recette'}{'.'.repeat(dots)}
         </div>
         <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8C8780', marginTop: 6 }}>
-          Une quinzaine de secondes. Ne fermez pas l’app.
+          {pages.length > 2 ? 'Une trentaine de secondes.' : 'Une quinzaine de secondes.'} Ne fermez pas l’app.
         </div>
       </div>
     </div>
@@ -308,18 +384,37 @@ function CNReviewStep({ draft, setDraft, onSave, onDiscard, bottomInset }) {
 
 export function CNImportScreen({ onBack, onSave, showToast, bottomInset = 0 }) {
   const [phase, setPhase] = React.useState('capture');   // capture | working | review
+  const [pages, setPages] = React.useState([]);          // [{ file, url }]
   const [draft, setDraft] = React.useState(null);
-  const [preview, setPreview] = React.useState(null);
   const [error, setError] = React.useState(null);
-  const lastFile = React.useRef(null);
 
-  const run = async (file) => {
-    lastFile.current = file;
+  /* Les aperçus sont des URL d'objet : il faut les libérer, sinon les images
+     restent en mémoire tant que l'onglet vit. */
+  const pagesRef = React.useRef(pages);
+  pagesRef.current = pages;
+  React.useEffect(() => () => pagesRef.current.forEach(p => URL.revokeObjectURL(p.url)), []);
+
+  const addPages = (fileList) => {
+    setError(null);
+    const room = CN_MAX_PAGES - pages.length;
+    const added = Array.from(fileList).slice(0, room).map(f => ({ file: f, url: URL.createObjectURL(f) }));
+    if (Array.from(fileList).length > room) {
+      setError(`Six pages au maximum pour une recette — les suivantes ont été ignorées.`);
+    }
+    setPages([...pages, ...added]);
+  };
+  const removePage = (i) => {
+    URL.revokeObjectURL(pages[i].url);
+    setPages(pages.filter((_, j) => j !== i));
+  };
+  const clearPages = () => { pages.forEach(p => URL.revokeObjectURL(p.url)); setPages([]); };
+
+  const run = async () => {
+    if (!pages.length) return;
     setError(null);
     setPhase('working');
     try {
-      const { recipe, preview: p } = await cnExtractRecipe(file);
-      setPreview(p);
+      const { recipe } = await cnExtractRecipe(pages.map(p => p.file));
       setDraft(recipe);
       setPhase('review');
     } catch (e) {
@@ -346,11 +441,14 @@ export function CNImportScreen({ onBack, onSave, showToast, bottomInset = 0 }) {
         <CNTopBar onBack={onBack} title={phase === 'review' ? 'Vérifier la recette' : 'Ajouter une recette'} />
       </div>
 
-      {phase === 'capture' && <CNCaptureStep onFile={run} error={error} onRetry={lastFile.current ? () => run(lastFile.current) : null} />}
-      {phase === 'working' && <CNWorkingStep preview={preview} />}
+      {phase === 'capture' && (
+        <CNCaptureStep pages={pages} onAdd={addPages} onRemove={removePage} onAnalyze={run}
+          error={error} bottomInset={bottomInset} />
+      )}
+      {phase === 'working' && <CNWorkingStep pages={pages} />}
       {phase === 'review' && draft && (
         <CNReviewStep draft={draft} setDraft={updateDraft} onSave={save} bottomInset={bottomInset}
-          onDiscard={() => { setDraft(null); setPreview(null); setPhase('capture'); }} />
+          onDiscard={() => { setDraft(null); clearPages(); setPhase('capture'); }} />
       )}
     </div>
   );

@@ -131,6 +131,8 @@ Nutrition — par personne. Si le document donne les valeurs, reprends-les et me
 
 Chapitre — Low-Carb sous 30 g de glucides, High-Carb au-dessus de 60 g, Post Training pour les plats riches en protéines destinés à la récupération. Petit Déjeuner et Encas seulement si c'en est un.
 
+Plusieurs pages — quand on te donne plusieurs images, ce sont les pages successives d'une même recette, dans l'ordre. Elles produisent une seule fiche. Les ingrédients et les étapes peuvent être répartis entre les pages ; un titre, une photo ou un tableau nutritionnel peuvent réapparaître d'une page à l'autre. Fusionne sans dupliquer, et numérote les étapes dans l'ordre de lecture.
+
 Ne transcris que ce que tu vois. Si le document est illisible ou n'est pas une recette, ne fabrique rien.
 
 EXEMPLE DE SORTIE ATTENDUE

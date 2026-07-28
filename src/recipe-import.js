@@ -141,10 +141,13 @@ export function cnValidateRecipe(r) {
   return errs;
 }
 
-/* ── Préparation de la photo ──
+/* ── Préparation des photos ──
    Redimensionne et recompresse avant l'envoi : sous la limite de corps de
    requête de Vercel, moins de jetons d'image, et extraction plus rapide.
    2000 px sur le grand côté garde un texte de recette parfaitement lisible. */
+export const CN_MAX_PAGES = 6;
+const CN_PAYLOAD_BUDGET = 3.2 * 1024 * 1024;   // marge sous la limite de 4,5 Mo
+
 export function cnPrepareImage(file, maxEdge = 2000, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -167,17 +170,35 @@ export function cnPrepareImage(file, maxEdge = 2000, quality = 0.85) {
   });
 }
 
-export async function cnExtractRecipe(file) {
-  const { base64, mediaType, preview } = await cnPrepareImage(file);
+/* Plusieurs pages tiennent rarement dans le budget à pleine résolution : on
+   réduit par paliers jusqu'à passer, plutôt que de laisser la requête être
+   rejetée. Un texte de recette reste lisible bien en dessous de 2000 px. */
+export async function cnPrepareImages(files) {
+  const list = Array.from(files).slice(0, CN_MAX_PAGES);
+  let maxEdge = list.length > 2 ? 1700 : 2000;
+  let quality = 0.85;
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const pages = await Promise.all(list.map(f => cnPrepareImage(f, maxEdge, quality)));
+    const total = pages.reduce((s, p) => s + p.base64.length, 0);
+    if (total <= CN_PAYLOAD_BUDGET || attempt === 3) return pages;
+    maxEdge = Math.round(maxEdge * 0.8);
+    quality = Math.max(0.6, quality - 0.05);
+  }
+}
+
+export async function cnExtractRecipe(files) {
+  const input = Array.isArray(files) || files instanceof FileList ? files : [files];
+  const pages = await cnPrepareImages(input);
   const res = await fetch('/api/extract', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, mediaType }),
+    body: JSON.stringify({ images: pages.map(p => ({ data: p.base64, mediaType: p.mediaType })) }),
   });
   let payload = null;
   try { payload = await res.json(); } catch (e) { /* réponse non JSON */ }
   if (!res.ok || !payload || !payload.recipe) {
     throw new Error((payload && payload.error) || "L'extraction a échoué. Réessayez.");
   }
-  return { recipe: cnNormalizeRecipe(payload.recipe), preview, usage: payload.usage };
+  return { recipe: cnNormalizeRecipe(payload.recipe), preview: pages[0].preview, usage: payload.usage };
 }
