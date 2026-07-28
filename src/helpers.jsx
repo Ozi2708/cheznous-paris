@@ -58,6 +58,8 @@ export function CNIcon({ name, size = 20, color = 'currentColor', strokeWidth = 
     box: <><path d="M3.5 7.6 12 3.5l8.5 4.1v8.8L12 20.5l-8.5-4.1V7.6z"/><path d="m3.5 7.6 8.5 4.1 8.5-4.1M12 11.7v8.8"/></>,
     basket: <><path d="M3.5 9.5h17l-1.6 8.3a2 2 0 0 1-2 1.7H7.1a2 2 0 0 1-2-1.7L3.5 9.5z"/><path d="M8.5 9.5 11 4M15.5 9.5 13 4M9.8 13v3M14.2 13v3"/></>,
     chef: <><path d="M7 13.5A3.8 3.8 0 0 1 8.4 6a3.9 3.9 0 0 1 7.2 0A3.8 3.8 0 0 1 17 13.5v1H7v-1z"/><path d="M7 17.5h10v1.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 7 19v-1.5z"/></>,
+    camera: <><path d="M3 8.5a2 2 0 0 1 2-2h2.2l1.3-2h6.9l1.3 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/><circle cx="12" cy="13" r="3.6"/></>,
+    image: <><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="m4 17 4.8-4.2a1.6 1.6 0 0 1 2.1 0L16 17M14 14.2l1.6-1.4a1.6 1.6 0 0 1 2.1 0L20 15"/></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || 'none'} stroke={color}

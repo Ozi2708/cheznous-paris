@@ -2,10 +2,11 @@ import React from 'react';
 import { CN_FONTS, CNIcon, CNBelgianDots, ingredientsForStep } from '../helpers.jsx';
 import { cnCookTheme, cnBuildPlan, cnConservation, cnConsolidate, cnIngKey } from '../utils.js';
 import { useCNTimers, CNActiveTimers, CNTimerChips, cnAssignTips, CNStepTip } from '../timers.jsx';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 export function CNBatchCookScreen({ sel, onExit }) {
-  const byId = React.useMemo(() => Object.fromEntries(CHEZNOUS_DATA.recipes.map(r => [r.id, r])), []);
+  const all = useAllRecipes();
+  const byId = React.useMemo(() => Object.fromEntries(all.map(r => [r.id, r])), [all]);
   const selected = sel.map(id => byId[id]).filter(Boolean);
   const { plan, colors } = React.useMemo(() => cnBuildPlan(selected), [sel.join()]);
   const [phase, setPhase] = React.useState(-1);

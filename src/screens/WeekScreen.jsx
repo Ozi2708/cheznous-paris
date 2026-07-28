@@ -1,11 +1,11 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS, CN_SLOTS } from '../utils.js';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
   const [q, setQ] = React.useState('');
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const results = React.useMemo(() => q ? cnApplyFilters(all, { ...CN_EMPTY_FILTERS, q }) : all, [all, q]);
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: open ? 'auto' : 'none' }} aria-hidden={!open}>
@@ -49,7 +49,7 @@ function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
 export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMenu, onPlanPending, onRemovePending }) {
   const [picking, setPicking] = React.useState(null);
   const [cleaning, setCleaning] = React.useState(false);
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const byId = React.useMemo(() => Object.fromEntries(all.map(r => [r.id, r])), [all]);
   const entries = Object.values(week).filter(Boolean);
   const nDone = entries.filter(e => e.done).length;

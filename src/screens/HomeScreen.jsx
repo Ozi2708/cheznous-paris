@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon, CNBelgianDots } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS } from '../utils.js';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 /* Avant 14h -> le plat de midi ; après 14h -> celui du soir. Une seule
    carte, celle du repas qui vient (ou qui vient de passer). */
@@ -111,7 +111,7 @@ function CNMoodCard({ card, count, onClick }) {
 }
 
 export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayIndex, onFoyer, syncStatus, week, byId, onGoWeek, modeSwitch }) {
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const daily = all[dayIndex % all.length];
   const dm = chMeta(daily.chapter);
   const counts = React.useMemo(() => {

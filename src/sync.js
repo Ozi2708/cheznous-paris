@@ -19,7 +19,7 @@ export const supa = (SUPABASE_URL && ANON_KEY)
   : null;
 
 export const CN_FOYER_KEY = 'cheznous_foyer_v1';
-export const SYNC_KEYS = ['week', 'pending', 'favs', 'batch', 'courses', 'purchases', 'cart'];
+export const SYNC_KEYS = ['week', 'pending', 'favs', 'batch', 'courses', 'purchases', 'cart', 'myrecipes'];
 
 /* Alphabet sans caractères ambigus (ni I, O, 0, 1) — code lisible à voix haute. */
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

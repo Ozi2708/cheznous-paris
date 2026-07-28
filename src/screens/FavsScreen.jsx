@@ -1,9 +1,9 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon, CNThumb } from '../helpers.jsx';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const list = React.useMemo(() => favs.map(id => all.find(r => r.id === id)).filter(Boolean), [favs.join()]);
 
   return (

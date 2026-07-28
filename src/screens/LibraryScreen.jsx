@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, CN_CHAPTERS, chMeta, CNIcon, CNChip, CNMacros, CNThumb } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, cnCountActive, CN_DIET_FILTERS } from '../utils.js';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 function CNSearchBar({ f, setF, onOpenFilters, autoFocus }) {
   const nActive = cnCountActive(f);
@@ -164,17 +164,25 @@ function CNLibraryIndex({ recipes, onOpen, onQuickAdd }) {
   );
 }
 
-export function CNLibraryScreen({ filters, setFilters, onOpen, onQuickAdd }) {
+export function CNLibraryScreen({ filters, setFilters, onOpen, onQuickAdd, onImport }) {
   const [sheetOpen, setSheetOpen] = React.useState(false);
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const results = React.useMemo(() => cnApplyFilters(all, filters), [all, filters]);
   const open = (r) => onOpen(r, results.map(x => x.id));
   return (
     <div data-screen-label="Bibliothèque" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
       <div style={{ paddingTop: 'var(--screen-top, 34px)', flexShrink: 0 }}>
-        <div style={{ padding: '6px 20px 14px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <div style={{ padding: '6px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Bibliothèque</span>
-          <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{results.length} / {all.length}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{results.length} / {all.length}</span>
+            {onImport && (
+              <button onClick={onImport} aria-label="Ajouter une recette en photo" title="Ajouter une recette en photo" style={{
+                width: 38, height: 38, borderRadius: '50%', border: 'none', background: '#506741', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}><CNIcon name="camera" size={18} color="#FFFFFF" /></button>
+            )}
+          </span>
         </div>
         <CNSearchBar f={filters} setF={setFilters} onOpenFilters={() => setSheetOpen(true)} />
         <CNChapterChips f={filters} setF={setFilters} recipes={all} />

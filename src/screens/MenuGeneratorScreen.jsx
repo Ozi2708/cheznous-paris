@@ -1,6 +1,6 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon, CNMacros } from '../helpers.jsx';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 import { cnGenerateMenu, cnRerollMenuItem, cnSynergies } from '../utils.js';
 
 function CNCountStepper({ count, setCount }) {
@@ -25,7 +25,7 @@ function CNCountStepper({ count, setCount }) {
 }
 
 export function CNMenuGeneratorScreen({ onBack, onCommit }) {
-  const all = CHEZNOUS_DATA.recipes;
+  const all = useAllRecipes();
   const [count, setCount] = React.useState(4);
   const [menu, setMenu] = React.useState(null); // array of recipe objects
 

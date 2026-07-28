@@ -22,12 +22,14 @@ export function CNTopBar({ onBack, label, color, onPrev, onNext, pos, fav, onFav
   );
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px' }}>
-      <button onClick={onBack} aria-label="Retour" style={{
-        width: 44, height: 44, borderRadius: 9999, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
-      }}>
-        <CNIcon name="back" size={18} color="#3C3830" />
-      </button>
+      {onBack && (
+        <button onClick={onBack} aria-label="Retour" style={{
+          width: 44, height: 44, borderRadius: 9999, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all .15s ease', flexShrink: 0,
+        }}>
+          <CNIcon name="back" size={18} color="#3C3830" />
+        </button>
+      )}
       <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: color || '#8C8780', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
       {onFav && (
         <button onClick={onFav} aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'} style={{
@@ -122,20 +124,28 @@ function CNStepsPreview({ steps, color }) {
   );
 }
 
-export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, week, onPlanWeek, onPrev, onNext, pos, bottomInset = 0, fav, onFav }) {
+/* `preview` : la fiche est affichée dans l'écran de validation d'un import.
+   On retire alors sa propre navigation et son CTA, qui feraient doublon avec
+   ceux de l'écran hôte — le reste du rendu est strictement identique. */
+export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, week, onPlanWeek, onPrev, onNext, pos, bottomInset = 0, fav, onFav, preview = false }) {
   const [checked, setChecked] = React.useState(() => new Set());
   const [planOpen, setPlanOpen] = React.useState(false);
   const m = chMeta(recipe.chapter);
+  const inset = typeof bottomInset === 'number' ? `${bottomInset}px` : (bottomInset || '0px');
   const factor = portions / 2;
   const sectionLbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', margin: '26px 0 14px' };
 
   return (
     <div data-screen-label={'Fiche — ' + recipe.title} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
       <div style={{ paddingTop: 'var(--screen-top, 34px)', flexShrink: 0 }}>
-        <CNTopBar onBack={onBack} label={`${m.label} · Recette ${String(recipe.num).padStart(2, '0')}`} color={m.color} onPrev={onPrev} onNext={onNext} pos={pos} fav={fav} onFav={onFav} />
+        <CNTopBar onBack={preview ? null : onBack} label={`${m.label} · Recette ${String(recipe.num).padStart(2, '0')}`} color={m.color}
+          onPrev={onPrev} onNext={onNext} pos={pos} fav={fav} onFav={preview ? null : onFav} />
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px ${130 + bottomInset}px` }}>
+      {/* `bottomInset` arrive en `calc(...)` : il faut composer en CSS, pas en JS —
+          une addition JavaScript produirait une valeur invalide et le navigateur
+          jetterait toute la déclaration, marges latérales comprises. */}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px calc(130px + ${inset})` }}>
         {recipe.image && (
           <div style={{ position: 'relative', margin: '-4px -20px 16px', aspectRatio: '5 / 4' }}>
             <img src={recipe.image} alt={recipe.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -201,7 +211,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
         </div>
       </div>
 
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: bottomInset, padding: '14px 20px 16px', background: 'linear-gradient(to top, #FAFAF8 65%, rgba(250,250,248,0))', display: 'flex', gap: 10, zIndex: 50 }}>
+      <div style={{ display: preview ? 'none' : 'flex', position: 'absolute', left: 0, right: 0, bottom: bottomInset, padding: '14px 20px 16px', background: 'linear-gradient(to top, #FAFAF8 65%, rgba(250,250,248,0))', gap: 10, zIndex: 50 }}>
         <button onClick={onCook} style={{
           flex: 1, height: 54, borderRadius: 9999, border: 'none', cursor: 'pointer',
           background: m.color, color: '#FFFFFF', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15,

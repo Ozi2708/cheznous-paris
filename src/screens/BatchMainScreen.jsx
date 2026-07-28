@@ -5,7 +5,7 @@ import {
   cnBatchList, cnMenuIdeas, cnEquipment, cnIngKey, cnConsolidate, cnSynergies, CN_B_DAYS, CN_B_DAYS_FULL,
 } from '../utils.js';
 import { cnStepDurations } from '../timers.jsx';
-import { CHEZNOUS_DATA } from '../data.js';
+import { useAllRecipes } from '../recipes.js';
 
 function CNKeepBadges({ r, light }) {
   const c = cnConservation(r);
@@ -19,9 +19,10 @@ function CNKeepBadges({ r, light }) {
 }
 
 export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
-  const list = React.useMemo(() => cnBatchList(CHEZNOUS_DATA.recipes), []);
+  const all = useAllRecipes();
+  const list = React.useMemo(() => cnBatchList(all), [all]);
   const menus = React.useMemo(() => cnMenuIdeas(list), [list]);
-  const byId = React.useMemo(() => Object.fromEntries(CHEZNOUS_DATA.recipes.map(r => [r.id, r])), []);
+  const byId = React.useMemo(() => Object.fromEntries(all.map(r => [r.id, r])), [all]);
   const [expanded, setExpanded] = React.useState(() => new Set());
   const [previewId, setPreviewId] = React.useState(menus.length ? menus[0].id : null);
   const selected = sel.map(id => byId[id]).filter(Boolean);

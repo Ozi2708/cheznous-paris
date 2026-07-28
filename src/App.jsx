@@ -1,7 +1,8 @@
 import React from 'react';
 import { CN_FONTS, CNIcon } from './helpers.jsx';
 import { CN_EMPTY_FILTERS, cnBatchList } from './utils.js';
-import { CHEZNOUS_DATA } from './data.js';
+import { useAllRecipes, cnSetUserRecipes, cnUserRecipes, cnAddUserRecipe, CN_MYRECIPES_KEY } from './recipes.js';
+import { CNImportScreen } from './screens/ImportScreen.jsx';
 import { CNPlanWeekSheet } from './ds-components.jsx';
 import { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakRadio } from './tweaks-panel.jsx';
 import { CNHomeScreen } from './screens/HomeScreen.jsx';
@@ -137,7 +138,7 @@ export function CNApp() {
      Les mises à jour venues de l'autre téléphone atterrissent ici : on écrit
      l'état local sans le re-pousser (sinon boucle d'écho). */
   const stateRef = React.useRef(null);
-  stateRef.current = { week, pending, favs, batch: batchSel, courses, purchases, cart };
+  stateRef.current = { week, pending, favs, batch: batchSel, courses, purchases, cart, myrecipes: cnUserRecipes() };
 
   const applyRemote = React.useCallback((key, value) => {
     if (key === 'week') { const v = value || {}; setWeekRaw(v); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(v)); }
@@ -147,6 +148,7 @@ export function CNApp() {
     else if (key === 'courses') { const v = value || CN_COURSES_EMPTY; setCoursesRaw(v); localStorage.setItem(CN_COURSES_KEY, JSON.stringify(v)); }
     else if (key === 'purchases') { const v = value || {}; setPurchasesRaw(v); localStorage.setItem(CN_PURCHASES_KEY, JSON.stringify(v)); }
     else if (key === 'cart') { const v = value || CN_CART_EMPTY; setCartRaw(v); localStorage.setItem(CN_CART_KEY, JSON.stringify(v)); }
+    else if (key === 'myrecipes') { const v = Array.isArray(value) ? value : []; localStorage.setItem(CN_MYRECIPES_KEY, JSON.stringify(v)); cnSetUserRecipes(v, { persist: false }); }
   }, []);
 
   const sync = useFoyerSync({ onRemote: applyRemote, getLocal: () => stateRef.current });
@@ -174,12 +176,13 @@ export function CNApp() {
     showToast(`${ids.length} plat${ids.length > 1 ? 's' : ''} ajouté${ids.length > 1 ? 's' : ''} à la semaine`);
   };
 
+  const recipes = useAllRecipes();
+
   React.useEffect(() => {
-    const valid = new Set(cnBatchList(CHEZNOUS_DATA.recipes).map(r => r.id));
+    const valid = new Set(cnBatchList(recipes).map(r => r.id));
     if (batchSel.some(id => !valid.has(id))) setBatchSel(batchSel.filter(id => valid.has(id)));
   }, []);
 
-  const recipes = CHEZNOUS_DATA.recipes;
   const byId = React.useMemo(() => Object.fromEntries(recipes.map(r => [r.id, r])), [recipes]);
   const recipe = recipes.find(r => r.id === recipeId) || null;
   const shopRecipes = [
@@ -269,7 +272,7 @@ export function CNApp() {
               onGoWeek={() => navigate({ tab: 'week', screen: 'tab' })}
               modeSwitch={<CNModeSwitch mode={mode} onSwitch={switchMode} count={cartCount} />}
               onGoLibrary={() => { setFilters({ ...CN_EMPTY_FILTERS }); navigate({ tab: 'library', screen: 'tab' }); }} onGoBatch={() => navigate({ tab: 'batch', screen: 'tab' })} />}
-            {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} />}
+            {tab === 'library' && <CNLibraryScreen filters={filters} setFilters={setFilters} onOpen={openRecipe} onQuickAdd={quickAddWeek} onImport={() => navigate({ screen: 'import' })} />}
             {tab === 'week' && <CNWeekScreen week={week} setWeek={setWeek} onOpen={openRecipe}
               pending={pending} onComposeMenu={() => navigate({ screen: 'menu' })} onPlanPending={planPending} onRemovePending={removePending} />}
             {tab === 'batch' && <CNBatchScreen sel={batchSel} setSel={setBatchSel} onOpen={openRecipe} onStart={() => navigate({ screen: 'batchcook' })} />}
@@ -332,6 +335,16 @@ export function CNApp() {
 
         {screen === 'menu' && (
           <CNMenuGeneratorScreen onBack={goBack} onCommit={commitMenu} />
+        )}
+
+        {screen === 'import' && (
+          <CNImportScreen onBack={goBack} showToast={showToast} bottomInset="0px"
+            onSave={(r) => {
+              cnAddUserRecipe(r);
+              sync.push('myrecipes', cnUserRecipes());
+              setPortions(2);
+              navigate({ screen: 'recipe', recipeId: r.id, ctxIds: null }, { replace: true });
+            }} />
         )}
 
         {(((screen === 'recipe' || screen === 'cook') && !recipe) || (screen === 'batchcook' && batchSel.length < 2)) && (
