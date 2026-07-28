@@ -440,7 +440,7 @@ export function CNImportScreen({ onBack, onSave, showToast, bottomInset = 0 }) {
 
   /* Les champs dérivés (badges, totaux, drapeaux) sont recalculés à chaque
      retouche : impossible de sauver une fiche incohérente. */
-  const updateDraft = (next) => setDraft(cnNormalizeRecipe(next, { id: next.id, num: next.num, createdAt: next.createdAt }));
+  const updateDraft = (next) => setDraft(cnNormalizeRecipe(next, { id: next.id, num: next.num, createdAt: next.createdAt, editing: true }));
 
   const save = () => {
     const final = cnNormalizeRecipe(draft, { id: draft.id, num: draft.num, createdAt: draft.createdAt });

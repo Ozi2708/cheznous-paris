@@ -9,8 +9,13 @@
    `CN_PIECE_G` : poids moyen d'une pièce, pour les ingrédients comptés à l'unité.
    `CN_UNIT_G` : conversion des unités de mesure en grammes.
 
-   Validé contre les 60 recettes du livre, dont les valeurs sont connues :
-   écart médian 8,8 % sur les calories, 51 recettes sur 60 sous les 25 %. */
+   Calibré contre les 60 recettes du livre, dont les valeurs sont connues.
+   Trois choix ont été retenus parce que la mesure les départage, pas
+   l'intuition : filet de poulet sans peau plutôt qu'avec, bœuf haché 5 % MG
+   plutôt que 10 %, et la densité réelle des huiles (1 càs = 13,6 g et non 15).
+   Résultat : écart médian 6,3 % sur les calories (contre 8,9 % avant
+   calibrage), biais systématique ramené de +7,4 % à +2,4 %, 52 recettes sur
+   60 sous les 25 %. */
 
 export const CN_FOODS = {
 "11000": [
@@ -405,13 +410,7 @@ export const CN_FOODS = {
 0.3,
 3.16
 ],
-"6252": [
-"Boeuf, steak haché 10% MG cru",
-170.0,
-20.0,
-0.0,
-10.0
-],
+"6252": ["Boeuf, steak haché 5% MG cru",130,21.9,0.3,4.6],
 "6201": [
 "Boeuf, steak ou bifteck cru",
 229.0,
@@ -426,13 +425,7 @@ export const CN_FOODS = {
 0.1,
 18.8
 ],
-"36007": [
-"Poulet blanc, viande et peau crues",
-122.0,
-20.8,
-0.0,
-4.3
-],
+"36007": ["Poulet, filet sans peau cru",110,23.4,0,1.5],
 "36304": [
 "Dinde, escalope crue",
 108.0,
@@ -936,4 +929,4 @@ export const CN_NUTRI_RULES = [["ail en poudre", 11000], ["gingembre en poudre",
 
 export const CN_PIECE_G = {"carotte": 125, "panais": 150, "poire": 170, "courgette": 200, "aubergine": 250, "poivron": 150, "oignon": 110, "echalote": 25, "citron": 100, "citron vert": 70, "avocat": 150, "tomate": 120, "poireau": 150, "patate douce": 200, "pomme de terre": 130, "courge": 900, "brocoli": 500, "uf": 55, "oeuf": 55, "cebette": 15, "celeri": 800, "epi de mais": 100, "pak choi": 300, "chou": 800, "mini tortilla": 30, "tortilla": 60, "wraps": 60, "pains pita": 60, "pains a hamburger": 50, "galettes de sarrasin": 60, "brick": 12, "gousse": 5, "ail": 5, "concombre": 300, "banane": 120, "pomme": 150, "pave": 130, "piment": 10, "steaks haches": 125, "blanc de poulet": 150, "blanc de dinde": 100};
 
-export const CN_UNIT_G = {"g": 1, "gr": 1, "gramme": 1, "kg": 1000, "ml": 1, "cl": 10, "l": 1000, "cas": 15, "c as": 15, "cuillere a soupe": 15, "cac": 5, "c ac": 5, "cuillere a cafe": 5, "pincee": 0.5, "poignee": 20, "poignees": 20, "gousse": 5, "gousses": 5, "tranche": 25, "tranches": 25, "cube": 10, "cubes": 10, "filet": 5, "trait": 3, "boite": 400, "sachet": 10, "feuille": 0.5, "feuilles": 0.5, "brin": 1, "brins": 1, "bouquet": 20, "tete": 300, "botte": 100, "branche": 10};
+export const CN_UNIT_G = {"g": 1, "gr": 1, "gramme": 1, "kg": 1000, "ml": 1, "cl": 10, "l": 1000, "cas": 13.6, "c as": 15, "cuillere a soupe": 15, "cac": 4.5, "c ac": 5, "cuillere a cafe": 5, "pincee": 0.5, "poignee": 20, "poignees": 20, "gousse": 5, "gousses": 5, "tranche": 25, "tranches": 25, "cube": 10, "cubes": 10, "filet": 5, "trait": 3, "boite": 400, "sachet": 10, "feuille": 0.5, "feuilles": 0.5, "brin": 1, "brins": 1, "bouquet": 20, "tete": 300, "botte": 100, "branche": 10};

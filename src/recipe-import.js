@@ -16,7 +16,15 @@ const SECTIONS = ['À Acheter', 'Placard', 'Épices'];
 const TIP_TITLES = ['Astuce Airfryer', 'Conseil', 'Variante', 'Variante carnée', 'Variantes'];
 const FOOTER_LABELS = ['Conseil', 'Conservation', 'Suggestion'];
 
-const txt = (v, max = 400) => String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max);
+/* `raw` : pendant la saisie, on ne touche pas aux blancs. Sinon l'espace que
+   vous venez de taper est effacé avant que vous ayez tapé la lettre suivante,
+   et il devient impossible d'écrire un deuxième mot. Le nettoyage complet
+   n'intervient qu'à l'enregistrement. */
+const mkTxt = (raw) => (v, max = 400) => {
+  const s = String(v == null ? '' : v);
+  return (raw ? s : s.replace(/\s+/g, ' ').trim()).slice(0, max);
+};
+const txt = mkTxt(false);
 const int = (v, min = 0, max = 9999) => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
@@ -25,7 +33,7 @@ const pick = (list, allowed) => (Array.isArray(list) ? list : []).filter(v => al
 
 /* Les étapes sont injectées en HTML : seul <strong> survit. Les balises à
    contenu exécutable partent avec leur contenu, le reste perd sa balise. */
-const cleanStep = (s) => txt(String(s == null ? '' : s)
+const cleanStep = (s, T = txt) => T(String(s == null ? '' : s)
   .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
   .replace(/<(?!\/?strong\s*\/?>)[^>]*>/gi, ''), 600);
 
@@ -34,6 +42,7 @@ const FISH_BADGES = ['Crevettes', 'Poisson', 'Saumon'];
 
 export function cnNormalizeRecipe(raw, opts = {}) {
   const r = raw || {};
+  const T = mkTxt(!!opts.editing);   // saisie en cours : on préserve les espaces
   const chapter = CHAPTERS.includes(r.chapter) ? r.chapter : 'Low-Carb';
   const m = chMeta(chapter);
 
@@ -56,7 +65,7 @@ export function cnNormalizeRecipe(raw, opts = {}) {
     .map(sec => ({
       section: sec.section,
       items: (Array.isArray(sec.items) ? sec.items : [])
-        .map(it => ({ q: txt(it && it.q, 40), name: txt(it && it.name, 80).toLowerCase() }))
+        .map(it => ({ q: T(it && it.q, 40), name: T(it && it.name, 80).toLowerCase() }))
         .filter(it => it.name),
     }))
     .filter(sec => sec.items.length)
@@ -103,8 +112,8 @@ export function cnNormalizeRecipe(raw, opts = {}) {
     nutrition = cnEnforceAtwater(declared); nutritionSource = 'estime';
   }
 
-  const steps = (Array.isArray(r.steps) ? r.steps : []).map(cleanStep).filter(Boolean).slice(0, 9);
-  const claudy = (Array.isArray(r.claudy) ? r.claudy : []).map(s => txt(s, 300)).filter(Boolean).slice(0, 2);
+  const steps = (Array.isArray(r.steps) ? r.steps : []).map(x => cleanStep(x, T)).filter(Boolean).slice(0, 9);
+  const claudy = (Array.isArray(r.claudy) ? r.claudy : []).map(s => T(s, 300)).filter(Boolean).slice(0, 2);
 
   const tips = (Array.isArray(r.tips) ? r.tips : [])
     .filter(t => t && TIP_TITLES.includes(t.title))
@@ -123,7 +132,7 @@ export function cnNormalizeRecipe(raw, opts = {}) {
     id: opts.id || `p${num}`,
     chapter,
     ctag: chapter,
-    title: txt(r.title, 90) || 'Recette sans titre',
+    title: T(r.title, 90) || 'Recette sans titre',
     portions: 'Pour 2 personnes',
     bigBadges: [`${m.label} · ${m.sub}`, ...typeBadges],
     dietTags,
