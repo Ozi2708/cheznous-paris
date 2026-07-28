@@ -1,6 +1,7 @@
 import { CN_CHAPTERS, chMeta } from './helpers.jsx';
 import { cnNextRecipeNum } from './recipes.js';
 import { cnRayon } from './courses-data.js';
+import { cnComputeNutrition, cnEnforceAtwater } from './nutrition.js';
 
 /* ── Normalisation d'une recette extraite ──
    Le modèle propose, ce fichier impose. Tout ce qui est déductible est
@@ -37,7 +38,7 @@ export function cnNormalizeRecipe(raw, opts = {}) {
   const m = chMeta(chapter);
 
   const n = r.nutrition || {};
-  const nutrition = {
+  const declared = {
     kcal: int(n.kcal, 0, 3000),
     lipides: int(n.lipides, 0, 300),
     glucides: int(n.glucides, 0, 400),
@@ -83,6 +84,25 @@ export function cnNormalizeRecipe(raw, opts = {}) {
   const isVegan = !isAnimal && (dietTags.includes('Végan') || typeBadges.includes('Végan'));
   const isVeggie = isVegan || (!isAnimal && (dietTags.includes('Végétarien') || typeBadges.includes('Végétarien')));
 
+  /* ── Nutrition ──
+     Trois provenances, par ordre de confiance :
+       document — les valeurs figuraient sur la photo, on les reprend ;
+       ciqual   — calculées en sommant les ingrédients depuis la table ANSES ;
+       estime   — repli sur l'appréciation du modèle, quand trop d'ingrédients
+                  sont hors répertoire pour que la somme veuille dire quelque chose.
+     Dans tous les cas la cohérence d'Atwater est imposée : des calories qui ne
+     collent pas à leurs macros sont fausses, quelle que soit leur origine. */
+  const fromTable = cnComputeNutrition(ingredients, 2);
+  const modelEstimated = !!n.estimated;
+  let nutrition, nutritionSource;
+  if (!modelEstimated && declared.kcal) {
+    nutrition = cnEnforceAtwater(declared); nutritionSource = 'document';
+  } else if (fromTable.reliable) {
+    nutrition = fromTable.nutrition; nutritionSource = 'ciqual';
+  } else {
+    nutrition = cnEnforceAtwater(declared); nutritionSource = 'estime';
+  }
+
   const steps = (Array.isArray(r.steps) ? r.steps : []).map(cleanStep).filter(Boolean).slice(0, 9);
   const claudy = (Array.isArray(r.claudy) ? r.claudy : []).map(s => txt(s, 300)).filter(Boolean).slice(0, 2);
 
@@ -124,7 +144,8 @@ export function cnNormalizeRecipe(raw, opts = {}) {
     isVeggie,
     /* Métadonnées propres aux recettes importées — ignorées par le reste de l'app. */
     origin: 'photo',
-    nutritionEstimated: !!(n.estimated),
+    nutritionSource,
+    nutritionCoverage: { reconnus: fromTable.counted, inconnus: fromTable.unmatched },
     createdAt: opts.createdAt || Date.now(),
   };
 }

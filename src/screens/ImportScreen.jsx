@@ -10,6 +10,16 @@ import { cnExtractRecipe, cnNormalizeRecipe, cnValidateRecipe, CN_MAX_PAGES } fr
 
 const CHAPTERS = Object.keys(CN_CHAPTERS);
 
+/* D'où viennent les quatre valeurs — l'utilisateur doit pouvoir en juger. */
+const CN_NUTRI_SOURCE = {
+  document: { badge: 'du document', color: '#3D5430', soft: '#EAF0E2',
+    text: 'Valeurs relevées sur la photo.' },
+  ciqual: { badge: 'calculé', color: '#3D4E8A', soft: '#EEF1FB',
+    text: 'Calculé en sommant les ingrédients depuis la table CIQUAL de l’ANSES.' },
+  estime: { badge: 'estimé', color: '#8A6B4A', soft: '#F9F1E7',
+    text: 'Trop d’ingrédients hors répertoire pour un calcul fiable : ces valeurs sont une estimation. Corrigez-les si vous les connaissez.' },
+};
+
 const inputStyle = {
   width: '100%', height: 44, borderRadius: 12, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
   padding: '0 13px', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', outline: 'none', boxSizing: 'border-box',
@@ -255,18 +265,23 @@ function CNAdjustForm({ draft, setDraft }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
           <span style={{ ...label, marginBottom: 0 }}>Nutrition · par personne</span>
-          {draft.nutritionEstimated && (
-            <span style={{
-              fontFamily: CN_FONTS.body, fontSize: 9, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase',
-              color: '#8A6B4A', background: '#F9F1E7', borderRadius: 9999, padding: '2px 7px',
-            }}>estimé</span>
+          {(() => {
+            const s = CN_NUTRI_SOURCE[draft.nutritionSource] || CN_NUTRI_SOURCE.estime;
+            return (
+              <span style={{
+                fontFamily: CN_FONTS.body, fontSize: 9, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase',
+                color: s.color, background: s.soft, borderRadius: 9999, padding: '2px 7px',
+              }}>{s.badge}</span>
+            );
+          })()}
+        </div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#8C8780', marginBottom: 8, lineHeight: 1.45 }}>
+          {(CN_NUTRI_SOURCE[draft.nutritionSource] || CN_NUTRI_SOURCE.estime).text}
+          {draft.nutritionSource === 'ciqual' && draft.nutritionCoverage && (
+            <> {draft.nutritionCoverage.reconnus} ingrédient{draft.nutritionCoverage.reconnus > 1 ? 's' : ''} reconnu{draft.nutritionCoverage.reconnus > 1 ? 's' : ''}
+              {draft.nutritionCoverage.inconnus > 0 ? `, ${draft.nutritionCoverage.inconnus} hors répertoire.` : '.'}</>
           )}
         </div>
-        {draft.nutritionEstimated && (
-          <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#8C8780', marginBottom: 8, lineHeight: 1.45 }}>
-            Ces valeurs ne figuraient pas sur le document : elles ont été estimées d’après les ingrédients. Corrigez-les si vous les connaissez.
-          </div>
-        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {[['kcal', 'Calories'], ['proteines', 'Protéines (g)'], ['glucides', 'Glucides (g)'], ['lipides', 'Lipides (g)']].map(([k, lbl]) => (
             <div key={k}>
