@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, CNIcon } from '../helpers.jsx';
 import { cnProducts, cnRhythm, cnStatus, cnToday, cnDayLabel, CN_RHYTHM_LABEL } from '../courses.js';
-import { CN_RAYONS, cnRayonMeta, cnRayon, cnProdNorm } from '../courses-data.js';
+import { CN_RAYONS, cnRayonMeta, cnRayon, cnProdNorm, cnDefaultQty } from '../courses-data.js';
 
 const CN_ACCENT = '#B85C38';
 
@@ -132,6 +132,12 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
                   }}>
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', lineHeight: 1.3 }}>{p.name}</span>
+                      {p.exact && (
+                        <span style={{
+                          display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic',
+                          color: CN_ACCENT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>{p.exact}</span>
+                      )}
                       <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, color: '#B8B3AA', marginTop: 2 }}>
                         {p.paused ? 'En pause'
                           : r.last == null ? `~${r.days} j (${CN_RHYTHM_LABEL[r.source]}) · jamais acheté`
@@ -177,6 +183,29 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
                 <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: '#8C8780', marginTop: 5 }}>
                   {CN_RHYTHM_LABEL[r.source]}{r.gaps ? ` sur ${r.gaps} intervalle${r.gaps > 1 ? 's' : ''}` : ''}
                   {s.since != null ? ` · dernier achat ${cnDayLabel(s.since)}` : ''}
+                </div>
+              </div>
+
+              {/* ── Ce qu'on achète, exactement ──
+                  Ces deux champs se retrouvent tels quels dans la liste copiée :
+                  plus besoin de retrouver la bonne référence à chaque commande. */}
+              <div>
+                <span style={fieldLabel}>Quantité habituelle</span>
+                <input value={editing.qty || ''} placeholder={cnDefaultQty(editing.name, editing.rayon)}
+                  onChange={e => patchPrefs(editing.id, { qty: e.target.value || undefined })}
+                  style={inputStyle} />
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#B8B3AA', marginTop: 5, lineHeight: 1.5 }}>
+                  Ce que vous prenez d’habitude — proposé dès que ce produit entre dans la liste.
+                </div>
+              </div>
+
+              <div>
+                <span style={fieldLabel}>Produit exact au drive</span>
+                <input value={editing.exact || ''} placeholder="Marque, format, référence…"
+                  onChange={e => patchPrefs(editing.id, { exact: e.target.value || undefined })}
+                  style={inputStyle} />
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#B8B3AA', marginTop: 5, lineHeight: 1.5 }}>
+                  Écrit à la place du nom dans la liste copiée : le drive ne choisit plus la marque à votre place.
                 </div>
               </div>
 

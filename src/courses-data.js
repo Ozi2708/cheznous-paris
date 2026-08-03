@@ -108,6 +108,7 @@ const CN_RAYON_RULES = [
    parenthèses des données (« poireau(x) »), apostrophes en espaces. */
 export function cnProdNorm(s) {
   return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/œ/g, 'oe').replace(/æ/g, 'ae')
     .replace(/\((s|x|es)\)/g, '').replace(/[’'`]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
@@ -137,4 +138,217 @@ const CN_JUNK = ['(au gout)', '(facultatif)', 'au gout', 'facultatif'];
 export function cnIsJunkIngredient(name) {
   const n = cnProdNorm(name);
   return !n || CN_JUNK.includes(n);
+}
+
+/* ── Unité d'achat d'un produit ──
+   Ce qu'on achète ne se compte pas de la même façon selon le produit : une
+   courgette à la pièce, du chocolat en grammes, du lait en litres, de la
+   lessive au flacon. Sans ça, l'ajusteur de quantité propose des nombres qui
+   ne veulent rien dire.
+
+   Chaque règle donne l'unité, le pas d'incrément et la quantité proposée par
+   défaut — celle d'un achat courant en drive, pas celle d'une recette : on
+   n'achète pas 2 cl de vinaigre, on achète la bouteille.
+
+   Premier motif qui commence un mot gagne, comme pour les rayons : les
+   exceptions passent donc d'abord, avant les familles génériques. */
+const CN_UNIT_RULES = [
+  /* — exceptions : ces noms contiennent un mot d'une famille plus large — */
+  ['creme hydratante', 'tube', 1, 1],       // pas de la crème fraîche
+  ['creme solaire', 'tube', 1, 1],
+  ['lait de coco', 'brique', 1, 1],         // ni du lait de vache
+  ['creme de coco', 'brique', 1, 1],
+  ['huile de coco', 'pot', 1, 1],
+  ['jus de citron', 'ml', 25, 100],         // le petit flacon, pas le litre
+  ['eau petillante', 'pack', 1, 1],         // ni la bouteille : le pack
+  ['eau gazeuse', 'pack', 1, 1],
+  ['eau plate', 'pack', 1, 1],
+  ['eau minerale', 'pack', 1, 1],
+  ['eau de fleur', 'ml', 50, 100],
+  ['eau', '', 1, 1],                        // « eau ou bouillon » : rien à acheter
+  ['tomates sechees', 'pot', 1, 1],
+  ['tomate sechee', 'pot', 1, 1],
+  ['chair de tomate', 'brique', 1, 1],
+  ['zeste', '', 1, 1],                      // un citron, pas 250 g de zeste
+  ['tortilla', 'paquet', 1, 1],             // « tortilla de maïs » n'est pas du maïs
+  ['wrap', 'paquet', 1, 1],
+  ['gnocchi', 'paquet', 1, 1],              // ni « gnocchis de pomme de terre » des pommes de terre
+  ['hamburger', 'lot', 1, 1],               // ni « pains à hamburger » du pain à la pièce
+  ['noix de coco', '', 1, 1],
+  ['noix de muscade', 'sachet', 1, 1],
+  ['lait de poule', '', 1, 1],
+  ['sauce tomate', 'pot', 1, 1],
+  ['pomme de terre', 'g', 250, 1000],
+  ['pommes de terre', 'g', 250, 1000],
+
+  /* — liquides : à la bouteille, comptés en ml ou en L — */
+  ['huile', 'ml', 100, 500], ['vinaigre', 'ml', 100, 500], ['sauce', 'ml', 100, 250],
+  ['lait', 'L', 1, 1], ['creme', 'ml', 100, 200], ['jus', 'L', 1, 1],
+  ['soda', 'pack', 1, 1], ['coca', 'pack', 1, 1], ['limonade', 'L', 1, 1],
+  ['biere', 'pack', 1, 1], ['vin', 'bouteille', 1, 1], ['cidre', 'bouteille', 1, 1],
+  ['sirop', 'ml', 100, 500],
+
+  /* — entretien, hygiène, maison : au contenant — */
+  ['lessive', 'flacon', 1, 1], ['adoucissant', 'flacon', 1, 1], ['liquide vaisselle', 'flacon', 1, 1],
+  ['nettoyant', 'flacon', 1, 1], ['javel', 'flacon', 1, 1], ['desinfectant', 'flacon', 1, 1],
+  ['gel douche', 'flacon', 1, 1], ['shampoing', 'flacon', 1, 1], ['savon', 'flacon', 1, 1],
+  ['dentifrice', 'tube', 1, 1], ['deodorant', '', 1, 1], ['parfum', '', 1, 1],
+  ['papier toilette', 'lot', 1, 1], ['papier hygienique', 'lot', 1, 1],
+  ['mouchoirs', 'lot', 1, 1], ['essuie-tout', 'lot', 1, 1], ['sopalin', 'lot', 1, 1],
+  ['sacs poubelle', 'lot', 1, 1], ['sac poubelle', 'lot', 1, 1], ['sac congelation', 'lot', 1, 1],
+  ['eponges', 'lot', 1, 1], ['eponge', 'lot', 1, 1], ['tablettes', 'lot', 1, 1],
+  ['cotons', 'lot', 1, 1], ['coton-tiges', 'lot', 1, 1], ['coton', 'lot', 1, 1],
+  ['lingettes', 'lot', 1, 1], ['rasoirs', 'lot', 1, 1], ['rasoir', 'lot', 1, 1],
+  ['brosse a dents', '', 1, 1], ['fil dentaire', '', 1, 1], ['bain de bouche', 'flacon', 1, 1],
+  ['piles', 'lot', 1, 1], ['ampoules', '', 1, 1], ['ampoule', '', 1, 1], ['bougies', 'lot', 1, 1],
+  ['papier aluminium', '', 1, 1], ['papier alu', '', 1, 1], ['papier cuisson', '', 1, 1],
+  ['film etirable', '', 1, 1], ['pansement', 'boîte', 1, 1], ['paracetamol', 'boîte', 1, 1],
+
+  /* — épicerie sèche : au poids — */
+  ['chocolat', 'g', 50, 200], ['cacao', 'g', 50, 250],
+  ['riz', 'g', 100, 500], ['pates', 'g', 100, 500], ['linguine', 'g', 100, 500],
+  ['spaghettis', 'g', 100, 500], ['tagliatelles', 'g', 100, 500], ['orzo', 'g', 100, 500],
+  ['quinoa', 'g', 100, 500], ['boulgour', 'g', 100, 500], ['semoule', 'g', 100, 500],
+  ['lentilles', 'g', 100, 250], ['pois chiches', 'g', 100, 250],
+  ['haricots blancs', 'g', 100, 250], ['haricots rouges', 'g', 100, 250],
+  ['farine', 'g', 100, 1000], ['sucre', 'g', 100, 1000],
+  ['flocons', 'g', 100, 500], ['chapelure', 'g', 50, 200], ['fecule', 'g', 50, 200],
+  ['noisettes', 'g', 25, 100], ['amandes', 'g', 25, 100], ['noix', 'g', 25, 100],
+  ['cacahuetes', 'g', 25, 100], ['pignons', 'g', 25, 50], ['graines', 'g', 25, 100],
+  ['olives', 'g', 25, 100], ['raisins secs', 'g', 25, 100],
+
+  /* — épicerie au contenant : bocaux, boîtes, paquets — */
+  ['cafe', 'g', 50, 250], ['the', 'boîte', 1, 1], ['tisane', 'boîte', 1, 1], ['infusion', 'boîte', 1, 1],
+  ['biscuits', 'paquet', 1, 1], ['chips', 'paquet', 1, 1], ['cereales', 'paquet', 1, 1],
+  ['muesli', 'paquet', 1, 1], ['granola', 'paquet', 1, 1], ['biscotte', 'paquet', 1, 1],
+  ['confiture', 'pot', 1, 1], ['miel', 'pot', 1, 1], ['moutarde', 'pot', 1, 1],
+  ['mayonnaise', 'pot', 1, 1], ['pesto', 'pot', 1, 1], ['houmous', 'pot', 1, 1],
+  ['cornichons', 'pot', 1, 1], ['tahini', 'pot', 1, 1], ['compote', 'lot', 1, 1],
+  ['coulis', 'brique', 1, 1], ['pulpe', 'brique', 1, 1], ['concentre', 'boîte', 1, 1],
+  ['tomate pelee', 'boîte', 1, 1], ['tomates pelees', 'boîte', 1, 1],
+  ['conserve', 'boîte', 1, 1], ['mais', 'boîte', 1, 1], ['bouillon', 'boîte', 1, 1],
+  ['levure', 'sachet', 1, 1], ['gnocchi', 'paquet', 1, 1],
+
+  /* — épices : sel et poivre au paquet, le reste au sachet — */
+  ['fleur de sel', 'boîte', 1, 1], ['sel', 'paquet', 1, 1], ['poivre', 'moulin', 1, 1],
+  ['epices', 'sachet', 1, 1], ['epice', 'sachet', 1, 1], ['curry', 'sachet', 1, 1],
+  ['paprika', 'sachet', 1, 1], ['cumin', 'sachet', 1, 1], ['curcuma', 'sachet', 1, 1],
+  ['cannelle', 'sachet', 1, 1], ['origan', 'sachet', 1, 1], ['chili', 'sachet', 1, 1],
+  ['laurier', 'sachet', 1, 1], ['herbes de provence', 'sachet', 1, 1],
+  ['massala', 'sachet', 1, 1], ['masala', 'sachet', 1, 1], ['zaatar', 'sachet', 1, 1],
+  ['safran', 'sachet', 1, 1], ['vanille', 'sachet', 1, 1], ['ras el hanout', 'sachet', 1, 1],
+  ['muscade', 'sachet', 1, 1], ['piment', 'sachet', 1, 1],
+  ['ail en poudre', 'sachet', 1, 1], ['gingembre en poudre', 'sachet', 1, 1],
+  ['oignon en poudre', 'sachet', 1, 1],
+
+  /* — herbes fraîches : à la botte — */
+  ['thym', 'botte', 1, 1], ['basilic', 'botte', 1, 1], ['coriandre', 'botte', 1, 1],
+  ['persil', 'botte', 1, 1], ['ciboulette', 'botte', 1, 1], ['aneth', 'botte', 1, 1],
+  ['menthe', 'botte', 1, 1], ['estragon', 'botte', 1, 1],
+  ['herbes fraiches', 'botte', 1, 1], ['radis', 'botte', 1, 1],
+
+  /* — viandes, poissons, fromages : au poids — */
+  ['boeuf', 'g', 50, 400], ['porc', 'g', 50, 400], ['poulet', 'g', 50, 300],
+  ['dinde', 'g', 50, 300], ['agneau', 'g', 50, 400], ['veau', 'g', 50, 400],
+  ['canard', 'g', 50, 300], ['lapin', 'g', 50, 400],
+  ['jambon', 'g', 50, 200], ['lardon', 'g', 50, 150], ['bacon', 'g', 50, 150],
+  ['chorizo', 'g', 50, 150], ['saucisse', '', 1, 4], ['merguez', '', 1, 4],
+  ['steak', '', 1, 2], ['escalope', '', 1, 2], ['cuisse', '', 1, 2], ['magret', '', 1, 2],
+  ['filet mignon', 'g', 50, 400], ['roti', 'g', 100, 800], ['pave', '', 1, 2],
+  ['saumon', 'g', 50, 300], ['cabillaud', 'g', 50, 300], ['truite', 'g', 50, 300],
+  ['poisson', 'g', 50, 300], ['crevettes', 'g', 50, 200], ['gambas', 'g', 50, 200],
+  ['moules', 'g', 250, 1000], ['saint-jacques', '', 1, 6], ['surimi', 'lot', 1, 1],
+  ['thon', 'boîte', 1, 2], ['sardine', 'boîte', 1, 2], ['maquereau', 'boîte', 1, 2],
+  ['tofu', 'g', 50, 200],
+
+  /* — crèmerie — */
+  ['oeufs', 'boîte', 1, 1], ['oeuf', 'boîte', 1, 1],
+  ['gorgonzola', 'g', 50, 100], ['feta', 'g', 50, 200], ['mozzarella', 'g', 50, 125],
+  ['parmesan', 'g', 25, 100], ['gruyere', 'g', 50, 200], ['cheddar', 'g', 50, 200],
+  ['emmental', 'g', 50, 200], ['comte', 'g', 50, 200], ['burrata', '', 1, 2],
+  ['ricotta', 'pot', 1, 1], ['mascarpone', 'pot', 1, 1], ['fromage blanc', 'pot', 1, 1],
+  ['fromage', 'g', 50, 200], ['beurre', 'g', 50, 250], ['margarine', 'pot', 1, 1],
+  ['yaourts', 'lot', 1, 1], ['yaourt', 'lot', 1, 1], ['skyr', 'pot', 1, 1],
+
+  /* — boulangerie — */
+  ['pain', '', 1, 1], ['baguette', '', 1, 1], ['brioche', '', 1, 1],
+  ['tortilla', 'paquet', 1, 1], ['wrap', 'paquet', 1, 1], ['pita', 'paquet', 1, 1],
+  ['galette', 'paquet', 1, 1], ['brick', 'paquet', 1, 1], ['hamburger', 'lot', 1, 1],
+  ['croissant', '', 1, 2], ['muffin', '', 1, 2],
+
+  /* — légumes vendus au poids plutôt qu'à la pièce — */
+  ['haricots verts', 'g', 100, 500], ['epinards', 'g', 100, 300], ['champignons', 'g', 100, 250],
+  ['tomates cerises', 'g', 50, 250], ['roquette', 'g', 50, 100], ['mache', 'g', 50, 100],
+  ['jeunes pousses', 'g', 50, 100], ['petits pois', 'g', 100, 500],
+  ['fraise', 'g', 250, 500], ['framboise', 'g', 125, 250], ['myrtille', 'g', 125, 250],
+  ['raisin', 'g', 250, 500], ['cerise', 'g', 250, 500],
+];
+
+/* Unité par défaut quand aucun motif ne correspond, d'après le rayon. */
+const CN_UNIT_BY_RAYON = {
+  legumes: ['', 1, 2], boucherie: ['g', 50, 300], cremerie: ['g', 50, 200],
+  boulangerie: ['', 1, 1], epicerie: ['g', 50, 250], epices: ['sachet', 1, 1],
+  surgeles: ['g', 100, 500], boissons: ['L', 1, 1],
+  hygiene: ['', 1, 1], entretien: ['', 1, 1], maison: ['', 1, 1],
+};
+
+/* { unit, step, qty } — l'unité peut être vide : on compte alors à la pièce. */
+export function cnUnitFor(name, rayon) {
+  const n = cnProdNorm(name);
+  for (const [pat, unit, step, qty] of CN_UNIT_RULES) {
+    if (cnStartsWord(n, pat)) return { unit, step, qty };
+  }
+  const [unit, step, qty] = CN_UNIT_BY_RAYON[rayon || cnRayon(name)] || ['', 1, 1];
+  return { unit, step, qty };
+}
+
+/* « 200 g », « 3 », « 1 flacon » — la quantité telle qu'on l'affiche. */
+export function cnFormatQty(qty, unit) {
+  const q = String(qty).replace('.', ',');
+  return unit ? `${q} ${unit}` : q;
+}
+
+/* Quantité d'achat proposée pour un produit sans quantité connue. */
+export function cnDefaultQty(name, rayon) {
+  const u = cnUnitFor(name, rayon);
+  return cnFormatQty(u.qty, u.unit);
+}
+
+/* ── Pas d'incrément selon l'unité ──
+   Un + sur du chocolat ajoute 50 g ; un + sur une courgette ajoute 1 courgette.
+   Le pas grandit avec la quantité : on ne passe pas de 500 g à 550 g. */
+export function cnQtyStep(unit, n) {
+  const q = Number(n) || 0;
+  if (unit === 'g')  return q >= 500 ? 100 : q >= 150 ? 50 : 25;
+  if (unit === 'ml') return q >= 500 ? 100 : q >= 150 ? 50 : 25;
+  if (unit === 'cl') return q >= 50 ? 10 : 5;
+  if (unit === 'L')  return q >= 2 ? 1 : 0.5;
+  if (unit === 'kg') return q >= 2 ? 1 : 0.5;
+  return 1;   /* pièces et contenants : jamais de demi-flacon */
+}
+
+/* Unités de recette dont le pas doit rester fin (« 1,5 càs »). */
+const CN_SPOON_UNITS = ['cas', 'cac', 'c a s', 'c a c', 'cuillere', 'cuilleres', 'pincee', 'pincees', 'cube', 'cubes', 'gousse', 'gousses', 'brin', 'brins'];
+export function cnIsSpoonUnit(unit) {
+  return CN_SPOON_UNITS.includes(cnProdNorm(unit || ''));
+}
+
+/* Trois ou quatre quantités plausibles, prêtes à poser en un geste.
+   On bascule sur le kilo et le litre là où on les écrirait à la main. */
+export function cnQtyChoices(unit) {
+  if (unit === 'g')  return ['100 g', '250 g', '500 g', '1 kg'];
+  if (unit === 'ml') return ['100 ml', '250 ml', '500 ml', '1 L'];
+  if (unit === 'L')  return ['1 L', '2 L', '6 L'];
+  if (unit === '')   return ['1', '2', '4', '6'];
+  return [1, 2, 3].map(n => cnFormatQty(n, unit));
+}
+
+/* « en grammes », « à la pièce », « au flacon » — comment se compte ce produit. */
+const CN_UNIT_FEM = ['boîte', 'bouteille', 'botte', 'brique'];
+export function cnUnitHint(unit) {
+  if (!unit) return 'à la pièce';
+  if (unit === 'g') return 'en grammes';
+  if (unit === 'ml') return 'en millilitres';
+  if (unit === 'L') return 'en litres';
+  return (CN_UNIT_FEM.includes(unit) ? 'à la ' : 'au ') + unit;
 }

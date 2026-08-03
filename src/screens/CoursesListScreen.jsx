@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, CNIcon, parseQty, fmtNum } from '../helpers.jsx';
 import { cnCartLines, cnCartCopyText } from '../courses.js';
-import { cnRayon } from '../courses-data.js';
+import { cnRayon, cnQtyStep, cnQtyChoices, cnUnitHint, cnIsSpoonUnit } from '../courses-data.js';
 
 const CN_ACCENT = '#B85C38';
 
@@ -79,23 +79,48 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
 /* ── Ajuster une quantité ──
    Les recettes donnent une base ; vous pouvez vouloir plus (des bananes pour
    la semaine, pas seulement celles du gâteau). On affiche donc toujours ce que
-   réclament les recettes à côté de votre quantité, et on sait y revenir. */
+   réclament les recettes à côté de votre quantité, et on sait y revenir.
+
+   Le pas et les raccourcis suivent l'unité du produit : + sur du chocolat
+   ajoute 50 g, + sur une courgette ajoute une courgette. */
 function CNQtySheet({ line, onClose, onSet, onRemove }) {
   const [val, setVal] = React.useState('');
   React.useEffect(() => { if (line) setVal(line.qty || ''); }, [line && line.key, line && line.qty]);
   const open = !!line;
 
-  /* Incrémente le nombre en tête en préservant l'unité : « 400 g » → « 500 g ». */
+  /* Unité effective : celle écrite dans le champ si elle existe (la recette
+     peut dire « 2 càs »), sinon celle du produit. */
+  const parsed = parseQty(val);
+  const unit = parsed.n != null && parsed.unit ? parsed.unit : (line ? line.unit || '' : '');
+  const known = line && unit === (line.unit || '');
+
+  const setNum = (n) => setVal(`${fmtNum(Math.max(0, n))}${unit ? ' ' + unit : ''}`);
+
+  /* Incrémente le nombre en tête en préservant l'unité : « 400 g » → « 500 g ».
+     Sur ce qui se compte à l'unité, on recale au passage : une recette peut
+     demander 1,5 carotte, on n'en achète pas 2,5. */
   const bump = (d) => {
-    const { n, unit } = parseQty(val);
-    if (n == null) { setVal(String(Math.max(0, 1 + d))); return; }
-    const step = n < 3 ? 0.5 : 1;
-    setVal(`${fmtNum(Math.max(0, n + d * step))}${unit ? ' ' + unit : ''}`);
+    const n = parsed.n;
+    if (n == null) { setNum(1 + d); return; }
+    if (cnIsSpoonUnit(unit)) { setNum(n + d * 0.5); return; }
+    const step = cnQtyStep(unit, d > 0 ? n : n - 0.01);
+    setNum(step === 1 ? (d > 0 ? Math.floor(n) + 1 : Math.ceil(n) - 1) : n + d * step);
   };
 
   const btn = {
     width: 46, height: 46, borderRadius: '50%', border: '1.5px solid #D5CEBE', background: '#FFFFFF',
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  };
+  const chip = (on) => ({
+    flex: 1, height: 38, borderRadius: 9999, cursor: 'pointer', minWidth: 0,
+    border: `1.5px solid ${on ? CN_ACCENT : '#E4DDD2'}`, background: on ? '#FBEDE7' : '#FFFFFF',
+    color: on ? CN_ACCENT : '#3C3830', fontFamily: CN_FONTS.mono, fontSize: 12.5, whiteSpace: 'nowrap',
+  });
+
+  /* Saisie « 300 » sur du chocolat → on enregistre « 300 g ». */
+  const commit = () => {
+    const p = parseQty(val);
+    onSet(p.n != null && !p.unit && line && line.unit ? `${fmtNum(p.n)} ${line.unit}` : val);
   };
 
   return (
@@ -110,17 +135,26 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
         padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 18px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
       }}>
         <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 14px' }}></div>
-        <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918' }}>{line ? line.name : ''}</div>
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginTop: 3, marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918' }}>{line ? line.name : ''}</span>
+          <span style={{
+            fontFamily: CN_FONTS.body, fontSize: 9.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase',
+            color: '#8A6B4A', background: '#F9F1E7', borderRadius: 9999, padding: '2px 8px',
+          }}>{cnUnitHint(line ? line.unit || '' : '')}</span>
+        </div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginTop: 3, marginBottom: 16 }}>
           {line && line.baseQty
             ? `Vos recettes en demandent ${line.baseQty}.`
-            : 'Aucune quantité imposée par vos recettes.'}
+            : line && line.suggQty
+              ? `Aucune recette ne l’impose — ${line.suggQty} est l’achat courant.`
+              : 'Aucune quantité imposée par vos recettes.'}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <button onClick={() => bump(-1)} style={btn} aria-label="Diminuer"><CNIcon name="minus" size={20} color="#3C3830" strokeWidth={2.2} /></button>
           <input value={val} onChange={e => setVal(e.target.value)} placeholder="quantité libre"
-            onKeyDown={e => { if (e.key === 'Enter') onSet(val); }}
+            inputMode={known && (line.unit === 'g' || line.unit === 'ml' || !line.unit) ? 'numeric' : 'text'}
+            onKeyDown={e => { if (e.key === 'Enter') commit(); }}
             style={{
               flex: 1, minWidth: 0, height: 52, borderRadius: 14, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
               padding: '0 14px', fontFamily: CN_FONTS.mono, fontSize: 17, color: '#1A1918',
@@ -129,7 +163,16 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
           <button onClick={() => bump(1)} style={btn} aria-label="Augmenter"><CNIcon name="plus" size={20} color="#3C3830" strokeWidth={2.2} /></button>
         </div>
 
-        <button onClick={() => onSet(val)} style={{
+        {/* Raccourcis : les quantités qu'on achète vraiment dans cette unité. */}
+        {known && (
+          <div style={{ display: 'flex', gap: 7, marginBottom: 16 }}>
+            {cnQtyChoices(line.unit || '').map(c => (
+              <button key={c} onClick={() => setVal(c)} style={chip(val === c)}>{c}</button>
+            ))}
+          </div>
+        )}
+
+        <button onClick={commit} style={{
           width: '100%', height: 52, borderRadius: 9999, border: 'none', background: CN_ACCENT, color: '#FFFFFF',
           cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15, marginBottom: 8,
         }}>Enregistrer</button>
@@ -139,7 +182,7 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
             <button onClick={() => onSet(null)} style={{
               flex: 1, height: 44, borderRadius: 12, border: '1.5px solid #E4DDD2', background: '#FFFFFF', cursor: 'pointer',
               fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#3C3830',
-            }}>Revenir à {line.baseQty || 'aucune'}</button>
+            }}>Revenir à {line.baseQty || line.suggQty || 'aucune'}</button>
           )}
           <button onClick={onRemove} style={{
             flex: 1, height: 44, borderRadius: 12, border: '1.5px solid #F2D9CF', background: '#FFFFFF', cursor: 'pointer',

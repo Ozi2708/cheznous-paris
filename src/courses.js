@@ -7,7 +7,7 @@
    depuis la semaine, donc toujours à jour. */
 
 import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
-import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient } from './courses-data.js';
+import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor, cnFormatQty } from './courses-data.js';
 
 export const CN_COURSES_EMPTY = { prefs: {}, custom: [] };
 /* `qty` : quantités que vous avez ajustées à la main, par clé de ligne. Elles
@@ -128,6 +128,8 @@ export function cnCartLines(cart, recipes, courses, purchases) {
     if (prev) {
       if (line.pid && !prev.pid) prev.pid = line.pid;
       if (line.qty && !prev.qty) prev.qty = line.qty;
+      if (line.prefQty && !prev.prefQty) prev.prefQty = line.prefQty;
+      if (line.exact && !prev.exact) prev.exact = line.exact;
       if (!prev.srcs.includes(line.src)) prev.srcs.push(line.src);
       return;
     }
@@ -140,7 +142,10 @@ export function cnCartLines(cart, recipes, courses, purchases) {
   (c.items || []).forEach(it => {
     if (skipped.has(it.key)) return;
     const p = it.pid ? pmap[it.pid] : null;
-    add({ ...it, name: p ? p.name : it.name, rayon: p ? p.rayon : (it.rayon || cnRayon(it.name)) });
+    add({
+      ...it, name: p ? p.name : it.name, rayon: p ? p.rayon : (it.rayon || cnRayon(it.name)),
+      prefQty: p ? p.qty : undefined, exact: p ? p.exact : undefined,
+    });
   });
 
   const checked = new Set(c.checked || []);
@@ -148,19 +153,28 @@ export function cnCartLines(cart, recipes, courses, purchases) {
   lines.forEach(l => {
     l.done = checked.has(l.key);
     l.baseQty = l.qty || '';                       // ce que réclament les recettes
-    if (over[l.key] != null) { l.qty = over[l.key]; l.edited = l.qty !== l.baseQty; }
+    const u = cnUnitFor(l.name, l.rayon);          // comment ce produit se compte
+    l.unit = u.unit; l.step = u.step;
+    /* Un produit ajouté sans quantité (une habitude, un ajout libre) arrive
+       avec l'achat courant de sa famille : 200 g de chocolat, 1 flacon de
+       lessive, 2 courgettes — jamais un tiret. */
+    if (!l.baseQty) l.suggQty = l.prefQty || cnFormatQty(u.qty, u.unit);
+    l.qty = over[l.key] != null ? over[l.key] : (l.baseQty || l.suggQty);
+    l.edited = over[l.key] != null;
   });
 
   const groups = CN_RAYONS.map(r => ({ ...r, lines: lines.filter(l => l.rayon === r.id) })).filter(g => g.lines.length);
   return { groups, lines, total: lines.length, done: lines.filter(l => l.done).length };
 }
 
-/* Texte copié : la liste entière, rayon par rayon. */
+/* Texte copié : la liste entière, rayon par rayon.
+   Quand vous avez mémorisé la référence exacte d'un produit, c'est elle qu'on
+   écrit — un assistant de drive n'a plus à deviner la marque à votre place. */
 export function cnCartCopyText(groups) {
   const out = [];
   groups.forEach(g => {
     out.push(`— ${g.label} —`);
-    g.lines.forEach(l => out.push(`${l.qty ? l.qty + ' ' : ''}${l.name}`));
+    g.lines.forEach(l => out.push(`${l.qty ? l.qty + ' ' : ''}${l.exact || l.name}`));
     out.push('');
   });
   return out.join('\n').trim();
