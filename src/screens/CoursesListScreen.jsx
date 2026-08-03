@@ -1,5 +1,5 @@
 import React from 'react';
-import { CN_FONTS, CNIcon } from '../helpers.jsx';
+import { CN_FONTS, CNIcon, parseQty, fmtNum } from '../helpers.jsx';
 import { cnCartLines, cnCartCopyText } from '../courses.js';
 import { cnRayon } from '../courses-data.js';
 
@@ -24,11 +24,11 @@ async function cnCopy(text) {
   } catch (e) { return false; }
 }
 
-function CNCartRow({ line, onToggle, onRemove }) {
+function CNCartRow({ line, onToggle, onEdit, onRemove }) {
   const src = CN_SRC_META[line.srcs[0]] || CN_SRC_META.manuel;
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 11, borderBottom: '1px solid #EEE8DC',
+      display: 'flex', alignItems: 'center', gap: 4, borderBottom: '1px solid #EEE8DC',
       padding: '3px 2px', opacity: line.done ? .42 : 1, transition: 'opacity .15s ease',
     }}>
       <button onClick={onToggle} style={{
@@ -53,19 +53,111 @@ function CNCartRow({ line, onToggle, onRemove }) {
             {line.count > 1 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 9.5, color: '#B89268' }}>×{line.count} plats</span>}
           </span>
         </span>
-        {line.qty && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 12, color: '#8C8780', flexShrink: 0, whiteSpace: 'nowrap' }}>{line.qty}</span>}
       </button>
-      <button onClick={onRemove} aria-label="Retirer" style={{
+
+      {/* La quantité est un bouton à part : on l'ajuste sans cocher la ligne. */}
+      <button onClick={onEdit} aria-label={`Modifier la quantité de ${line.name}`} style={{
+        display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, cursor: 'pointer',
+        border: `1.5px solid ${line.edited ? CN_ACCENT : '#E4DDD2'}`,
+        background: line.edited ? '#FBEDE7' : '#FFFFFF',
+        borderRadius: 9999, padding: '5px 10px', minHeight: 32,
+      }}>
+        <span style={{
+          fontFamily: CN_FONTS.mono, fontSize: 12,
+          color: line.edited ? CN_ACCENT : (line.qty ? '#3C3830' : '#B8B3AA'), whiteSpace: 'nowrap',
+        }}>{line.qty || '—'}</span>
+        <CNIcon name="pencil" size={11} color={line.edited ? CN_ACCENT : '#B8B3AA'} />
+      </button>
+
+      <button onClick={onRemove} aria-label={`Retirer ${line.name}`} style={{
         background: 'none', border: 'none', cursor: 'pointer', padding: 6, flexShrink: 0, lineHeight: 0,
       }}><CNIcon name="x" size={14} color="#D5CEBE" strokeWidth={2} /></button>
     </div>
   );
 }
 
+/* ── Ajuster une quantité ──
+   Les recettes donnent une base ; vous pouvez vouloir plus (des bananes pour
+   la semaine, pas seulement celles du gâteau). On affiche donc toujours ce que
+   réclament les recettes à côté de votre quantité, et on sait y revenir. */
+function CNQtySheet({ line, onClose, onSet, onRemove }) {
+  const [val, setVal] = React.useState('');
+  React.useEffect(() => { if (line) setVal(line.qty || ''); }, [line && line.key, line && line.qty]);
+  const open = !!line;
+
+  /* Incrémente le nombre en tête en préservant l'unité : « 400 g » → « 500 g ». */
+  const bump = (d) => {
+    const { n, unit } = parseQty(val);
+    if (n == null) { setVal(String(Math.max(0, 1 + d))); return; }
+    const step = n < 3 ? 0.5 : 1;
+    setVal(`${fmtNum(Math.max(0, n + d * step))}${unit ? ' ' + unit : ''}`);
+  };
+
+  const btn = {
+    width: 46, height: 46, borderRadius: '50%', border: '1.5px solid #D5CEBE', background: '#FFFFFF',
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  };
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 200, pointerEvents: open ? 'auto' : 'none' }} aria-hidden={!open}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,25,24,.4)', opacity: open ? 1 : 0, transition: 'opacity .25s ease' }}></div>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0, background: '#FAFAF8', borderRadius: '24px 24px 0 0',
+        transform: open ? 'translateY(0)' : 'translateY(105%)',
+        visibility: open ? 'visible' : 'hidden',
+        transition: open ? 'transform .3s cubic-bezier(.32,.72,.25,1)'
+                         : 'transform .3s cubic-bezier(.32,.72,.25,1), visibility 0s linear .3s',
+        padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 18px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
+      }}>
+        <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 14px' }}></div>
+        <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918' }}>{line ? line.name : ''}</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginTop: 3, marginBottom: 18 }}>
+          {line && line.baseQty
+            ? `Vos recettes en demandent ${line.baseQty}.`
+            : 'Aucune quantité imposée par vos recettes.'}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <button onClick={() => bump(-1)} style={btn} aria-label="Diminuer"><CNIcon name="minus" size={20} color="#3C3830" strokeWidth={2.2} /></button>
+          <input value={val} onChange={e => setVal(e.target.value)} placeholder="quantité libre"
+            onKeyDown={e => { if (e.key === 'Enter') onSet(val); }}
+            style={{
+              flex: 1, minWidth: 0, height: 52, borderRadius: 14, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
+              padding: '0 14px', fontFamily: CN_FONTS.mono, fontSize: 17, color: '#1A1918',
+              textAlign: 'center', outline: 'none', boxSizing: 'border-box',
+            }} />
+          <button onClick={() => bump(1)} style={btn} aria-label="Augmenter"><CNIcon name="plus" size={20} color="#3C3830" strokeWidth={2.2} /></button>
+        </div>
+
+        <button onClick={() => onSet(val)} style={{
+          width: '100%', height: 52, borderRadius: 9999, border: 'none', background: CN_ACCENT, color: '#FFFFFF',
+          cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 15, marginBottom: 8,
+        }}>Enregistrer</button>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          {line && line.edited && (
+            <button onClick={() => onSet(null)} style={{
+              flex: 1, height: 44, borderRadius: 12, border: '1.5px solid #E4DDD2', background: '#FFFFFF', cursor: 'pointer',
+              fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#3C3830',
+            }}>Revenir à {line.baseQty || 'aucune'}</button>
+          )}
+          <button onClick={onRemove} style={{
+            flex: 1, height: 44, borderRadius: 12, border: '1.5px solid #F2D9CF', background: '#FFFFFF', cursor: 'pointer',
+            fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: CN_ACCENT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+          }}><CNIcon name="trash" size={14} color={CN_ACCENT} /> Retirer de la liste</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar }) {
   const [draft, setDraft] = React.useState('');
-  const { groups, total, done } = React.useMemo(
+  const [editKey, setEditKey] = React.useState(null);
+  const { groups, lines, total, done } = React.useMemo(
     () => cnCartLines(cart, recipes, courses, purchases), [cart, recipes, courses, purchases]);
+  const editLine = lines.find(l => l.key === editKey) || null;
 
   const toggle = (key) => {
     const set = new Set(cart.checked || []);
@@ -81,6 +173,14 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases
       checked: (cart.checked || []).filter(k => k !== key),
     });
   };
+  /* `null` efface la surcharge et rend la main aux recettes. */
+  const setQty = (key, value) => {
+    const q = { ...(cart.qty || {}) };
+    if (value == null || value === '') delete q[key]; else q[key] = value.trim();
+    setCart({ ...cart, qty: q });
+    setEditKey(null);
+  };
+
   const addManual = () => {
     const name = draft.trim();
     if (!name) return;
@@ -142,10 +242,15 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases
               }}><CNIcon name={g.icon} size={13} color={g.color} /> {g.label}</span>
               <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{g.lines.length}</span>
             </div>
-            {g.lines.map(l => <CNCartRow key={l.key} line={l} onToggle={() => toggle(l.key)} onRemove={() => remove(l.key)} />)}
+            {g.lines.map(l => <CNCartRow key={l.key} line={l} onToggle={() => toggle(l.key)}
+              onEdit={() => setEditKey(l.key)} onRemove={() => remove(l.key)} />)}
           </div>
         ))}
       </div>
+
+      <CNQtySheet line={editLine} onClose={() => setEditKey(null)}
+        onSet={(v) => setQty(editKey, v)}
+        onRemove={() => { remove(editKey); setEditKey(null); }} />
 
       {total > 0 && (
         <div style={{

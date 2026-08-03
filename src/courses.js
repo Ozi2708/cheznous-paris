@@ -10,7 +10,10 @@ import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
 import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient } from './courses-data.js';
 
 export const CN_COURSES_EMPTY = { prefs: {}, custom: [] };
-export const CN_CART_EMPTY = { items: [], checked: [], skipped: [] };
+/* `qty` : quantités que vous avez ajustées à la main, par clé de ligne. Elles
+   survivent au recalcul des recettes — si la semaine change, votre « 8 bananes »
+   reste, et l'app sait toujours combien les recettes en demandaient. */
+export const CN_CART_EMPTY = { items: [], checked: [], skipped: [], qty: {} };
 
 export const cnToday = () => Math.floor(Date.now() / 86400000);
 export function cnDayLabel(days) {
@@ -141,7 +144,12 @@ export function cnCartLines(cart, recipes, courses, purchases) {
   });
 
   const checked = new Set(c.checked || []);
-  lines.forEach(l => { l.done = checked.has(l.key); });
+  const over = c.qty || {};
+  lines.forEach(l => {
+    l.done = checked.has(l.key);
+    l.baseQty = l.qty || '';                       // ce que réclament les recettes
+    if (over[l.key] != null) { l.qty = over[l.key]; l.edited = l.qty !== l.baseQty; }
+  });
 
   const groups = CN_RAYONS.map(r => ({ ...r, lines: lines.filter(l => l.rayon === r.id) })).filter(g => g.lines.length);
   return { groups, lines, total: lines.length, done: lines.filter(l => l.done).length };
@@ -197,7 +205,11 @@ export function cnFinishTrip({ cart, recipes, courses, purchases }) {
   return {
     purchases: nextPurch,
     courses: nextCourses,
-    cart: { items: (cart.items || []).filter(it => !doneKeys.has(it.key)), checked: [], skipped: [] },
+    cart: {
+      items: (cart.items || []).filter(it => !doneKeys.has(it.key)),
+      checked: [], skipped: [],
+      qty: Object.fromEntries(Object.entries(cart.qty || {}).filter(([k]) => !doneKeys.has(k))),
+    },
     count: doneLines.length,
   };
 }
