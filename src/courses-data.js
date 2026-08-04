@@ -485,9 +485,25 @@ const CN_PREP_TAILS = [' en des', ' en rondelles', ' en lamelles', ' en morceaux
   ' bien mur', ' bien murs', ' bien mure', ' bien mures'];
 const CN_ABBREV = [[/\bp\.\s*de\s*terre\b/gi, 'pomme de terre']];
 
+/* ── Le calibre n'est pas le produit ──
+   « Gros champignons de Paris » et « champignons de Paris », ce sont les mêmes
+   champignons : les garder distincts fait acheter deux barquettes. On retire
+   donc le calibre en tête de nom — sauf quand il fait partie du produit. */
+const CN_CALIBRE = ['gros', 'grosse', 'grosses', 'petit', 'petite', 'petits', 'petites',
+  'moyen', 'moyenne', 'moyens', 'moyennes', 'grand', 'grande', 'grands', 'grandes'];
+const CN_CALIBRE_GARDE = ['gros sel', 'petits pois', 'petit pois', 'petit epeautre',
+  'petit sale', 'petit suisse', 'petits suisses', 'grand cru'];
+
 export function cnBuyName(name) {
   let s = String(name || '').trim();
   CN_ABBREV.forEach(([re, to]) => { s = s.replace(re, to); });
+  {
+    const n = cnProdNorm(s);
+    const first = n.split(' ')[0];
+    if (CN_CALIBRE.includes(first) && !CN_CALIBRE_GARDE.some(k => n.startsWith(k))) {
+      s = s.split(/\s+/).slice(1).join(' ');
+    }
+  }
   for (;;) {
     const tail = CN_PREP_TAILS.find(t => cnProdNorm(s).endsWith(t));
     if (!tail) break;
@@ -518,10 +534,17 @@ const CN_INVARIABLE = ['ananas', 'mais', 'jus', 'riz', 'pois', 'cassis', 'anis',
   'panais', 'chips', 'noix', 'cresson'];
 const CN_PREPS = ['de', 'du', 'des', 'a', 'au', 'aux', 'en', 'pour', 'sans', 'avec'];
 
+/* Les sept noms en -ou qui font leur pluriel en -x. */
+const CN_OU_X = ['bijou', 'caillou', 'chou', 'genou', 'hibou', 'joujou', 'pou'];
+
 function cnNumberWord(w, plural) {
   const n = cnProdNorm(w);
   if (n.length < 4 || CN_INVARIABLE.includes(n)) return w;
-  if (plural) return /[sxz]$/i.test(w) ? w : w + 's';
+  if (plural) {
+    if (/[sxz]$/i.test(w)) return w;
+    if (/(eau|au|eu)$/i.test(w) || CN_OU_X.includes(n)) return w + 'x';   // poireaux, choux
+    return w + 's';
+  }
   if (/ux$/i.test(w)) return w.slice(0, -1);          // « choux » → « chou »
   return /[^s]s$/i.test(w) ? w.slice(0, -1) : w;
 }
@@ -539,6 +562,35 @@ function cnAgree(name, plural) {
   return words.map((w, i) => (i < head ? cnNumberWord(w, plural) : w)).join(' ');
 }
 
+/* ── Poids moyen d'une pièce, au rayon fruits et légumes ──
+   Le drive vend le vrac au kilo : demander « 4 oignons » sans dire ce que ça
+   pèse fait prendre le filet d'un kilo. Un ordre de grandeur suffit à viser
+   le bon conditionnement. */
+const CN_PIECE_G = [
+  ['echalote', 25], ['gousse', 5], ['citron vert', 70], ['citron', 100],
+  ['champignon', 20], ['radis', 15], ['abricot', 50], ['figue', 60],
+  ['kiwi', 90], ['carotte', 90], ['endive', 100], ['banane', 120],
+  ['oignon nouveau', 40], ['oignon', 110], ['tomate cerise', 10], ['tomate', 120],
+  ['navet', 120], ['clementine', 80], ['pomme de terre', 130], ['poivron', 150],
+  ['betterave', 150], ['panais', 150], ['peche', 150], ['nectarine', 150],
+  ['pomme', 160], ['orange', 180], ['poire', 170], ['courgette', 200],
+  ['avocat', 200], ['poireau', 200], ['salade', 200], ['aubergine', 250],
+  ['patate douce', 250], ['fenouil', 300], ['mangue', 350], ['concombre', 350],
+  ['brocoli', 500], ['ananas', 900], ['chou-fleur', 800], ['chou', 900],
+  ['butternut', 1000], ['courge', 1000], ['melon', 1000], ['potiron', 1500],
+  ['pasteque', 3000],
+];
+function cnPieceWeight(name) {
+  const n = cnProdNorm(name);
+  for (const [pat, g] of CN_PIECE_G) if (cnStartsWord(n, pat)) return g;
+  return null;
+}
+function cnRoundWeight(g) {
+  if (g >= 1000) return cnFormatQty(Math.round(g / 100) / 10, 'kg');
+  const step = g >= 200 ? 50 : 25;
+  return cnFormatQty(Math.max(25, Math.round(g / step) * step), 'g');
+}
+
 export function cnDriveLine(line) {
   const q = cnSplitQty(line.qty || '');
   /* Un nom de produit se dit en minuscule au fil de la phrase. */
@@ -553,7 +605,15 @@ export function cnDriveLine(line) {
 
   /* La référence mémorisée précise, elle ne remplace pas : le nom générique
      reste ce sur quoi l'assistant cherche si la marque manque en rayon. */
-  return line.exact ? `${base} (${line.exact})` : base;
+  if (line.exact) return `${base} (${line.exact})`;
+
+  /* Sinon, l'indice qui évite le filet d'un kilo : ce que pèsent ces pièces.
+     Le drive vend le vrac au poids — sans repère, « 4 oignons » devient 1 kg. */
+  if (q.n != null && !q.unit && line.rayon === 'legumes') {
+    const g = cnPieceWeight(line.name);
+    if (g) return `${base} (environ ${cnRoundWeight(g * q.n)})`;
+  }
+  return base;
 }
 
 /* ── Estimation de budget ──

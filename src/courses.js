@@ -216,9 +216,16 @@ export function cnCartDriveText(groups) {
   const items = [];
   groups.forEach(g => g.lines.forEach(l => { if (!l.done) items.push(cnDriveLine(l)); }));
   if (!items.length) return '';
+  /* Ces trois règles viennent d'une commande réelle : « prends le plus proche
+     au-dessus » faisait acheter deux paquets de pavés pour 400 g, trois
+     sachets de fromage pour 200 g, et remplaçait des pousses de salade par
+     des pousses d'épinard sans le dire. */
   return [
     'Ajoute ces produits à mon panier Carrefour Drive.',
-    "Respecte les quantités indiquées ; si le format exact n'existe pas, prends le plus proche au-dessus.",
+    '',
+    "1. Un seul article par ligne, sauf si un seul ne couvre pas la quantité demandée.",
+    "2. Prends le conditionnement le plus proche de la quantité, sans la dépasser de plus d'un format.",
+    "3. Ne remplace jamais par une autre variété ou un autre produit : si tu ne trouves pas, signale-le au lieu de choisir à ma place.",
     '',
     ...items.map(t => '- ' + t),
   ].join('\n');
