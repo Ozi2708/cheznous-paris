@@ -8,7 +8,7 @@
 
 import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
 import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor,
-  cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro, cnRayonOrNull } from './courses-data.js';
+  cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro, cnRayonOrNull, cnDriveLine } from './courses-data.js';
 
 export const CN_COURSES_EMPTY = { prefs: {}, custom: [] };
 /* `qty` : quantités que vous avez ajustées à la main, par clé de ligne. Elles
@@ -202,6 +202,26 @@ export function cnCartCopyText(groups) {
     out.push('');
   });
   return out.join('\n').trim();
+}
+
+/* ── Ce qu'on colle dans l'assistant du drive ──
+   Depuis mars 2026, Carrefour est une application de ChatGPT : on lui donne
+   une liste, il remplit le panier. Ce qu'on colle n'est donc pas un pense-bête,
+   c'est une consigne — et sa forme décide de ce qui atterrit dans le panier.
+
+   D'où : pas de titres de rayon (un assistant les prendrait pour des articles),
+   un produit par ligne, une quantité déjà traduite en format vendu, et deux
+   phrases d'entrée qui disent quoi faire et comment arbitrer. */
+export function cnCartDriveText(groups) {
+  const items = [];
+  groups.forEach(g => g.lines.forEach(l => { if (!l.done) items.push(cnDriveLine(l)); }));
+  if (!items.length) return '';
+  return [
+    'Ajoute ces produits à mon panier Carrefour Drive.',
+    "Respecte les quantités indiquées ; si le format exact n'existe pas, prends le plus proche au-dessus.",
+    '',
+    ...items.map(t => '- ' + t),
+  ].join('\n');
 }
 
 /* ── Chercher dans ce qu'on suit déjà ──

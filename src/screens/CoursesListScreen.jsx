@@ -1,7 +1,7 @@
 import React from 'react';
 import { CN_FONTS, CNIcon, parseQty, fmtNum } from '../helpers.jsx';
 import { CN_C, CN_T, CN_R } from '../tokens.js';
-import { cnCartLines, cnCartCopyText, cnSearchProducts, cnFindProduct, cnCreateProduct } from '../courses.js';
+import { cnCartLines, cnCartCopyText, cnCartDriveText, cnSearchProducts, cnFindProduct, cnCreateProduct } from '../courses.js';
 import { cnRayon, cnRayonOrNull, cnRayonMeta, cnQtyStep, cnQtyChoices, cnUnitHint, cnIsSpoonUnit, cnUnitFor } from '../courses-data.js';
 
 const CN_ACCENT = CN_C.terra;
@@ -422,12 +422,21 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
     setCart({ ...cart, items: [...(cart.items || []), { key, name, rayon: cnRayon(name), src: 'manuel' }] });
   };
 
-  /* Le geste principal : la liste part chez le drive, sans ce qui est déjà pris. */
-  const copy = async () => {
+  /* ── Les deux copies ──
+     Celle du bas part chez l'assistant du drive : une consigne suivie d'une
+     ligne par produit, sans titre de rayon qu'il prendrait pour un article.
+     Celle de l'en-tête reste la liste rangée par rayons, pour un œil humain. */
+  const copyDrive = async () => {
+    const text = cnCartDriveText(groups);
+    if (!text) { showToast('Tout est déjà coché'); return; }
+    const ok = await cnCopy(text);
+    showToast(ok ? `${remaining} article${remaining > 1 ? 's' : ''} copié${remaining > 1 ? 's' : ''} — collez-les dans Carrefour` : 'Copie impossible');
+  };
+  const copyRayons = async () => {
     const text = cnCartCopyText(groups);
     if (!text) { showToast('Tout est déjà coché'); return; }
     const ok = await cnCopy(text);
-    showToast(ok ? `${remaining} article${remaining > 1 ? 's' : ''} copié${remaining > 1 ? 's' : ''} — collez-les au drive` : 'Copie impossible');
+    showToast(ok ? 'Liste par rayons copiée' : 'Copie impossible');
   };
 
   const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.micro, letterSpacing: '.11em', textTransform: 'uppercase', color: CN_C.muted };
@@ -438,8 +447,14 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: CN_T.display, color: CN_C.ink }}>Ma liste</span>
           {total > 0 && (
-            <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.muted, whiteSpace: 'nowrap' }}>
-              {done}/{total}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.muted, whiteSpace: 'nowrap' }}>
+                {done}/{total}
+              </span>
+              <button onClick={copyRayons} aria-label="Copier la liste par rayons" title="Copier la liste par rayons" style={{
+                width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}><CNIcon name="copy" size={15} color={CN_C.faint} /></button>
             </span>
           )}
         </div>
@@ -575,7 +590,7 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
           position: 'absolute', left: 0, right: 0, bottom: bottomInset, padding: '14px 20px 16px', zIndex: 55,
           background: `linear-gradient(to top, ${CN_C.paper} 70%, rgba(250,250,248,0))`, display: 'flex', gap: 8,
         }}>
-          <button onClick={copy} disabled={!remaining} style={{
+          <button onClick={copyDrive} disabled={!remaining} style={{
             flex: 1, height: 54, borderRadius: CN_R.pill, border: 'none', cursor: remaining ? 'pointer' : 'default',
             background: remaining ? CN_ACCENT : CN_C.rule, color: CN_C.card,
             fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.base,

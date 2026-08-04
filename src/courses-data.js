@@ -377,7 +377,7 @@ export function cnUnitHint(unit) {
    garde le besoin d'origine à côté pour que rien ne se perde. */
 
 /* Nombre en tête d'une chaîne, sans dépendre de React : « 204 ml » → 204, ml. */
-function cnSplitQty(q) {
+export function cnSplitQty(q) {
   const m = String(q || '').match(/^\s*([\d.,]+)\s*(.*)$/);
   if (!m) return { n: null, unit: String(q || '').trim() };
   return { n: parseFloat(m[1].replace(',', '.')), unit: m[2].trim() };
@@ -495,6 +495,65 @@ export function cnBuyName(name) {
   }
   s = s.split(/\s+/).filter(w => !CN_PREP_WORDS.has(cnProdNorm(w))).join(' ').trim();
   return s ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+/* ── Écrire un article comme on le dicterait ──
+   Destiné à être collé dans un assistant qui remplit un panier drive : une
+   ligne se lit « 400 g de filet mignon », « 2 briques de coulis de tomates »,
+   « 9 aubergines ». La préposition compte — sans elle, « 400 g filet mignon »
+   se lit comme deux articles distincts.
+
+   Quand vous avez mémorisé une référence précise, c'est elle qui parle : elle
+   porte déjà sa marque et son format, on ne lui ajoute qu'un multiplicateur. */
+const CN_H_MUET = ['huile', 'huitre', 'herbe'];   // « d'huile », mais « de haricots »
+function cnDe(name) {
+  const n = cnProdNorm(name);
+  if (/^[aeiouy]/.test(n) || CN_H_MUET.some(h => n.startsWith(h))) return "d'";
+  return 'de ';
+}
+
+/* Ces noms s'écrivent avec un s au singulier. */
+const CN_INVARIABLE = ['ananas', 'mais', 'jus', 'riz', 'pois', 'cassis', 'anis',
+  'couscous', 'houmous', 'brebis', 'radis', 'poids', 'os', 'temps', 'velours',
+  'panais', 'chips', 'noix', 'cresson'];
+const CN_PREPS = ['de', 'du', 'des', 'a', 'au', 'aux', 'en', 'pour', 'sans', 'avec'];
+
+function cnNumberWord(w, plural) {
+  const n = cnProdNorm(w);
+  if (n.length < 4 || CN_INVARIABLE.includes(n)) return w;
+  if (plural) return /[sxz]$/i.test(w) ? w : w + 's';
+  if (/ux$/i.test(w)) return w.slice(0, -1);          // « choux » → « chou »
+  return /[^s]s$/i.test(w) ? w.slice(0, -1) : w;
+}
+
+/* Accorde le nom avec le nombre — « 1 aubergines » et « 2 salade verte » se
+   lisent mal, et un assistant hésite sur ce qu'on lui demande. Seule la tête du
+   nom s'accorde : ce qui suit une préposition n'a pas à bouger (« 2 laits de
+   coco », pas « 2 laits de cocos »). */
+function cnAgree(name, plural) {
+  const words = name.split(' ');
+  let head = words.length;
+  for (let i = 1; i < words.length; i++) {
+    if (CN_PREPS.includes(cnProdNorm(words[i])) || /^d[’']/.test(words[i])) { head = i; break; }
+  }
+  return words.map((w, i) => (i < head ? cnNumberWord(w, plural) : w)).join(' ');
+}
+
+export function cnDriveLine(line) {
+  const q = cnSplitQty(line.qty || '');
+  /* Un nom de produit se dit en minuscule au fil de la phrase. */
+  let name = line.name ? line.name[0].toLowerCase() + line.name.slice(1) : '';
+  /* On n'accorde que ce qui se compte : « 400 g de tomates cerises » garde son
+     pluriel quel que soit le poids. */
+  if (q.n != null && !q.unit) name = cnAgree(name, q.n >= 2);
+
+  const base = !line.qty ? name
+    : q.n == null || !q.unit ? `${line.qty} ${name}`      // « 9 aubergines »
+    : `${line.qty} ${cnDe(name)}${name}`;                 // « 400 g de bœuf »
+
+  /* La référence mémorisée précise, elle ne remplace pas : le nom générique
+     reste ce sur quoi l'assistant cherche si la marque manque en rayon. */
+  return line.exact ? `${base} (${line.exact})` : base;
 }
 
 /* ── Estimation de budget ──

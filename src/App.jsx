@@ -364,8 +364,9 @@ export function CNApp() {
             background: '#1A1918', color: '#FAFAF8', borderRadius: 9999, padding: '11px 18px',
             display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 24px rgba(26,25,24,.3)',
           }}>
-            <CNIcon name="check" size={15} color="#DCBE98" strokeWidth={2.5} />
-            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{toast}</span>
+            <CNIcon name="check" size={15} color="#DCBE98" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+            {/* Un message coupé au milieu ne dit plus rien : il passe à la ligne. */}
+            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, lineHeight: 1.35 }}>{toast}</span>
           </div>
         )}
 
