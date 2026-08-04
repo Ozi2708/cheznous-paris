@@ -417,6 +417,7 @@ const CN_UNIT_RULES = [
   ['haricots verts', 'g', 100, 500], ['epinards', 'g', 100, 300], ['champignons', 'g', 100, 250],
   ['tomates cerises', 'g', 50, 250], ['roquette', 'g', 50, 100], ['mache', 'g', 50, 100],
   ['jeunes pousses', 'g', 50, 100], ['petits pois', 'g', 100, 500],
+  ['frites', 'g', 500, 1000], ['nuggets', 'g', 250, 750],
   ['fraise', 'g', 250, 500], ['framboise', 'g', 125, 250], ['myrtille', 'g', 125, 250],
   ['raisin', 'g', 250, 500], ['cerise', 'g', 250, 500],
   /* l'ail se vend à la tête, le gingembre au rhizome — jamais « 2 gousses » */
@@ -704,7 +705,7 @@ function cnAgree(name, plural) {
    pèse fait prendre le filet d'un kilo. Un ordre de grandeur suffit à viser
    le bon conditionnement. */
 const CN_PIECE_G = [
-  ['echalote', 25], ['gousse', 5], ['cebette', 25], ['oignon nouveau', 25],
+  ['echalote', 25], ['gousse', 5], ['cebette', 25], ['oignon nouveau', 25], ['oignon blanc', 25],
   ['citron vert', 70], ['citron', 100],
   ['champignon', 20], ['radis', 15], ['abricot', 50], ['figue', 60],
   ['kiwi', 90], ['carotte', 90], ['endive', 100], ['banane', 120],
@@ -736,16 +737,16 @@ function cnRoundWeight(g) {
    cébette du Midi s'appelle « oignon nouveau » en rayon, et une ligne que le
    drive ne comprend pas est une ligne qu'il refuse. */
 const CN_DRIVE_SYN = [
-  ['cebette', 'Oignons nouveaux'],
-  ['cive', 'Oignons nouveaux'],
+  ['cebette', 'Oignons blancs'],
+  ['cive', 'Oignons blancs'],
+  ['oignon nouveau', 'Oignons blancs'],
   ['pomme de terre a chair ferme', 'Pommes de terre à chair ferme'],
-  /* Certains produits n'existent au catalogue qu'avec leur caractéristique :
-     un sac poubelle se vend par contenance, un pain pita sous deux noms. */
-  ['sacs poubelle', 'Sacs poubelle 30 litres'],
-  ['sac poubelle', 'Sacs poubelle 30 litres'],
-  ['pain pita', 'Pains pita (pain libanais)'],
-  ['pains pita', 'Pains pita (pain libanais)'],
-  ['sac congelation', 'Sacs de congélation 3 litres'],
+  /* Le mot que le rayon emploie vraiment. Attention à ne rien préciser de
+     plus : une caractéristique ajoutée fait d'un produit générique une
+     variété, et la consigne interdit alors de la remplacer — trois refus de
+     « sacs poubelle 30 litres » l'ont montré. */
+  ['ail en poudre', 'Ail semoule'],
+  ['fromage rape a l italienne', 'Mozzarella râpée'],
 ];
 function cnDriveName(name) {
   const n = cnProdNorm(name);
