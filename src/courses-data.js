@@ -82,6 +82,120 @@ export const CN_SEED_PRODUCTS = [
   { id: 'jus-orange',       name: "Jus d'orange",           rayon: 'boissons',  days: 10 },
   { id: 'biere',            name: 'Bière',                  rayon: 'boissons',  days: 21 },
   { id: 'vin',              name: 'Vin',                    rayon: 'boissons',  days: 21 },
+
+  /* ── Ce qu'on rachète sans qu'une recette le demande ──
+     Un produit n'a sa place ici que s'il revient tout seul, à un rythme.
+     Les ingrédients d'un plat précis arrivent déjà par les recettes ; ce qui
+     suit, c'est le fond de maison — celui qu'on oublie jusqu'à en manquer. */
+
+  /* Fruits & légumes : les basiques d'une semaine, indépendants des plats */
+  { id: 'bananes',          name: 'Bananes',                rayon: 'legumes',   days: 7 },
+  { id: 'pommes-fruit',     name: 'Pommes',                 rayon: 'legumes',   days: 10 },
+  { id: 'citrons',          name: 'Citrons',                rayon: 'legumes',   days: 14 },
+  { id: 'salade-verte',     name: 'Salade verte',           rayon: 'legumes',   days: 7 },
+  { id: 'tomates',          name: 'Tomates',                rayon: 'legumes',   days: 7 },
+  { id: 'carottes',         name: 'Carottes',               rayon: 'legumes',   days: 10 },
+  { id: 'oignons',          name: 'Oignons',                rayon: 'legumes',   days: 21 },
+  { id: 'ail-tete',         name: 'Ail',                    rayon: 'legumes',   days: 30 },
+  { id: 'pommes-de-terre',  name: 'Pommes de terre',        rayon: 'legumes',   days: 21 },
+  { id: 'courgettes',       name: 'Courgettes',             rayon: 'legumes',   days: 10 },
+  { id: 'avocats',          name: 'Avocats',                rayon: 'legumes',   days: 10 },
+  { id: 'champignons',      name: 'Champignons de Paris',   rayon: 'legumes',   days: 14 },
+  { id: 'oranges',          name: 'Oranges',                rayon: 'legumes',   days: 14 },
+  { id: 'concombre',        name: 'Concombre',              rayon: 'legumes',   days: 10 },
+
+  /* Boucherie & poisson : les pièces qu'on prend par habitude */
+  { id: 'blanc-poulet',     name: 'Blanc de poulet',        rayon: 'boucherie', days: 10 },
+  { id: 'steak-hache',      name: 'Steak haché',            rayon: 'boucherie', days: 14 },
+  { id: 'lardons',          name: 'Lardons',                rayon: 'boucherie', days: 21 },
+  { id: 'jambon-blanc',     name: 'Jambon blanc',           rayon: 'boucherie', days: 10 },
+  { id: 'saumon-frais',     name: 'Saumon frais',           rayon: 'boucherie', days: 21 },
+  { id: 'saucisses',        name: 'Saucisses',              rayon: 'boucherie', days: 30 },
+
+  /* Crèmerie : le rayon le plus rapide à se vider */
+  { id: 'creme-fraiche',    name: 'Crème fraîche',          rayon: 'cremerie',  days: 14 },
+  { id: 'creme-liquide',    name: 'Crème liquide',          rayon: 'cremerie',  days: 21 },
+  { id: 'fromage-blanc',    name: 'Fromage blanc',          rayon: 'cremerie',  days: 10 },
+  { id: 'fromage-tartiner', name: 'Fromage à tartiner',     rayon: 'cremerie',  days: 21 },
+  { id: 'parmesan',         name: 'Parmesan',               rayon: 'cremerie',  days: 30 },
+  { id: 'mozzarella',       name: 'Mozzarella',             rayon: 'cremerie',  days: 14 },
+  { id: 'fromage-coupe',    name: 'Fromage à la coupe',     rayon: 'cremerie',  days: 14 },
+  { id: 'lait-vegetal',     name: "Lait d'amande",          rayon: 'epicerie',  days: 14 },
+
+  /* Pain & petit-déjeuner */
+  { id: 'baguette',         name: 'Baguette',               rayon: 'boulangerie', days: 3 },
+  { id: 'pain-complet',     name: 'Pain complet',           rayon: 'boulangerie', days: 5 },
+  { id: 'biscottes',        name: 'Biscottes',              rayon: 'boulangerie', days: 30 },
+  { id: 'flocons-avoine',   name: "Flocons d'avoine",       rayon: 'boulangerie', days: 30 },
+  { id: 'pate-tartiner',    name: 'Pâte à tartiner',        rayon: 'boulangerie', days: 45 },
+  { id: 'compotes',         name: 'Compotes',               rayon: 'boulangerie', days: 21 },
+
+  /* Épicerie : les conserves et les fonds de sauce */
+  { id: 'pulpe-tomates',    name: 'Pulpe de tomates',       rayon: 'epicerie',  days: 21 },
+  { id: 'coulis-tomates',   name: 'Coulis de tomates',      rayon: 'epicerie',  days: 21 },
+  { id: 'thon-boite',       name: 'Thon au naturel',        rayon: 'epicerie',  days: 21 },
+  { id: 'mais-conserve',    name: 'Maïs en conserve',       rayon: 'epicerie',  days: 30 },
+  { id: 'pois-chiches',     name: 'Pois chiches',           rayon: 'epicerie',  days: 30 },
+  { id: 'lentilles',        name: 'Lentilles vertes',       rayon: 'epicerie',  days: 45 },
+  { id: 'haricots-rouges',  name: 'Haricots rouges',        rayon: 'epicerie',  days: 45 },
+  { id: 'bouillon-cube',    name: 'Bouillon cube',          rayon: 'epicerie',  days: 60 },
+  { id: 'moutarde',         name: 'Moutarde',               rayon: 'epicerie',  days: 60 },
+  { id: 'ketchup',          name: 'Ketchup',                rayon: 'epicerie',  days: 45 },
+  { id: 'mayonnaise',       name: 'Mayonnaise',             rayon: 'epicerie',  days: 45 },
+  { id: 'vinaigre-balsam',  name: 'Vinaigre balsamique',    rayon: 'epicerie',  days: 90 },
+  { id: 'huile-tournesol',  name: 'Huile de tournesol',     rayon: 'epicerie',  days: 60 },
+  { id: 'sauce-soja',       name: 'Sauce soja',             rayon: 'epicerie',  days: 90 },
+  { id: 'lait-coco',        name: 'Lait de coco',           rayon: 'epicerie',  days: 45 },
+  { id: 'amandes',          name: 'Amandes',                rayon: 'epicerie',  days: 21 },
+  { id: 'cornichons',       name: 'Cornichons',             rayon: 'epicerie',  days: 60 },
+  { id: 'levure',           name: 'Levure chimique',        rayon: 'epicerie',  days: 90 },
+
+  /* Épices : lentes, mais elles finissent toujours par manquer */
+  { id: 'herbes-provence',  name: 'Herbes de Provence',     rayon: 'epices',    days: 120 },
+  { id: 'paprika',          name: 'Paprika',                rayon: 'epices',    days: 150 },
+  { id: 'curry',            name: 'Curry',                  rayon: 'epices',    days: 150 },
+  { id: 'cumin',            name: 'Cumin',                  rayon: 'epices',    days: 150 },
+  { id: 'curcuma',          name: 'Curcuma',                rayon: 'epices',    days: 150 },
+  { id: 'cannelle',         name: 'Cannelle',               rayon: 'epices',    days: 180 },
+  { id: 'ail-poudre',       name: 'Ail en poudre',          rayon: 'epices',    days: 120 },
+  { id: 'origan',           name: 'Origan',                 rayon: 'epices',    days: 150 },
+  { id: 'laurier',          name: 'Laurier',                rayon: 'epices',    days: 180 },
+
+  /* Surgelés : le rayon qu'on oublie de tenir à jour */
+  { id: 'legumes-surgeles', name: 'Poêlée de légumes surgelés', rayon: 'surgeles', days: 21 },
+  { id: 'epinards-surgeles',name: 'Épinards surgelés',      rayon: 'surgeles',  days: 30 },
+  { id: 'haricots-surgeles',name: 'Haricots verts surgelés', rayon: 'surgeles', days: 30 },
+  { id: 'petits-pois-surg', name: 'Petits pois surgelés',   rayon: 'surgeles',  days: 30 },
+  { id: 'poisson-surgele',  name: 'Filets de poisson surgelés', rayon: 'surgeles', days: 30 },
+  { id: 'frites-surgelees', name: 'Frites surgelées',       rayon: 'surgeles',  days: 30 },
+  { id: 'glace',            name: 'Glace',                  rayon: 'surgeles',  days: 21 },
+
+  /* Boissons */
+  { id: 'eau-plate',        name: 'Eau plate',              rayon: 'boissons',  days: 14 },
+  { id: 'soda',             name: 'Soda',                   rayon: 'boissons',  days: 21 },
+  { id: 'sirop',            name: 'Sirop',                  rayon: 'boissons',  days: 60 },
+  { id: 'jus-pomme',        name: 'Jus de pomme',           rayon: 'boissons',  days: 14 },
+
+  /* Hygiène */
+  { id: 'apres-shampoing',  name: 'Après-shampoing',        rayon: 'hygiene',   days: 60 },
+  { id: 'mousse-raser',     name: 'Mousse à raser',         rayon: 'hygiene',   days: 90 },
+  { id: 'protections',      name: 'Protections hygiéniques', rayon: 'hygiene',  days: 30 },
+  { id: 'fil-dentaire',     name: 'Fil dentaire',           rayon: 'hygiene',   days: 90 },
+  { id: 'bain-bouche',      name: 'Bain de bouche',         rayon: 'hygiene',   days: 90 },
+  { id: 'creme-solaire',    name: 'Crème solaire',          rayon: 'hygiene',   days: 180 },
+
+  /* Entretien */
+  { id: 'vinaigre-blanc',   name: 'Vinaigre blanc',         rayon: 'entretien', days: 60 },
+  { id: 'bicarbonate',      name: 'Bicarbonate de soude',   rayon: 'entretien', days: 90 },
+  { id: 'produit-vitres',   name: 'Nettoyant vitres',       rayon: 'entretien', days: 90 },
+  { id: 'lingettes-desinf', name: 'Lingettes désinfectantes', rayon: 'entretien', days: 45 },
+  { id: 'sacs-congelation', name: 'Sacs de congélation',    rayon: 'entretien', days: 90 },
+  { id: 'liquide-rincage',  name: 'Liquide de rinçage lave-vaisselle', rayon: 'entretien', days: 90 },
+  { id: 'sel-regenerant',   name: 'Sel régénérant lave-vaisselle', rayon: 'entretien', days: 120 },
+
+  /* Maison */
+  { id: 'allumettes',       name: 'Allumettes',             rayon: 'maison',    days: 180 },
+  { id: 'ruban-adhesif',    name: 'Ruban adhésif',          rayon: 'maison',    days: 240 },
 ];
 
 /* ── Classement automatique d'un nom en rayon ──
@@ -89,18 +203,25 @@ export const CN_SEED_PRODUCTS = [
    catalogue portent déjà leur rayon. Première règle qui matche = gagnante,
    d'où le bloc d'exceptions en tête (« crème de coco » n'est pas de la crème). */
 const CN_RAYON_RULES = [
+  /* Ces noms contiennent un mot d'une autre famille : ils passent d'abord. */
+  ['entretien', ['lingettes desinfectantes', 'lingette desinfectante', 'vinaigre blanc',
+                 'bicarbonate', 'sacs de congelation', 'sac de congelation',
+                 'liquide de rincage', 'sel regenerant']],
+  ['hygiene',   ['creme solaire', 'protections hygieniques', 'mousse a raser']],
+  /* Ce qui est surgelé va aux surgelés, quel que soit le produit d'origine. */
+  ['surgeles',  ['surgele', 'glace', 'sorbet', 'nuggets']],
   ['epices',    ['ail en poudre', 'gingembre en poudre', 'oignon en poudre', 'piment']],
   ['legumes',   ['gingembre frais', 'herbes fraiches', 'basilic', 'coriandre fraiche', 'persil', 'ciboulette', 'aneth', 'menthe', 'estragon']],
-  ['epicerie',  ['coulis de tomate', 'concentre de tomate', 'pulpe de tomate', 'chair de tomate', 'tomates sechees', 'tomate pelee', 'mais en conserve', 'mais cuit', 'jus de citron', 'zeste de citron', 'lait de coco', 'creme de coco', 'lait d amande', 'lait de soja', 'creme de soja', 'lait vegetal', 'vegetal', 'vegetale', 'tofu', 'houmous', 'pesto', 'olives', 'cornichons', 'bouillon', 'sauce', 'vinaigre', 'gnocchi', 'eau ou bouillon']],
+  ['epicerie',  ['thon au naturel', 'thon en boite', 'sardines a l huile', 'maquereaux au vin',
+                 'coulis de tomate', 'concentre de tomate', 'pulpe de tomate', 'chair de tomate', 'tomates sechees', 'tomate pelee', 'mais en conserve', 'mais cuit', 'jus de citron', 'zeste de citron', 'lait de coco', 'creme de coco', 'lait d amande', 'lait de soja', 'creme de soja', 'lait vegetal', 'vegetal', 'vegetale', 'tofu', 'houmous', 'pesto', 'olives', 'cornichons', 'bouillon', 'sauce', 'vinaigre', 'gnocchi', 'eau ou bouillon', 'cafe', 'the vert', 'the noir', 'the /', 'tisane', 'infusion']],
   ['hygiene',   ['papier toilette', 'papier hygienique', 'mouchoir', 'savon', 'gel douche', 'shampoing', 'deodorant', 'dentifrice', 'brosse a dent', 'fil dentaire', 'bain de bouche', 'rasoir', 'mousse a raser', 'coton', 'demaquillant', 'creme hydratante', 'protection hygienique', 'serviette hygienique', 'tampon', 'couche', 'lingette', 'parfum', 'pansement', 'paracetamol', 'doliprane']],
   ['entretien', ['lessive', 'adoucissant', 'liquide vaisselle', 'lave-vaisselle', 'eponge', 'sac poubelle', 'sacs poubelle', 'essuie-tout', 'sopalin', 'nettoyant', 'detergent', 'javel', 'desinfectant', 'anticalcaire', 'detachant', 'papier aluminium', 'papier alu', 'film etirable', 'papier cuisson', 'sac congelation', 'balai', 'serpillere']],
-  ['maison',    ['pile', 'ampoule', 'bougie', 'allume-feu', 'charbon']],
+  ['maison',    ['pile', 'ampoule', 'bougie', 'allume-feu', 'allumette', 'charbon', 'ruban adhesif', 'adhesif', 'ficelle']],
   ['epices',    ['epice', 'sel', 'poivre', 'curry', 'cumin', 'paprika', 'curcuma', 'cannelle', 'massala', 'masala', 'zaatar', 'origan', 'thym', 'laurier', 'herbes de provence', 'chili', 'muscade', 'safran', 'vanille', 'ras el hanout', 'fleur de sel']],
   ['boucherie', ['poulet', 'dinde', 'bœuf', 'boeuf', 'porc', 'agneau', 'veau', 'canard', 'lapin', 'lardon', 'bacon', 'jambon', 'saucisse', 'chorizo', 'steak', 'hache', 'roti', 'filet mignon', 'escalope', 'cuisse', 'magret', 'merguez', 'poisson', 'saumon', 'cabillaud', 'lieu', 'colin', 'truite', 'thon', 'crevette', 'moule', 'gambas', 'calamar', 'sardine', 'maquereau', 'saint-jacques', 'surimi']],
   ['cremerie',  ['lait', 'creme', 'beurre', 'yaourt', 'fromage', 'feta', 'mozzarella', 'parmesan', 'gruyere', 'cheddar', 'ricotta', 'gorgonzola', 'brebis', 'chevre', 'comte', 'emmental', 'skyr', 'œuf', 'oeuf', 'margarine', 'mascarpone', 'burrata']],
-  ['boulangerie', ['pain', 'baguette', 'tortilla', 'wrap', 'pita', 'hamburger', 'galette', 'brick', 'brioche', 'biscotte', 'croissant', 'muffin', 'cereales', 'muesli', 'granola', 'flocons d avoine']],
-  ['surgeles',  ['surgele', 'glace', 'sorbet', 'nuggets']],
-  ['boissons',  ['eau petillante', 'eau plate', 'eau gazeuse', 'jus', 'soda', 'coca', 'biere', 'vin rouge', 'vin blanc', 'cidre', 'limonade', 'cafe', 'the vert', 'the noir', 'tisane', 'infusion', 'sirop']],
+  ['boulangerie', ['pain', 'baguette', 'tortilla', 'wrap', 'pita', 'hamburger', 'galette', 'brick', 'brioche', 'biscotte', 'croissant', 'muffin', 'cereales', 'muesli', 'granola', 'flocons d avoine', 'confiture', 'pate a tartiner', 'compote']],
+  ['boissons',  ['eau petillante', 'eau plate', 'eau gazeuse', 'jus', 'soda', 'coca', 'biere', 'vin', 'cidre', 'limonade', 'sirop']],
   ['legumes',   ['ail', 'gingembre', 'oignon', 'echalote', 'cebette', 'poireau', 'carotte', 'panais', 'celeri', 'navet', 'radis', 'betterave', 'courgette', 'aubergine', 'poivron', 'tomate', 'champignon', 'shitake', 'brocoli', 'chou', 'epinard', 'mache', 'roquette', 'salade', 'pousses', 'haricot vert', 'haricots vert', 'patate douce', 'pomme de terre', 'pommes de terre', 'courge', 'butternut', 'potiron', 'avocat', 'citron', 'poire', 'pomme', 'banane', 'orange', 'fraise', 'framboise', 'myrtille', 'raisin', 'peche', 'abricot', 'mangue', 'ananas', 'kiwi', 'melon', 'pasteque', 'concombre', 'fenouil', 'asperge', 'artichaut', 'endive', 'pak choi', 'epi de mais', 'petits pois', 'rhubarbe', 'grenade']],
 ];
 
@@ -211,6 +332,14 @@ const CN_UNIT_RULES = [
   ['piles', 'lot', 1, 1], ['ampoules', '', 1, 1], ['ampoule', '', 1, 1], ['bougies', 'lot', 1, 1],
   ['papier aluminium', '', 1, 1], ['papier alu', '', 1, 1], ['papier cuisson', '', 1, 1],
   ['film etirable', '', 1, 1], ['pansement', 'boîte', 1, 1], ['paracetamol', 'boîte', 1, 1],
+  ['protections hygieniques', 'paquet', 1, 1], ['protection hygienique', 'paquet', 1, 1],
+  ['serviettes hygieniques', 'paquet', 1, 1], ['tampons', 'boîte', 1, 1],
+  ['mousse a raser', 'flacon', 1, 1], ['creme solaire', 'tube', 1, 1],
+  ['bicarbonate', 'paquet', 1, 1], ['vinaigre blanc', 'flacon', 1, 1],
+  ['sacs de congelation', 'lot', 1, 1], ['liquide de rincage', 'flacon', 1, 1],
+  ['sel regenerant', 'paquet', 1, 1], ['lingettes', 'paquet', 1, 1],
+  ['allumettes', 'boîte', 1, 1], ['ruban adhesif', 'rouleau', 1, 1],
+  ['pate a tartiner', 'pot', 1, 1], ['glace', 'bac', 1, 1], ['sorbet', 'bac', 1, 1],
 
   /* — épicerie sèche : au poids — */
   ['chocolat', 'g', 50, 200], ['cacao', 'g', 50, 250],
@@ -325,7 +454,7 @@ export function cnFormatQty(qty, unit) {
 /* Quantité d'achat proposée pour un produit sans quantité connue. */
 export function cnDefaultQty(name, rayon) {
   const u = cnUnitFor(name, rayon);
-  return cnFormatQty(u.qty, u.unit);
+  return u.unit === 'g' || u.unit === 'ml' ? cnFormatMass(u.qty, u.unit) : cnFormatQty(u.qty, u.unit);
 }
 
 /* ── Pas d'incrément selon l'unité ──

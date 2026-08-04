@@ -36,7 +36,7 @@ export const CHEZNOUS_DATA = {
    "portions": "Pour 2 personnes",
    "bigBadges": [
     "Low-Carb · Faible en glucides",
-    "Bœuf"
+    "Porc"
    ],
    "dietTags": [
     "Sans gluten",
@@ -58,7 +58,7 @@ export const CHEZNOUS_DATA = {
      "items": [
       {
        "q": "400 g",
-       "name": "filet mignon de bœuf"
+       "name": "filet mignon de porc"
       },
       {
        "q": "1,5",
@@ -150,7 +150,7 @@ export const CHEZNOUS_DATA = {
    "num": 1,
    "totalMin": 48,
    "typeBadges": [
-    "Bœuf"
+    "Porc"
    ],
    "isVegan": false,
    "isVeggie": false,
@@ -3279,8 +3279,12 @@ export const CHEZNOUS_DATA = {
        "name": "ricotta"
       },
       {
-       "q": "2 poignées",
-       "name": "herbes fraîches (basilic, persil)"
+       "q": "1 poignée",
+       "name": "basilic frais"
+      },
+      {
+       "q": "1 poignée",
+       "name": "persil frais"
       }
      ]
     },
@@ -3316,7 +3320,7 @@ export const CHEZNOUS_DATA = {
    "steps": [
     "Faites cuire le riz basmati dans de l'eau bouillante salée selon le paquet. Égouttez et réservez.",
     "Faites revenir les épinards quelques minutes jusqu'à réduction. Égouttez soigneusement et hachez-les.",
-    "Dans un bol, mélangez épinards, ricotta, herbes fraîches, sel et poivre.",
+    "Dans un bol, mélangez épinards, ricotta, basilic et persil ciselés, sel et poivre.",
     "Ouvrez le filet de poulet en portefeuille. Déposez la farce au centre puis roulez en ballotine.",
     "Maintenez avec du film alimentaire spécial cuisson ou de la ficelle. Cuisez dans l'eau frémissante <strong>15-20 min</strong>.",
     "Retirez le film. Pour coloration, dorez rapidement à la poêle. Servez en tranches avec le riz."
