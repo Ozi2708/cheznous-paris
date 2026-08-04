@@ -216,30 +216,35 @@ export function cnCartDriveText(groups) {
   const items = [];
   groups.forEach(g => g.lines.forEach(l => { if (!l.done) items.push(cnDriveLine(l)); }));
   if (!items.length) return '';
-  /* Chacune de ces règles vient d'une commande réellement passée :
-       1  « sans dépasser d'un format » autorisait 2 sachets de gruyère pour
-          200 g et 3 barquettes d'épinards pour 300 g ;
-       2  « 1 boîte de maïs » a rapporté un lot de trois ;
-       3  interdire toute substitution faisait refuser des produits sans
-          variété — sacs poubelle, nettoyant multi-usage, pains pita ;
-       4  sans elle, les pousses de salade devenaient des pousses d'épinard ;
-       5  la liste des refus, elle, a parfaitement fonctionné dès le premier
-          essai : on la demande explicitement. */
+  /* Chacune de ces règles vient d'une commande réellement passée.
+
+     La première a été réécrite après coup : pour empêcher le surachat, j'avais
+     demandé un seul article quitte à rester en dessous. C'était confondre deux
+     situations. Un poids vient d'une recette et doit être couvert — 200 g de
+     saumon pour 300 g demandés, c'est le plat qui rate. Un nombre, lui, se
+     respecte à l'unité près : « 1 boîte de maïs » avait rapporté un lot de
+     trois. La règle distingue donc désormais ce qui se pèse de ce qui se compte.
+
+     Les autres : interdire toute substitution faisait refuser des produits sans
+     variété (sacs poubelle, nettoyant multi-usage) ; sans la règle inverse, les
+     pousses de salade devenaient des pousses d'épinard ; et la liste des refus,
+     qui a parfaitement fonctionné dès le premier essai, se demande deux fois. */
   return [
     'Ajoute ces produits à mon panier Carrefour Drive.',
     '',
-    "1. Un seul article par ligne. Choisis le conditionnement dont la contenance est la plus proche de la quantité demandée, au-dessus ou en dessous — mieux vaut un peu moins qu'un deuxième article. N'en prends plusieurs que si la quantité demandée dépasse le plus grand format vendu.",
-    "2. « 1 boîte », « 1 paquet », « 1 flacon » veut dire une seule unité, pas un lot de plusieurs — mais si ce produit ne se vend qu'en lot, prends le plus petit lot disponible et signale-le : ne refuse jamais la ligne pour cette raison.",
-    "3. Quand une ligne ne précise ni marque ni variété, c'est un produit générique : prends la référence la plus courante, ne me la refuse pas.",
-    "4. Quand une ligne précise une variété, ne la remplace pas par une autre : signale-le-moi plutôt. Une simple différence d'appellation n'est pas une autre variété — l'ail semoule est de l'ail en poudre, l'oignon blanc en botte est un oignon nouveau.",
-    '5. Termine par la liste de ce que tu n’as pas pu ajouter, avec la raison.',
+    "1. Quand une ligne donne un poids ou un volume, couvre-le : prends le conditionnement le plus proche au-dessus, et plusieurs exemplaires seulement si un seul ne suffit pas. Ne reste pas en dessous de ce que je demande — 200 g de saumon quand j'en demande 300, c'est un plat raté.",
+    "2. Quand une ligne donne un nombre ou un contenant — « 1 boîte », « 2 têtes », « 3 pains » — prends exactement ce nombre, pas un lot de plusieurs. Si le produit ne se vend qu'en lot, prends le plus petit lot et signale-le : ne refuse jamais la ligne pour cette raison.",
+    "3. Un poids précédé de « environ » est indicatif : il sert à choisir le bon conditionnement, pas à être atteint. « 4 oignons — environ 450 g », c'est quatre oignons.",
+    "4. Quand une ligne ne précise ni marque ni variété, c'est un produit générique : prends la référence la plus courante, ne me la refuse pas.",
+    "5. Quand une ligne précise une variété, ne la remplace pas par une autre : signale-le-moi plutôt. Une simple différence d'appellation n'est pas une autre variété — l'ail semoule est de l'ail en poudre, l'oignon blanc en botte est un oignon nouveau.",
+    '6. Termine par la liste de ce que tu n’as pas pu ajouter, avec la raison.',
     '',
     ...items.map(t => '- ' + t),
     '',
     /* Répétée après la liste : sur un envoi de 91 lignes, la consigne placée
        en tête seule s'était perdue et huit articles avaient disparu sans un
        mot. Une ligne manquante qu'on ignore est pire qu'un refus. */
-    "Reprends maintenant la règle 5 : liste les lignes que tu n'as pas ajoutées, une par une, avec la raison. N'en oublie aucune, même si la liste est longue.",
+    "Reprends maintenant la règle 6 : liste les lignes que tu n'as pas ajoutées, une par une, avec la raison. N'en oublie aucune, même si la liste est longue.",
   ].join('\n');
 }
 
