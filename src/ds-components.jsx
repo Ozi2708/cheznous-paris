@@ -35,7 +35,7 @@ export function CNPlanWeekSheet({ open, onClose, recipe, week, onPlan }) {
                     height: 38, borderRadius: 9999, cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12,
                     border: `1.5px solid ${isHere ? '#506741' : taken ? '#EEE8DC' : '#D5CEBE'}`,
                     background: isHere ? '#506741' : taken ? '#F5F2EC' : '#FFFFFF',
-                    color: isHere ? '#FFFFFF' : taken ? '#B8B3AA' : '#3C3830', transition: 'all .15s ease',
+                    color: isHere ? '#FFFFFF' : taken ? '#767066' : '#3C3830', transition: 'all .15s ease',
                   }}>{isHere ? '✓ ' + slot : taken ? slot + ' · pris' : slot}</button>
                 );
               })}
@@ -61,7 +61,7 @@ export function NutritionBar({ kcal, lipides, glucides, proteines }) {
           <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 22, color: n.color, lineHeight: 1 }}>
             {n.value ?? '—'}<span style={{ fontSize: 12, fontWeight: 700 }}>{n.unit}</span>
           </div>
-          <div style={{ fontFamily: CN_FONTS.body, fontWeight: 500, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: '#B8B3AA', marginTop: 4 }}>{n.label}</div>
+          <div style={{ fontFamily: CN_FONTS.body, fontWeight: 500, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: '#767066', marginTop: 4 }}>{n.label}</div>
         </div>
       ))}
     </div>

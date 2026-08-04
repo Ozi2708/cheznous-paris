@@ -3,7 +3,7 @@ import { CN_FONTS, CNIcon } from '../helpers.jsx';
 import { cnTestConnection, cnNormalizeCode } from '../sync.js';
 
 const STATUS_META = {
-  off: { dot: '#B8B3AA', label: 'Hors ligne · données sur cet appareil uniquement' },
+  off: { dot: '#8C8780', label: 'Hors ligne · données sur cet appareil uniquement' },
   connecting: { dot: '#D4952A', label: 'Connexion…' },
   live: { dot: '#506741', label: 'Synchronisé' },
   error: { dot: '#C0483F', label: 'Synchro interrompue — les données restent sur l’appareil' },
@@ -107,7 +107,7 @@ export function CNFoyerSheet({ open, onClose, sync, showToast }) {
                 <CNIcon name="link" size={16} color="#3C3830" /> J’ai déjà un code
               </button>
             </div>
-            <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#B8B3AA', marginTop: 12, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#767066', marginTop: 12, lineHeight: 1.5 }}>
               « Créer » publie le contenu de cet appareil et vous donne un code à transmettre.
             </div>
           </React.Fragment>
@@ -144,7 +144,7 @@ export function CNFoyerSheet({ open, onClose, sync, showToast }) {
         {/* ── Foyer actif ── */}
         {sync.code && (
           <React.Fragment>
-            <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 8 }}>
+            <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', marginBottom: 8 }}>
               Code du foyer
             </div>
             <button onClick={async () => showToast(await copyText(sync.code) ? 'Code copié' : 'Copie impossible')}

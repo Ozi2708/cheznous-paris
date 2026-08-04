@@ -7,7 +7,8 @@
    depuis la semaine, donc toujours à jour. */
 
 import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
-import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor, cnFormatQty } from './courses-data.js';
+import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor,
+  cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro } from './courses-data.js';
 
 export const CN_COURSES_EMPTY = { prefs: {}, custom: [] };
 /* `qty` : quantités que vous avez ajustées à la main, par clé de ligne. Elles
@@ -100,8 +101,10 @@ export function cnWhy(product, purchases) {
    épices restent proposés à part, à cocher seulement si le stock est vide. */
 export function cnRecipeNeeds(recipes) {
   const groups = cnShoppingList(recipes || []);
+  /* Le rayon se déduit du nom d'origine (« lentilles vertes cuites »), le nom
+     affiché est celui qu'on cherchera au drive (« Lentilles vertes »). */
   const mk = (e) => ({
-    key: 'rec:' + e.key, ingKey: e.key, name: cnCleanName(e.name), qty: e.total || '',
+    key: 'rec:' + e.key, ingKey: e.key, name: cnBuyName(cnCleanName(e.name)), qty: e.total || '',
     rayon: cnRayon(e.name), src: 'recette', count: e.count,
   });
   const clean = (list) => (list || []).filter(e => !cnIsJunkIngredient(e.name)).map(mk);
@@ -130,6 +133,7 @@ export function cnCartLines(cart, recipes, courses, purchases) {
       if (line.qty && !prev.qty) prev.qty = line.qty;
       if (line.prefQty && !prev.prefQty) prev.prefQty = line.prefQty;
       if (line.exact && !prev.exact) prev.exact = line.exact;
+      if (line.price != null && prev.price == null) prev.price = line.price;
       if (!prev.srcs.includes(line.src)) prev.srcs.push(line.src);
       return;
     }
@@ -145,6 +149,7 @@ export function cnCartLines(cart, recipes, courses, purchases) {
     add({
       ...it, name: p ? p.name : it.name, rayon: p ? p.rayon : (it.rayon || cnRayon(it.name)),
       prefQty: p ? p.qty : undefined, exact: p ? p.exact : undefined,
+      price: p ? p.price : undefined,
     });
   });
 
@@ -152,29 +157,44 @@ export function cnCartLines(cart, recipes, courses, purchases) {
   const over = c.qty || {};
   lines.forEach(l => {
     l.done = checked.has(l.key);
-    l.baseQty = l.qty || '';                       // ce que réclament les recettes
+    l.needQty = l.qty || '';                       // ce que réclament les recettes, mot pour mot
     const u = cnUnitFor(l.name, l.rayon);          // comment ce produit se compte
     l.unit = u.unit; l.step = u.step;
-    /* Un produit ajouté sans quantité (une habitude, un ajout libre) arrive
-       avec l'achat courant de sa famille : 200 g de chocolat, 1 flacon de
-       lessive, 2 courgettes — jamais un tiret. */
-    if (!l.baseQty) l.suggQty = l.prefQty || cnFormatQty(u.qty, u.unit);
-    l.qty = over[l.key] != null ? over[l.key] : (l.baseQty || l.suggQty);
+    /* La quantité proposée est celle qu'on peut commander : 204 ml de lait de
+       soja deviennent 1 L, 2 gousses deviennent 1 tête. Votre quantité
+       habituelle, si vous en avez mémorisé une, passe avant tout le reste. */
+    l.buyQty = l.prefQty || cnBuyQty(l.name, l.rayon, l.needQty);
+    l.qty = over[l.key] != null ? over[l.key] : l.buyQty;
     l.edited = over[l.key] != null;
+    /* Vrai dès que ce qu'on commande ne se lit pas comme ce qu'on cuisine. */
+    l.converted = !!l.needQty && l.needQty !== l.qty;
+    l.euros = cnPriceFor(l.name, l.rayon, l.price);
   });
 
-  const groups = CN_RAYONS.map(r => ({ ...r, lines: lines.filter(l => l.rayon === r.id) })).filter(g => g.lines.length);
-  return { groups, lines, total: lines.length, done: lines.filter(l => l.done).length };
+  const groups = CN_RAYONS.map(r => ({ ...r, lines: lines.filter(l => l.rayon === r.id) }))
+    .filter(g => g.lines.length)
+    .map(g => ({ ...g, done: g.lines.every(l => l.done) }));
+  const open = lines.filter(l => !l.done);
+  return {
+    groups, lines, total: lines.length, done: lines.filter(l => l.done).length,
+    /* Le budget porte sur ce qui reste à acheter — c'est le chiffre qui aide
+       à décider, pas le total de ce qu'on a déjà pris. */
+    euros: open.reduce((s, l) => s + l.euros, 0),
+    eurosLabel: cnFormatEuro(open.reduce((s, l) => s + l.euros, 0)),
+  };
 }
 
-/* Texte copié : la liste entière, rayon par rayon.
+/* ── Texte copié, destiné à être collé dans un drive ──
+   On n'écrit que ce qui reste à acheter : ce qui est coché est déjà pris.
    Quand vous avez mémorisé la référence exacte d'un produit, c'est elle qu'on
-   écrit — un assistant de drive n'a plus à deviner la marque à votre place. */
+   écrit — l'assistant du drive n'a plus à deviner la marque à votre place. */
 export function cnCartCopyText(groups) {
   const out = [];
   groups.forEach(g => {
+    const lines = g.lines.filter(l => !l.done);
+    if (!lines.length) return;
     out.push(`— ${g.label} —`);
-    g.lines.forEach(l => out.push(`${l.qty ? l.qty + ' ' : ''}${l.exact || l.name}`));
+    lines.forEach(l => out.push(`${l.qty ? l.qty + ' ' : ''}${l.exact || l.name}`));
     out.push('');
   });
   return out.join('\n').trim();

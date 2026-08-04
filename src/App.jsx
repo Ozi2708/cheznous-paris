@@ -79,8 +79,10 @@ function CNTabBar({ mode, tab, onTab, weekCount, cartCount }) {
             background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 2px',
             minHeight: 48, position: 'relative', transition: 'all .15s ease',
           }}>
-            <CNIcon name={t.icon} size={22} color={active ? accent : '#B8B3AA'} strokeWidth={active ? 2.1 : 1.7} />
-            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.04em', color: active ? accent : '#B8B3AA' }}>{t.label}</span>
+            {/* Un onglet inactif reste un repère : il lui faut un contraste
+                lisible et une taille au-dessus du plancher de lisibilité. */}
+            <CNIcon name={t.icon} size={22} color={active ? accent : '#8C8780'} strokeWidth={active ? 2.1 : 1.7} />
+            <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.02em', color: active ? accent : '#767066' }}>{t.label}</span>
             {n > 0 && (
               <span style={{ position: 'absolute', top: 2, right: 'calc(50% - 19px)', background: '#B89268', color: '#fff', borderRadius: '50%', minWidth: 15, height: 15, fontFamily: CN_FONTS.mono, fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{n}</span>
             )}

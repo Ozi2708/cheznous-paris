@@ -11,7 +11,7 @@ export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
       <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 20px 4px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Favoris</span>
-          {list.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{list.length} recette{list.length > 1 ? 's' : ''}</span>}
+          {list.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066' }}>{list.length} recette{list.length > 1 ? 's' : ''}</span>}
         </div>
         {list.length > 0 && (
           <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8C8780', marginTop: 4, fontStyle: 'italic' }}>Vos valeurs sûres, toujours sous la main.</div>
@@ -43,7 +43,7 @@ export function CNFavsScreen({ favs, onToggleFav, onOpen, onQuickAdd }) {
                 <button onClick={() => onOpen(r)} style={{ flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                   <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase', color: m.color, marginBottom: 3 }}>{m.label}</span>
                   <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13.5, color: '#1A1918', lineHeight: 1.3 }}>{r.title}</span>
-                  <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal · {r.nutrition.proteines}g prot</span>
+                  <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal · {r.nutrition.proteines}g prot</span>
                 </button>
                 <button onClick={() => onQuickAdd(r)} aria-label="Ajouter à ma semaine" title="Ajouter à ma semaine" style={{
                   width: 38, height: 38, borderRadius: 9999, border: '1.5px solid #E4DDD2', background: '#FFFFFF',

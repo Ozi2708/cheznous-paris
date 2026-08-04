@@ -16,7 +16,7 @@ function CNTodayCard({ week, byId, onOpen, onGoWeek }) {
   if (!r) {
     return (
       <div style={{ padding: '0 20px', marginBottom: 22 }}>
-        <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 10 }}>{slot.label}</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', marginBottom: 10 }}>{slot.label}</div>
         <button onClick={onGoWeek} style={{
           display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 60,
           background: 'transparent', border: '1.5px dashed #D5CEBE', borderRadius: 14, padding: '14px 16px',
@@ -35,7 +35,7 @@ function CNTodayCard({ week, byId, onOpen, onGoWeek }) {
   return (
     <div style={{ padding: '0 20px', marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA' }}>{slot.label}</span>
+        <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066' }}>{slot.label}</span>
         <button onClick={onGoWeek} style={{ border: 'none', background: 'none', cursor: 'pointer', fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#8C8780', textDecoration: 'underline' }}>Voir la semaine</button>
       </div>
       <button onClick={() => onOpen(r)} style={{
@@ -122,7 +122,7 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
     });
     return c;
   }, [all]);
-  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', padding: '0 20px', marginBottom: 10 };
+  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', padding: '0 20px', marginBottom: 10 };
 
   return (
     <div data-screen-label="Accueil — Le marché" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8' }}>
@@ -159,8 +159,8 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
             width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: '#FFFFFF',
             border: '1.5px solid #E4DDD2', borderRadius: 9999, padding: '0 16px', height: 44, cursor: 'pointer',
           }}>
-            <CNIcon name="search" size={17} color="#B8B3AA" />
-            <span style={{ fontFamily: CN_FONTS.body, fontSize: 14, color: '#B8B3AA' }}>Une recette, un ingrédient…</span>
+            <CNIcon name="search" size={17} color="#8C8780" />
+            <span style={{ fontFamily: CN_FONTS.body, fontSize: 14, color: '#767066' }}>Une recette, un ingrédient…</span>
           </button>
         </div>
 
@@ -222,7 +222,7 @@ export function CNHomeScreen({ onPreset, onOpen, onGoLibrary, onGoBatch, dayInde
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14, color: '#1A1918' }}>
               <CNIcon name="book" size={18} color="#506741" /> Toute la bibliothèque
             </span>
-            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11.5, color: '#B8B3AA' }}>{all.length} recettes →</span>
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11.5, color: '#767066' }}>{all.length} recettes →</span>
           </button>
         </div>
       </div>

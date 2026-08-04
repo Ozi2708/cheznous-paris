@@ -282,6 +282,8 @@ const CN_UNIT_RULES = [
   ['jeunes pousses', 'g', 50, 100], ['petits pois', 'g', 100, 500],
   ['fraise', 'g', 250, 500], ['framboise', 'g', 125, 250], ['myrtille', 'g', 125, 250],
   ['raisin', 'g', 250, 500], ['cerise', 'g', 250, 500],
+  /* l'ail se vend à la tête, le gingembre au rhizome — jamais « 2 gousses » */
+  ['ail', 'tête', 1, 1], ['gingembre', '', 1, 1],
 ];
 
 /* Unité par défaut quand aucun motif ne correspond, d'après le rayon. */
@@ -302,10 +304,14 @@ export function cnUnitFor(name, rayon) {
   return { unit, step, qty };
 }
 
-/* « 200 g », « 3 », « 1 flacon » — la quantité telle qu'on l'affiche. */
+/* « 200 g », « 3 », « 2 briques » — la quantité telle qu'on l'affiche.
+   Les contenants s'accordent : on écrit « 2 boîtes », pas « 2 boîte ». */
+const CN_UNIT_INVARIABLE = ['g', 'ml', 'cl', 'L', 'kg', 'l'];
 export function cnFormatQty(qty, unit) {
   const q = String(qty).replace('.', ',');
-  return unit ? `${q} ${unit}` : q;
+  if (!unit) return q;
+  const plural = Number(qty) > 1 && !CN_UNIT_INVARIABLE.includes(unit) && !/[sx]$/.test(unit);
+  return `${q} ${plural ? unit + 's' : unit}`;
 }
 
 /* Quantité d'achat proposée pour un produit sans quantité connue. */
@@ -344,11 +350,161 @@ export function cnQtyChoices(unit) {
 }
 
 /* « en grammes », « à la pièce », « au flacon » — comment se compte ce produit. */
-const CN_UNIT_FEM = ['boîte', 'bouteille', 'botte', 'brique'];
+const CN_UNIT_FEM = ['boîte', 'bouteille', 'botte', 'brique', 'tête'];
 export function cnUnitHint(unit) {
   if (!unit) return 'à la pièce';
   if (unit === 'g') return 'en grammes';
   if (unit === 'ml') return 'en millilitres';
   if (unit === 'L') return 'en litres';
   return (CN_UNIT_FEM.includes(unit) ? 'à la ' : 'au ') + unit;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Du besoin d'une recette au format qu'on peut commander
+   ────────────────────────────────────────────────────────────────────────
+   Une recette réclame 204 ml de lait de soja, 2 gousses d'ail, 8,5 aubergines.
+   Un drive ne vend rien de tout ça. Sans traduction, la liste est jolie et
+   inutilisable — c'était le cas de 42 % des lignes que produisent les recettes.
+   On traduit donc le besoin en ce qu'on met vraiment dans le panier, et on
+   garde le besoin d'origine à côté pour que rien ne se perde. */
+
+/* Nombre en tête d'une chaîne, sans dépendre de React : « 204 ml » → 204, ml. */
+function cnSplitQty(q) {
+  const m = String(q || '').match(/^\s*([\d.,]+)\s*(.*)$/);
+  if (!m) return { n: null, unit: String(q || '').trim() };
+  return { n: parseFloat(m[1].replace(',', '.')), unit: m[2].trim() };
+}
+
+/* Unités qui décrivent un geste de cuisine, pas un achat. Le nombre qui les
+   accompagne ne dit rien du conditionnement : 10 feuilles de basilic, ça reste
+   une botte. */
+const CN_KITCHEN_UNITS = ['feuille', 'feuilles', 'tranche', 'tranches', 'branche', 'branches',
+  'filet', 'filets', 'poignee', 'poignees', 'bouquet', 'bouquets', 'trait', 'traits',
+  'goutte', 'gouttes', 'morceau', 'morceaux', 'boule', 'boules', 'portion', 'portions',
+  'rondelle', 'rondelles', 'lamelle', 'lamelles', 'batonnet', 'batonnets'];
+
+/* Conditionnements qui se comptent en articles, pas en grammes. */
+const CN_CONTAINER_UNITS = ['boîte', 'pot', 'brique', 'paquet', 'sachet', 'flacon', 'lot',
+  'botte', 'tube', 'moulin', 'bouteille', 'pack', 'tête', 'bocal'];
+export function cnIsContainer(unit) { return CN_CONTAINER_UNITS.includes(unit); }
+
+/* ── Contenance des conditionnements courants, en g ou ml ──
+   Sert à répondre « combien d'articles ? » quand la recette pèse et que le
+   produit se vend au contenant : 880 g de coulis, ce sont deux briques.
+   Ordres de grandeur de rayon, volontairement ronds. */
+const CN_PACK_SIZES = [
+  ['coulis', 500], ['pulpe', 400], ['tomates pelees', 400], ['tomate pelee', 400],
+  ['chair de tomate', 400], ['sauce tomate', 400], ['concentre', 140],
+  ['mais', 300], ['haricots rouges', 400], ['haricots blancs', 400],
+  ['pois chiches', 400], ['lentilles', 400], ['flageolets', 400],
+  ['thon', 140], ['sardine', 120], ['maquereau', 120], ['surimi', 200],
+  ['pesto', 190], ['houmous', 200], ['tapenade', 100], ['tahini', 300],
+  ['confiture', 350], ['miel', 250], ['moutarde', 200], ['mayonnaise', 250],
+  ['cornichons', 200], ['compote', 400],
+  ['ricotta', 250], ['mascarpone', 250], ['fromage blanc', 500], ['skyr', 450],
+  ['yaourt', 500], ['creme de coco', 400], ['lait de coco', 400],
+  ['tofu', 200], ['margarine', 250], ['bouillon', 60],
+];
+function cnPackSize(name) {
+  const n = cnProdNorm(name);
+  for (const [pat, size] of CN_PACK_SIZES) if (cnStartsWord(n, pat)) return size;
+  return null;
+}
+
+/* Formats réellement vendus en rayon. On monte au suivant, jamais on ne descend :
+   une recette qui demande 194 ml de crème fait acheter le pot de 200. */
+const CN_LADDER_G  = [50, 100, 125, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 3000];
+const CN_LADDER_ML = [100, 200, 250, 330, 500, 750, 1000, 1500, 2000, 3000];
+function cnSnapUp(n, ladder) {
+  return ladder.find(v => v >= n - 0.001) || Math.ceil(n / 1000) * 1000;
+}
+
+/* Au-delà du kilo ou du litre, on écrit comme on le dirait. */
+function cnFormatMass(n, unit) {
+  if (unit === 'g' && n >= 1000) return cnFormatQty(Math.round(n / 100) / 10, 'kg');
+  if (unit === 'ml' && n >= 1000) return cnFormatQty(Math.round(n / 100) / 10, 'L');
+  return cnFormatQty(n, unit);
+}
+
+/* La quantité à commander pour couvrir `need`. `need` est ce que réclament les
+   recettes, mot pour mot ; la valeur rendue est ce qu'on met dans le panier. */
+export function cnBuyQty(name, rayon, need) {
+  const u = cnUnitFor(name, rayon);
+  const courant = cnFormatQty(u.qty, u.unit);
+  const { n, unit } = cnSplitQty(need);
+  if (!need || n == null) return courant;
+  const nu = cnProdNorm(unit);
+
+  /* Geste de cuisine : le nombre ne dit rien de ce qu'on achète. */
+  if (cnIsSpoonUnit(unit) || CN_KITCHEN_UNITS.includes(nu)) return courant;
+
+  /* Même unité que l'achat : on monte au conditionnement suivant, sans
+     jamais descendre sous le plus petit format vendu. */
+  if (nu === cnProdNorm(u.unit)) {
+    if (u.unit === 'g' || u.unit === 'ml') {
+      const ladder = u.unit === 'g' ? CN_LADDER_G : CN_LADDER_ML;
+      return cnFormatMass(Math.max(cnSnapUp(n, ladder), u.qty), u.unit);
+    }
+    return cnFormatQty(Math.max(1, Math.ceil(n - 0.001)), u.unit);   // 8,5 aubergines → 9
+  }
+
+  /* La recette pèse, le produit se vend au contenant : combien d'articles ? */
+  const factor = { g: 1, ml: 1, cl: 10, l: 1000, kg: 1000 }[nu];
+  if (factor && cnIsContainer(u.unit)) {
+    const size = cnPackSize(name);
+    const k = size ? Math.max(1, Math.ceil(n * factor / size - 0.001)) : u.qty;
+    return cnFormatQty(k, u.unit);
+  }
+
+  /* Conversion impossible sans inventer (des grammes vers des pièces, par
+     exemple) : on propose l'achat courant plutôt qu'un chiffre faux. */
+  return courant;
+}
+
+/* ── Le nom tel qu'on le cherchera au drive ──
+   Les recettes décrivent un ingrédient préparé — « lentilles vertes cuites »,
+   « gnocchis de p. de terre ». Le drive vend un produit. Une recherche sur
+   l'état de préparation ne renvoie rien. */
+const CN_PREP_WORDS = new Set([
+  'cuit', 'cuits', 'cuite', 'cuites', 'precuit', 'precuits', 'precuite', 'precuites',
+  'egoutte', 'egouttes', 'egouttee', 'egouttees', 'rince', 'rinces', 'rincee', 'rincees',
+  'decongele', 'decongeles', 'decongelee', 'decongelees',
+  'emince', 'eminces', 'emincee', 'emincees', 'tiede', 'tiedes',
+  'refroidi', 'refroidis', 'ramolli', 'ramollis', 'fondu', 'fondus', 'fondue', 'fondues',
+]);
+const CN_PREP_TAILS = [' en des', ' en rondelles', ' en lamelles', ' en morceaux',
+  ' en cubes', ' en tranches', ' en fines lamelles', ' a temperature ambiante',
+  ' bien mur', ' bien murs', ' bien mure', ' bien mures'];
+const CN_ABBREV = [[/\bp\.\s*de\s*terre\b/gi, 'pomme de terre']];
+
+export function cnBuyName(name) {
+  let s = String(name || '').trim();
+  CN_ABBREV.forEach(([re, to]) => { s = s.replace(re, to); });
+  for (;;) {
+    const tail = CN_PREP_TAILS.find(t => cnProdNorm(s).endsWith(t));
+    if (!tail) break;
+    s = s.slice(0, s.length - tail.length).trim();
+  }
+  s = s.split(/\s+/).filter(w => !CN_PREP_WORDS.has(cnProdNorm(w))).join(' ').trim();
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+/* ── Estimation de budget ──
+   Prix moyen d'un article par rayon — un ordre de grandeur de supermarché, pas
+   un tarif. Un prix saisi sur un produit prend toujours le pas. « 26 articles »
+   ne fait renoncer à rien ; « ≈ 68 € » si. */
+const CN_RAYON_PRICE = {
+  legumes: 2.4, boucherie: 7.5, cremerie: 3.2, boulangerie: 2.6, epicerie: 3.1,
+  epices: 2.2, surgeles: 4.5, boissons: 3.4, hygiene: 4.2, entretien: 4.8, maison: 5.5,
+};
+export function cnPriceFor(name, rayon, price) {
+  if (price != null && price !== '') {
+    const p = parseFloat(String(price).replace(',', '.'));
+    if (!isNaN(p) && p >= 0) return p;
+  }
+  return CN_RAYON_PRICE[rayon || cnRayon(name)] || 3;
+}
+export function cnFormatEuro(n) {
+  const r = n >= 100 ? Math.round(n) : Math.round(n * 2) / 2;
+  return String(r).replace('.', ',') + ' €';
 }

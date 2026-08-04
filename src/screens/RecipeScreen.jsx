@@ -41,7 +41,7 @@ export function CNTopBar({ onBack, label, color, onPrev, onNext, pos, fav, onFav
       )}
       {(onPrev || onNext) && (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          {pos && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA', whiteSpace: 'nowrap', marginRight: 2 }}>{pos.i + 1}/{pos.n}</span>}
+          {pos && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066', whiteSpace: 'nowrap', marginRight: 2 }}>{pos.i + 1}/{pos.n}</span>}
           {arrowBtn(-1, !onPrev, onPrev)}
           {arrowBtn(1, !onNext, onNext)}
         </span>
@@ -60,7 +60,7 @@ function CNPortionStepper({ portions, setPortions, color }) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 12, padding: '10px 12px' }}>
       <div>
         <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#8C8780' }}>Portions</div>
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#B8B3AA', marginTop: 2 }}>quantités recalculées</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#767066', marginTop: 2 }}>quantités recalculées</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <button style={{ ...btn, opacity: portions <= 1 ? .35 : 1 }} disabled={portions <= 1} onClick={() => setPortions(p => Math.max(1, p - 1))}>−</button>
@@ -133,7 +133,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
   const m = chMeta(recipe.chapter);
   const inset = typeof bottomInset === 'number' ? `${bottomInset}px` : (bottomInset || '0px');
   const factor = portions / 2;
-  const sectionLbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', margin: '26px 0 14px' };
+  const sectionLbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', margin: '26px 0 14px' };
 
   return (
     <div data-screen-label={'Fiche — ' + recipe.title} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
@@ -164,19 +164,19 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
         </div>
 
         <NutritionBar kcal={recipe.nutrition.kcal} lipides={recipe.nutrition.lipides} glucides={recipe.nutrition.glucides} proteines={recipe.nutrition.proteines} />
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA', padding: '8px 2px 0', textAlign: 'right' }}>valeurs par personne</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#767066', padding: '8px 2px 0', textAlign: 'right' }}>valeurs par personne</div>
 
         <div style={{ display: 'flex', gap: 14, alignItems: 'baseline', padding: '12px 2px 18px', fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8C8780', borderBottom: '1px solid #E4DDD2', marginBottom: 18 }}>
           <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: m.color, marginRight: 4 }}>•</span> Prép. <strong style={{ color: '#1A1918' }}>{recipe.prepMin} min</strong></span>
           <span style={{ whiteSpace: 'nowrap' }}><span style={{ color: m.color, marginRight: 4 }}>•</span> Cuisson <strong style={{ color: '#1A1918' }}>{recipe.cookMin} min</strong></span>
-          <span style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontFamily: CN_FONTS.mono, fontSize: 11.5, color: '#B8B3AA' }}>{recipe.totalMin} min au total</span>
+          <span style={{ marginLeft: 'auto', whiteSpace: 'nowrap', fontFamily: CN_FONTS.mono, fontSize: 11.5, color: '#767066' }}>{recipe.totalMin} min au total</span>
         </div>
 
         <CNPortionStepper portions={portions} setPortions={setPortions} color={m.color} />
 
         <div style={sectionLbl}>Ingrédients</div>
         <CNIngredientChecklist recipe={recipe} factor={factor} checked={checked} setChecked={setChecked} />
-        {recipe.portionLabel && <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA', marginTop: -4 }}>{recipe.portionLabel.replace('pour 2 personnes', `pour ${portions} personne${portions > 1 ? 's' : ''}`)}</div>}
+        {recipe.portionLabel && <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#767066', marginTop: -4 }}>{recipe.portionLabel.replace('pour 2 personnes', `pour ${portions} personne${portions > 1 ? 's' : ''}`)}</div>}
 
         {recipe.tips.length > 0 && (
           <div style={{ marginTop: 18 }}>
@@ -202,7 +202,7 @@ export function CNRecipeScreen({ recipe, onBack, onCook, portions, setPortions, 
                   <CNIcon name={fi.icon} size={15} color={fi.c} />
                 </span>
                 <div>
-                  <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 3 }}>{t.label}</div>
+                  <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', marginBottom: 3 }}>{t.label}</div>
                   <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, fontStyle: 'italic', color: '#8C8780', lineHeight: 1.55 }}>{t.text}</div>
                 </div>
               </div>

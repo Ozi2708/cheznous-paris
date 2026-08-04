@@ -13,7 +13,7 @@ function CNCountStepper({ count, setCount }) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 14, padding: '14px 16px' }}>
       <div>
         <div style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase', color: '#8C8780' }}>Combien de plats ?</div>
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#B8B3AA', marginTop: 3 }}>pour votre semaine</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#767066', marginTop: 3 }}>pour votre semaine</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <button style={{ ...btn, opacity: count <= 1 ? .35 : 1 }} disabled={count <= 1} onClick={() => setCount(c => Math.max(1, c - 1))}>−</button>
@@ -68,7 +68,7 @@ export function CNMenuGeneratorScreen({ onBack, onCommit }) {
         {menu && (
           <React.Fragment>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '24px 0 12px' }}>
-              <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA' }}>Proposition ({menu.length})</span>
+              <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066' }}>Proposition ({menu.length})</span>
               <button onClick={rerollAll} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer',
                 fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12, color: '#506741',

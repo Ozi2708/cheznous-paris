@@ -133,7 +133,7 @@ export function CNMacros({ n, size = 12, gap = 10 }) {
     <span style={{ display: 'inline-flex', gap, alignItems: 'baseline' }}>
       {items.map((it, i) => (
         <span key={i} style={{ fontFamily: CN_FONTS.mono, fontSize: size, color: it.c, whiteSpace: 'nowrap' }}>
-          {it.v}{it.u}&nbsp;<span style={{ color: '#B8B3AA', fontSize: size - 2 }}>{it.label}</span>
+          {it.v}{it.u}&nbsp;<span style={{ color: '#767066', fontSize: size - 2 }}>{it.label}</span>
         </span>
       ))}
     </span>

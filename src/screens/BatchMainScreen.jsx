@@ -29,7 +29,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
   const minutes = cnSessionMinutes(selected);
   const { plan, colors } = React.useMemo(() => selected.length >= 2 ? cnBuildPlan(selected) : { plan: [], colors: {} }, [sel.join()]);
   const toggle = (id) => setSel(sel.includes(id) ? sel.filter(x => x !== id) : sel.length < 5 ? [...sel, id] : sel);
-  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', margin: '26px 0 12px' };
+  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', margin: '26px 0 12px' };
   const short = (t, n) => t.length > n ? t.slice(0, n - 1) + '…' : t;
   const avgKcal = selected.length ? Math.round(selected.reduce((s, r) => s + r.nutrition.kcal, 0) / selected.length) : 0;
 
@@ -105,7 +105,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                     <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: CN_BATCH_COLORS[ri], flexShrink: 0 }}></span>
                       <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5, color: '#1A1918', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</span>
-                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA', flexShrink: 0 }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066', flexShrink: 0 }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
                     </div>
                   ))}
                 </div>
@@ -124,7 +124,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
           })}
 
           <div style={lbl}>… ou composez la vôtre <span style={{ color: '#D5CEBE' }}>·</span> <span style={{ color: '#8A6B4A' }}>{list.length} plats compatibles</span></div>
-          <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#B8B3AA', margin: '-6px 0 10px' }}>2 à 5 plats qui tiennent au moins 3 jours au frais.</div>
+          <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#767066', margin: '-6px 0 10px' }}>2 à 5 plats qui tiennent au moins 3 jours au frais.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {list.map(r => {
               const on = sel.includes(r.id);
@@ -169,7 +169,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                     }}>
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: colors[r.id] || CN_BATCH_COLORS[selected.indexOf(r) % 5] }}></span>
                       {short(r.title, 24)}
-                      <CNIcon name="x" size={10} color="#B8B3AA" />
+                      <CNIcon name="x" size={10} color="#8C8780" />
                     </button>
                   ))}
                 </div>
@@ -181,7 +181,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                   ].map((s, i) => (
                     <div key={i} style={{ textAlign: 'center', borderLeft: i > 0 ? '1px solid #EEE8DC' : 'none' }}>
                       <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#8A6B4A' }}>{s.v}</div>
-                      <div style={{ fontFamily: CN_FONTS.body, fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', marginTop: 2 }}>{s.l}</div>
+                      <div style={{ fontFamily: CN_FONTS.body, fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: '#767066', marginTop: 2 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -250,7 +250,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                                 )}
                               </div>
                             </div>
-                            <CNIcon name="chevR" size={15} color="#B8B3AA" style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .2s ease', flexShrink: 0 }} />
+                            <CNIcon name="chevR" size={15} color="#8C8780" style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .2s ease', flexShrink: 0 }} />
                           </div>
                           {isOpen && (
                             <div style={{ borderTop: '1px solid #EEE8DC', marginTop: 10, paddingTop: 10 }}>
@@ -268,7 +268,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                   );
                 })}
               </div>
-              <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#B8B3AA', marginTop: 2 }}>
+              <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#767066', marginTop: 2 }}>
                 Touchez une phase pour voir le détail — le mode session vous guidera étape par étape.
               </div>
 
@@ -304,7 +304,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                             display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer',
                             padding: '2px 0', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11.5, color: '#8C8780',
                           }}>
-                            <CNIcon name="chevR" size={12} color="#B8B3AA" style={{ transform: soloOpen ? 'rotate(90deg)' : 'none', transition: 'transform .2s ease' }} />
+                            <CNIcon name="chevR" size={12} color="#8C8780" style={{ transform: soloOpen ? 'rotate(90deg)' : 'none', transition: 'transform .2s ease' }} />
                             {soloOpen ? 'Masquer' : 'Voir'} les {solo.length} ingrédients propres à chaque plat
                           </button>
                           {soloOpen && (
@@ -316,7 +316,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                                 }}>
                                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors[c.uses[0].recipe.id] || '#B8B3AA' }}></span>
                                   <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, color: '#3C3830' }}>{c.name.split(',')[0].replace(/\(s\)/g, '').trim()}</span>
-                                  <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, color: '#B8B3AA' }}>{c.uses[0].q}</span>
+                                  <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, color: '#767066' }}>{c.uses[0].q}</span>
                                 </span>
                               ))}
                             </div>
@@ -324,7 +324,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                         </div>
                       )}
                       {staples.length > 0 && (
-                        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA', borderTop: '1px solid #F5F2EC', marginTop: 10, paddingTop: 9 }}>
+                        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#767066', borderTop: '1px solid #F5F2EC', marginTop: 10, paddingTop: 9 }}>
                           Toujours sous la main : {staples.map(s => s.name.toLowerCase()).join(', ')}.
                         </div>
                       )}
@@ -338,7 +338,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                 <div style={{ display: 'grid', gridTemplateColumns: `90px repeat(7, 1fr)`, gap: 3, marginBottom: 8 }}>
                   <span></span>
                   {CN_B_DAYS.map((d, di) => (
-                    <span key={d} style={{ fontFamily: CN_FONTS.mono, fontSize: 9, color: di === 0 ? '#8A6B4A' : '#B8B3AA', textAlign: 'center', textTransform: 'uppercase' }}>{d}</span>
+                    <span key={d} style={{ fontFamily: CN_FONTS.mono, fontSize: 9, color: di === 0 ? '#8A6B4A' : '#767066', textAlign: 'center', textTransform: 'uppercase' }}>{d}</span>
                   ))}
                   {byUrgency.map(r => {
                     const c = cnConservation(r);
@@ -371,7 +371,7 @@ export function CNBatchScreen({ sel, setSel, onOpen, onStart }) {
                   })}
                 </div>
               </div>
-              <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#B8B3AA', marginTop: 8 }}>
+              <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: '#767066', marginTop: 8 }}>
                 Session le dimanche · commencez par les plats qui se gardent le moins longtemps.
               </div>
             </div>

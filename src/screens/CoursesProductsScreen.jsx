@@ -1,9 +1,10 @@
 import React from 'react';
 import { CN_FONTS, CNIcon } from '../helpers.jsx';
 import { cnProducts, cnRhythm, cnStatus, cnToday, cnDayLabel, CN_RHYTHM_LABEL } from '../courses.js';
-import { CN_RAYONS, cnRayonMeta, cnRayon, cnProdNorm, cnDefaultQty } from '../courses-data.js';
+import { CN_RAYONS, cnRayonMeta, cnRayon, cnProdNorm, cnDefaultQty, cnPriceFor } from '../courses-data.js';
+import { CN_C } from '../tokens.js';
 
-const CN_ACCENT = '#B85C38';
+const CN_ACCENT = CN_C.terra;
 
 function CNSheet({ open, onClose, title, children }) {
   return (
@@ -32,7 +33,7 @@ const inputStyle = {
   width: '100%', height: 46, borderRadius: 12, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
   padding: '0 14px', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', outline: 'none', boxSizing: 'border-box',
 };
-const fieldLabel = { display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.09em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 6 };
+const fieldLabel = { display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.09em', textTransform: 'uppercase', color: '#767066', marginBottom: 6 };
 
 function CNRayonPicker({ value, onChange }) {
   return (
@@ -99,7 +100,7 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           <span style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span style={{ position: 'absolute', left: 14, display: 'flex' }}><CNIcon name="search" size={16} color="#B8B3AA" /></span>
+            <span style={{ position: 'absolute', left: 14, display: 'flex' }}><CNIcon name="search" size={16} color="#8C8780" /></span>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Chercher un produit…"
               style={{ ...inputStyle, height: 44, borderRadius: 9999, paddingLeft: 38 }} />
           </span>
@@ -138,7 +139,7 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
                           color: CN_ACCENT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>{p.exact}</span>
                       )}
-                      <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, color: '#B8B3AA', marginTop: 2 }}>
+                      <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, color: '#767066', marginTop: 2 }}>
                         {p.paused ? 'En pause'
                           : r.last == null ? `~${r.days} j (${CN_RHYTHM_LABEL[r.source]}) · jamais acheté`
                           : `Tous les ~${r.days} j (${CN_RHYTHM_LABEL[r.source]}) · ${r.buys}× · ${cnDayLabel(s.since)}`}
@@ -194,7 +195,7 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
                 <input value={editing.qty || ''} placeholder={cnDefaultQty(editing.name, editing.rayon)}
                   onChange={e => patchPrefs(editing.id, { qty: e.target.value || undefined })}
                   style={inputStyle} />
-                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#B8B3AA', marginTop: 5, lineHeight: 1.5 }}>
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#767066', marginTop: 5, lineHeight: 1.5 }}>
                   Ce que vous prenez d’habitude — proposé dès que ce produit entre dans la liste.
                 </div>
               </div>
@@ -204,8 +205,19 @@ export function CNCoursesProductsScreen({ courses, setCourses, purchases, setPur
                 <input value={editing.exact || ''} placeholder="Marque, format, référence…"
                   onChange={e => patchPrefs(editing.id, { exact: e.target.value || undefined })}
                   style={inputStyle} />
-                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#B8B3AA', marginTop: 5, lineHeight: 1.5 }}>
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#767066', marginTop: 5, lineHeight: 1.5 }}>
                   Écrit à la place du nom dans la liste copiée : le drive ne choisit plus la marque à votre place.
+                </div>
+              </div>
+
+              <div>
+                <span style={fieldLabel}>Prix habituel (€)</span>
+                <input value={editing.price || ''} placeholder={String(cnPriceFor(editing.name, editing.rayon)).replace('.', ',')}
+                  inputMode="decimal"
+                  onChange={e => patchPrefs(editing.id, { price: e.target.value || undefined })}
+                  style={inputStyle} />
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, color: '#767066', marginTop: 5, lineHeight: 1.5 }}>
+                  Affine l’estimation de la liste. Sans rien saisir, on prend la moyenne du rayon.
                 </div>
               </div>
 

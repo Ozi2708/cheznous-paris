@@ -8,10 +8,10 @@ function CNSearchBar({ f, setF, onOpenFilters, autoFocus }) {
   return (
     <div style={{ display: 'flex', gap: 8, padding: '0 20px' }}>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 9999, padding: '0 16px', height: 44 }}>
-        <CNIcon name="search" size={17} color="#B8B3AA" />
+        <CNIcon name="search" size={17} color="#8C8780" />
         <input value={f.q} autoFocus={autoFocus} onChange={e => setF({ ...f, q: e.target.value })} placeholder="Une recette, un ingrédient…"
           style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', minWidth: 0 }} />
-        {f.q && <button onClick={() => setF({ ...f, q: '' })} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}><CNIcon name="x" size={14} color="#B8B3AA" /></button>}
+        {f.q && <button onClick={() => setF({ ...f, q: '' })} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2, display: 'flex' }}><CNIcon name="x" size={14} color="#8C8780" /></button>}
       </div>
       <button onClick={onOpenFilters} style={{
         width: 44, height: 44, borderRadius: 9999, border: '1.5px solid', cursor: 'pointer', position: 'relative',
@@ -34,7 +34,7 @@ function CNChapterChips({ f, setF, recipes }) {
         const n = recipes.filter(r => r.chapter === c).length;
         const m = chMeta(c);
         if (n === 0) return (
-          <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12, padding: '8px 14px', borderRadius: 9999, border: '1.5px dashed #D5CEBE', color: '#B8B3AA', whiteSpace: 'nowrap' }}>
+          <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12, padding: '8px 14px', borderRadius: 9999, border: '1.5px dashed #D5CEBE', color: '#767066', whiteSpace: 'nowrap' }}>
             {m.label} <span style={{ fontSize: 10, fontStyle: 'italic', fontWeight: 400 }}>bientôt</span>
           </span>
         );
@@ -83,14 +83,14 @@ function CNFilterSheet({ open, onClose, f, setF, results }) {
           <div>
             <div style={lbl}>Calories max</div>
             <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 26, color: '#E07534', marginBottom: 4 }}>
-              {f.maxKcal >= 900 ? '—' : f.maxKcal}<span style={{ fontSize: 13, color: '#B8B3AA', fontWeight: 600 }}> kcal</span>
+              {f.maxKcal >= 900 ? '—' : f.maxKcal}<span style={{ fontSize: 13, color: '#767066', fontWeight: 600 }}> kcal</span>
             </div>
             <input type="range" min="300" max="900" step="25" value={f.maxKcal} onChange={e => setF({ ...f, maxKcal: +e.target.value })} style={{ width: '100%', accentColor: '#E07534' }} />
           </div>
           <div>
             <div style={lbl}>Protéines min</div>
             <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 26, color: '#3E7852', marginBottom: 4 }}>
-              {f.minProt === 0 ? '—' : f.minProt}<span style={{ fontSize: 13, color: '#B8B3AA', fontWeight: 600 }}> g</span>
+              {f.minProt === 0 ? '—' : f.minProt}<span style={{ fontSize: 13, color: '#767066', fontWeight: 600 }}> g</span>
             </div>
             <input type="range" min="0" max="60" step="5" value={f.minProt} onChange={e => setF({ ...f, minProt: +e.target.value })} style={{ width: '100%', accentColor: '#3E7852' }} />
           </div>
@@ -122,7 +122,7 @@ function CNLibraryIndex({ recipes, onOpen, onQuickAdd }) {
               <span style={{ fontFamily: CN_FONTS.serif, fontSize: 38, lineHeight: 1, color: m.color }}>{String(Object.keys(CN_CHAPTERS).indexOf(ch) + 1).padStart(2, '0')}</span>
               <div>
                 <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918' }}>{m.label}</div>
-                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#B8B3AA' }}>{m.sub} · {list.length} recettes</div>
+                <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#767066' }}>{m.sub} · {list.length} recettes</div>
               </div>
             </div>
             {list.map(r => (
@@ -138,7 +138,7 @@ function CNLibraryIndex({ recipes, onOpen, onQuickAdd }) {
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
                       <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: m.color, flexShrink: 0 }}>{String(r.num).padStart(2, '0')}</span>
                       <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 14.5, color: '#1A1918', lineHeight: 1.35, flex: 1 }}>{r.title}</span>
-                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', flexShrink: 0 }}>{r.totalMin}′</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066', flexShrink: 0 }}>{r.totalMin}′</span>
                     </div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 5, paddingLeft: r.image ? 0 : 28 }}>
                       <CNMacros n={r.nutrition} size={11} gap={8} />
@@ -175,7 +175,7 @@ export function CNLibraryScreen({ filters, setFilters, onOpen, onQuickAdd, onImp
         <div style={{ padding: '6px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Bibliothèque</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{results.length} / {all.length}</span>
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066' }}>{results.length} / {all.length}</span>
             {onImport && (
               <button onClick={onImport} aria-label="Ajouter une recette en photo" title="Ajouter une recette en photo" style={{
                 width: 38, height: 38, borderRadius: '50%', border: 'none', background: '#506741', cursor: 'pointer',

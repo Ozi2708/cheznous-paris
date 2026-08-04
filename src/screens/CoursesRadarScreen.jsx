@@ -2,8 +2,9 @@ import React from 'react';
 import { CN_FONTS, CNIcon } from '../helpers.jsx';
 import { cnProducts, cnStatus, cnWhy, cnSnooze, cnRecipeNeeds, CN_LEVEL_META } from '../courses.js';
 import { CN_RAYONS, cnRayonMeta } from '../courses-data.js';
+import { CN_C } from '../tokens.js';
 
-const CN_ACCENT = '#B85C38';
+const CN_ACCENT = CN_C.terra;
 
 function CNSuggestRow({ product, status, inCart, onAdd, onSnooze, purchases }) {
   const m = CN_LEVEL_META[status.level] || CN_LEVEL_META.bientot;
@@ -23,7 +24,7 @@ function CNSuggestRow({ product, status, inCart, onAdd, onSnooze, purchases }) {
             }}>{m.label}</span>
           )}
         </span>
-        <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, color: '#B8B3AA', marginTop: 2 }}>
+        <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 11, color: '#767066', marginTop: 2 }}>
           {cnWhy(product, purchases)}
         </span>
       </span>
@@ -31,7 +32,7 @@ function CNSuggestRow({ product, status, inCart, onAdd, onSnooze, purchases }) {
         <button onClick={onSnooze} title="J’en ai encore" aria-label="J’en ai encore" style={{
           width: 34, height: 34, borderRadius: '50%', border: '1.5px solid #E4DDD2', background: '#FFFFFF',
           cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}><CNIcon name="pause" size={13} color="#B8B3AA" strokeWidth={2} /></button>
+        }}><CNIcon name="pause" size={13} color="#8C8780" strokeWidth={2} /></button>
       )}
       <button onClick={onAdd} disabled={inCart} aria-label="Ajouter à la liste" style={{
         width: 34, height: 34, borderRadius: '50%', border: 'none', flexShrink: 0,
@@ -77,7 +78,7 @@ export function CNCoursesRadarScreen({ cart, setCart, recipes, courses, setCours
     else setCart({ ...cart, items: [...(cart.items || []), { key: l.key, name: l.name, qty: l.qty, rayon: l.rayon, src: 'placard' }] });
   };
 
-  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 8 };
+  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', marginBottom: 8 };
 
   return (
     <div data-screen-label="Le Panier — À prévoir" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8' }}>
@@ -152,7 +153,7 @@ export function CNCoursesRadarScreen({ cart, setCart, recipes, courses, setCours
                       background: on ? CN_ACCENT : '#FFFFFF', color: on ? '#FFFFFF' : '#3C3830',
                       transition: 'all .15s ease',
                     }}>
-                      <CNIcon name={on ? 'check' : 'plus'} size={12} color={on ? '#FFFFFF' : '#B8B3AA'} strokeWidth={2.2} />
+                      <CNIcon name={on ? 'check' : 'plus'} size={12} color={on ? '#FFFFFF' : '#8C8780'} strokeWidth={2.2} />
                       {l.name}
                     </button>
                   );
@@ -183,9 +184,9 @@ export function CNCoursesRadarScreen({ cart, setCart, recipes, courses, setCours
                       <CNIcon name={ray.icon} size={14} color={ray.color} />
                     </span>
                     <span style={{ flex: 1, textAlign: 'left', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: '#1A1918' }}>{ray.label}</span>
-                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA' }}>{list.length}</span>
+                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066' }}>{list.length}</span>
                     <span style={{ display: 'inline-flex', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .18s ease' }}>
-                      <CNIcon name="chevR" size={15} color="#B8B3AA" />
+                      <CNIcon name="chevR" size={15} color="#8C8780" />
                     </span>
                   </button>
                   {open && (

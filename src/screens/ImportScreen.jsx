@@ -24,7 +24,7 @@ const inputStyle = {
   width: '100%', height: 44, borderRadius: 12, border: '1.5px solid #E4DDD2', background: '#FFFFFF',
   padding: '0 13px', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', outline: 'none', boxSizing: 'border-box',
 };
-const label = { display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.09em', textTransform: 'uppercase', color: '#B8B3AA', marginBottom: 6 };
+const label = { display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 10.5, letterSpacing: '.09em', textTransform: 'uppercase', color: '#767066', marginBottom: 6 };
 
 function CNTopBar({ onBack, title, right }) {
   return (
@@ -109,7 +109,7 @@ function CNCaptureStep({ pages, onAdd, onRemove, onAnalyze, error, bottomInset }
           <>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={label}>{pages.length} page{pages.length > 1 ? 's' : ''}</span>
-              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, color: '#B8B3AA' }}>
+              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, color: '#767066' }}>
                 {room > 0 ? `${room} de plus possible${room > 1 ? 's' : ''}` : 'maximum atteint'}
               </span>
             </div>
@@ -326,7 +326,7 @@ function CNAdjustForm({ draft, setDraft }) {
             }}><CNIcon name="x" size={14} color="#D5CEBE" strokeWidth={2} /></button>
           </div>
         ))}
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA', marginTop: 2 }}>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#767066', marginTop: 2 }}>
           Les balises &lt;strong&gt; mettent les températures et durées en avant.
         </div>
       </div>

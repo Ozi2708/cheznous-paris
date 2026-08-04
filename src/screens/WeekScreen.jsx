@@ -21,7 +21,7 @@ function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
             {slotLabel} <span style={{ fontWeight: 400, fontFamily: CN_FONTS.serif, fontStyle: 'italic', color: '#8C8780' }}>— on mange quoi ?</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 9999, padding: '0 16px', height: 42 }}>
-            <CNIcon name="search" size={16} color="#B8B3AA" />
+            <CNIcon name="search" size={16} color="#8C8780" />
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Chercher…"
               style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: CN_FONTS.body, fontSize: 14, color: '#1A1918', minWidth: 0 }} />
           </div>
@@ -36,7 +36,7 @@ function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
               }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color, flexShrink: 0 }}></span>
                 <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13.5, color: '#1A1918', flex: 1, lineHeight: 1.3 }}>{r.title}</span>
-                <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', flexShrink: 0 }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066', flexShrink: 0 }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
               </button>
             );
           })}
@@ -63,7 +63,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
       <div style={{ flexShrink: 0, padding: 'var(--screen-top, 34px) 20px 4px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: 30, color: '#1A1918', whiteSpace: 'nowrap' }}>Ma semaine</span>
-          {entries.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#B8B3AA', whiteSpace: 'nowrap', flexShrink: 0 }}>{nDone} / {entries.length} cuisinés</span>}
+          {entries.length > 0 && <span style={{ fontFamily: CN_FONTS.mono, fontSize: 11, color: '#767066', whiteSpace: 'nowrap', flexShrink: 0 }}>{nDone} / {entries.length} cuisinés</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, minHeight: 24 }}>
           {!cleaning && (
@@ -115,7 +115,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
           <div style={{ marginBottom: 20, background: '#FFFFFF', border: '1.5px solid #E4DDD2', borderRadius: 14, padding: '12px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#B89268' }}>À planifier</span>
-              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#B8B3AA' }}>comptés dans les courses</span>
+              <span style={{ fontFamily: CN_FONTS.body, fontSize: 11, fontStyle: 'italic', color: '#767066' }}>comptés dans les courses</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {pendingRecipes.map((r, i) => {
@@ -125,7 +125,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color, flexShrink: 0 }}></span>
                     <button onClick={() => onOpen(r)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
                       <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: '#1A1918', lineHeight: 1.3 }}>{r.title}</span>
-                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
                     </button>
                     <button onClick={() => onPlanPending && onPlanPending(r, i)} style={{
                       height: 34, borderRadius: 9999, padding: '0 13px', flexShrink: 0, cursor: 'pointer',
@@ -135,7 +135,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                     <button onClick={() => onRemovePending && onRemovePending(i)} aria-label="Retirer" style={{
                       width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
                       border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}><CNIcon name="x" size={14} color="#B8B3AA" /></button>
+                    }}><CNIcon name="x" size={14} color="#8C8780" /></button>
                   </div>
                 );
               })}
@@ -148,7 +148,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
           return (
             <div key={day} style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: isToday ? '#506741' : '#B8B3AA' }}>{day}</span>
+                <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: isToday ? '#506741' : '#767066' }}>{day}</span>
                 {isToday && <span style={{ fontFamily: CN_FONTS.body, fontSize: 9, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', background: '#506741', color: '#FAFAF8', borderRadius: 9999, padding: '2px 8px' }}>aujourd'hui</span>}
                 <span style={{ flex: 1, height: 1, background: isToday ? '#50674133' : '#EEE8DC' }}></span>
               </div>
@@ -165,9 +165,9 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                     }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = '#506741'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = '#D5CEBE'}>
-                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, textAlign: 'left' }}>{slot.label}</span>
-                      <CNIcon name="plus" size={14} color="#B8B3AA" />
-                      <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#B8B3AA' }}>Ajouter un plat</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#767066', width: 34, textAlign: 'left' }}>{slot.label}</span>
+                      <CNIcon name="plus" size={14} color="#8C8780" />
+                      <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#767066' }}>Ajouter un plat</span>
                     </button>
                   );
                   const m = chMeta(r.chapter);
@@ -179,10 +179,10 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                       borderLeft: `4px solid ${done ? '#D5CEBE' : m.color}`,
                       borderRadius: 11, padding: '8px 10px 8px 12px', transition: 'all .2s ease',
                     }}>
-                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#B8B3AA', width: 34, flexShrink: 0 }}>{slot.label}</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#767066', width: 34, flexShrink: 0 }}>{slot.label}</span>
                       <button onClick={() => onOpen(r)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: done ? '#B8B3AA' : '#1A1918', lineHeight: 1.3, textDecoration: done ? 'line-through' : 'none' }}>{r.title}</span>
-                        <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#B8B3AA' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                        <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: done ? '#767066' : '#1A1918', lineHeight: 1.3, textDecoration: done ? 'line-through' : 'none' }}>{r.title}</span>
+                        <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
                       </button>
                       <button onClick={() => setSlot(day, slot.id, { ...entry, done: !done })} aria-label={done ? 'Marquer non cuisiné' : 'Marquer cuisiné'} style={{
                         width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
@@ -195,7 +195,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                         width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
                         border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <CNIcon name="x" size={14} color="#B8B3AA" />
+                        <CNIcon name="x" size={14} color="#8C8780" />
                       </button>
                     </div>
                   );
