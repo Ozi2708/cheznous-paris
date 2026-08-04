@@ -216,7 +216,7 @@ function CNAddField({ courses, inCartNames, onPickProduct, onCreate, onQuickAdd 
 /* ── Ajuster une quantité ──
    Les recettes donnent un besoin, le drive vend un format. On affiche donc les
    deux : ce que réclament vos plats, et ce qu'on a traduit pour le panier. */
-function CNQtySheet({ line, onClose, onSet, onRemove, onOpenRecipe }) {
+function CNQtySheet({ line, onClose, onSet, onRemove, onOpenRecipe, onUncheck }) {
   const [val, setVal] = React.useState('');
   React.useEffect(() => { if (line) setVal(line.qty || ''); }, [line && line.key, line && line.qty]);
   const open = !!line;
@@ -346,6 +346,14 @@ function CNQtySheet({ line, onClose, onSet, onRemove, onOpenRecipe }) {
           cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.base, marginBottom: 8,
         }}>Enregistrer</button>
 
+        {line && line.done && (
+          <button onClick={onUncheck} style={{
+            width: '100%', height: 44, borderRadius: CN_R.md, border: `1.5px solid ${CN_ACCENT}`,
+            background: CN_C.card, cursor: 'pointer', marginBottom: 8,
+            fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.small, color: CN_ACCENT,
+          }}>Remettre dans la liste</button>
+        )}
+
         <div style={{ display: 'flex', gap: 8 }}>
           {line && line.edited && (
             <button onClick={() => onSet(null)} style={{
@@ -399,6 +407,26 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
     }
     setCart({ ...cart, checked: [...set] });
   };
+  const uncheckAll = () => {
+    setCart({ ...cart, checked: [] });
+    showToast(`${doneLines.length} article${doneLines.length > 1 ? 's' : ''} remis dans la liste`);
+  };
+
+  /* Le compteur de l'en-tête mène à ce qu'on a déjà pris. On défile la liste
+     à la main : scrollIntoView emporterait la page entière avec elle. */
+  const doneRef = React.useRef(null);
+  const scrollRef = React.useRef(null);
+  const goToDone = () => {
+    if (!doneLines.length) { showToast('Rien de coché pour l’instant'); return; }
+    setShowDone(true);
+    setTimeout(() => {
+      const sc = scrollRef.current, el = doneRef.current;
+      if (!sc || !el) return;
+      const dy = el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8;
+      sc.scrollTo({ top: sc.scrollTop + dy, behavior: 'smooth' });
+    }, 60);
+  };
+
   const remove = (key) => {
     const isItem = (cart.items || []).some(it => it.key === key);
     setCart({
@@ -459,14 +487,16 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
 
   return (
     <div data-screen-label="Le Panier — Ma liste" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CN_C.paper }}>
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px calc(120px + ${bottomInset})` }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px calc(120px + ${bottomInset})` }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: CN_T.display, color: CN_C.ink }}>Ma liste</span>
           {total > 0 && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.muted, whiteSpace: 'nowrap' }}>
-                {done}/{total}
-              </span>
+              <button onClick={goToDone} aria-label="Voir ce que j’ai déjà pris" style={{
+                border: 'none', background: 'none', cursor: 'pointer', padding: '4px 2px',
+                fontFamily: CN_FONTS.mono, fontSize: CN_T.small,
+                color: done ? CN_ACCENT : CN_C.muted, whiteSpace: 'nowrap',
+              }}>{done}/{total}</button>
               <button onClick={copyRayons} aria-label="Copier la liste par rayons" title="Copier la liste par rayons" style={{
                 width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -560,33 +590,55 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
             )}
 
             {/* Déjà pris : replié par défaut, à portée si on s'est trompé. */}
+            {/* ── Déjà pris ──
+                On doit pouvoir relire ce qu'on a pris sans rien défaire : seule
+                la case remet un article dans la liste, le nom ouvre son détail
+                comme partout ailleurs. */}
             {doneLines.length > 0 && (
-              <div style={{ marginTop: 10, borderTop: `1px solid ${CN_C.rule}`, paddingTop: 12 }}>
-                <button onClick={() => setShowDone(!showDone)} style={{
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-                  background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', minHeight: 40,
-                }}>
-                  <CNIcon name="check" size={15} color={CN_ACCENT} strokeWidth={2.4} />
-                  <span style={{ ...lbl, flex: 1 }}>Déjà pris · {doneLines.length}</span>
-                  <span style={{ display: 'inline-flex', transform: showDone ? 'rotate(90deg)' : 'none', transition: 'transform .18s ease' }}>
-                    <CNIcon name="chevR" size={15} color={CN_C.faint} />
-                  </span>
-                </button>
-                {showDone && doneLines.map(l => (
-                  <button key={l.key} onClick={() => toggle(l.key)} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', minHeight: 44,
-                    background: 'none', border: 'none', borderBottom: `1px solid ${CN_C.hair}`, padding: '10px 0', cursor: 'pointer',
+              <div ref={doneRef} style={{ marginTop: 10, borderTop: `1px solid ${CN_C.rule}`, paddingTop: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={() => setShowDone(!showDone)} style={{
+                    display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, textAlign: 'left',
+                    background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', minHeight: 40,
                   }}>
-                    <span style={{
-                      width: 21, height: 21, borderRadius: CN_R.sm, flexShrink: 0, background: CN_ACCENT,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}><CNIcon name="check" size={12} color={CN_C.card} strokeWidth={2.5} /></span>
-                    <span style={{
-                      flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.muted,
-                      textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>{l.name}</span>
-                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.faint, flexShrink: 0 }}>{l.qty}</span>
+                    <CNIcon name="check" size={15} color={CN_ACCENT} strokeWidth={2.4} />
+                    <span style={{ ...lbl, flex: 1 }}>Déjà pris · {doneLines.length}</span>
+                    <span style={{ display: 'inline-flex', transform: showDone ? 'rotate(90deg)' : 'none', transition: 'transform .18s ease' }}>
+                      <CNIcon name="chevR" size={15} color={CN_C.faint} />
+                    </span>
                   </button>
+                  {showDone && (
+                    <button onClick={uncheckAll} style={{
+                      border: 'none', background: 'none', cursor: 'pointer', flexShrink: 0, padding: '4px 0',
+                      fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.small, color: CN_ACCENT,
+                    }}>Tout remettre</button>
+                  )}
+                </div>
+
+                {showDone && doneLines.map(l => (
+                  <div key={l.key} style={{
+                    display: 'flex', alignItems: 'center', gap: 2, borderBottom: `1px solid ${CN_C.hair}`,
+                  }}>
+                    <button onClick={() => toggle(l.key)} aria-label={`Remettre ${l.name} dans la liste`} style={{
+                      width: 40, minHeight: 44, flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'flex-start', padding: 0,
+                    }}>
+                      <span style={{
+                        width: 21, height: 21, borderRadius: CN_R.sm, background: CN_ACCENT,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}><CNIcon name="check" size={12} color={CN_C.card} strokeWidth={2.5} /></span>
+                    </button>
+                    <button onClick={() => setEditKey(l.key)} aria-label={`Ouvrir ${l.name}`} style={{
+                      flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
+                      background: 'none', border: 'none', padding: '10px 0', cursor: 'pointer', minHeight: 44,
+                    }}>
+                      <span style={{
+                        flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.muted,
+                        textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>{l.name}</span>
+                      <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.faint, flexShrink: 0 }}>{l.qty}</span>
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -597,7 +649,8 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
       <CNQtySheet line={editLine} onClose={() => setEditKey(null)}
         onSet={(v) => setQty(editKey, v)}
         onRemove={() => { remove(editKey); setEditKey(null); }}
-        onOpenRecipe={onOpenRecipe && ((id) => { setEditKey(null); onOpenRecipe(id); })} />
+        onOpenRecipe={onOpenRecipe && ((id) => { setEditKey(null); onOpenRecipe(id); })}
+        onUncheck={() => { toggle(editKey); setEditKey(null); }} />
 
       {/* Vous commandez au drive : copier la liste EST le geste principal.
           Enregistrer la sortie courses vient après, une fois la commande passée. */}
