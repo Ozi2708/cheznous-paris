@@ -36,18 +36,28 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
     <div style={{
       display: 'flex', alignItems: 'center', gap: 2, borderBottom: `1px solid ${CN_C.hair}`,
     }}>
-      <button onClick={onToggle} style={{
-        flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
-        background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', minHeight: 46,
+      {/* ── Cocher, c'est la case ──
+          Cocher fait sortir l'article de la liste : ce geste doit être visé,
+          pas déclenché en effleurant le nom. La case a donc sa propre cible,
+          et le reste de la ligne ouvre le détail — ce qu'on attend en tapant
+          sur un produit. */}
+      <button onClick={onToggle} aria-label={`Cocher ${line.name}`} style={{
+        width: 40, minHeight: 46, flexShrink: 0, background: 'none', border: 'none',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', padding: 0,
       }}>
         <span style={{
-          width: 21, height: 21, borderRadius: CN_R.sm, flexShrink: 0,
+          width: 21, height: 21, borderRadius: CN_R.sm,
           border: `1.5px solid ${CN_C.edge}`, background: CN_C.card,
         }}></span>
+      </button>
 
+      <button onClick={onEdit} aria-label={`Ouvrir ${line.name}`} style={{
+        flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
+        background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', minHeight: 46,
+      }}>
         {/* Pastille de provenance : présente seulement quand ce n'est pas une recette. */}
         {src && <span title={src.label} style={{
-          width: 6, height: 6, borderRadius: CN_R.pill, background: src.color, flexShrink: 0, marginLeft: -3,
+          width: 6, height: 6, borderRadius: CN_R.pill, background: src.color, flexShrink: 0,
         }}></span>}
 
         <span style={{
@@ -64,8 +74,7 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
         )}
       </button>
 
-      {/* La quantité est un bouton à part : on l'ajuste sans cocher la ligne. */}
-      <button onClick={onEdit} aria-label={`Quantité et détail de ${line.name}`} style={{
+      <button onClick={onEdit} aria-label={`Quantité de ${line.name}`} style={{
         display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, cursor: 'pointer',
         border: `1.5px solid ${line.edited ? CN_ACCENT : 'transparent'}`,
         background: line.edited ? CN_C.terraSoft : 'transparent',
@@ -378,9 +387,16 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
     if (focusRayon && !openGroups.some(g => g.id === focusRayon)) setFocusRayon(null);
   }, [focusRayon, openGroups]);
 
+  /* Un article coché sort de la liste. La première fois, on dit où il va —
+     sinon ça se lit comme une suppression. */
+  const hinted = React.useRef(false);
   const toggle = (key) => {
     const set = new Set(cart.checked || []);
-    set.has(key) ? set.delete(key) : set.add(key);
+    if (set.has(key)) set.delete(key);
+    else {
+      set.add(key);
+      if (!hinted.current) { hinted.current = true; showToast('Coché — retrouvez-le dans « Déjà pris », en bas de la liste'); }
+    }
     setCart({ ...cart, checked: [...set] });
   };
   const remove = (key) => {
