@@ -399,16 +399,19 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
      sinon ça se lit comme une suppression. */
   const hinted = React.useRef(false);
   const toggle = (key) => {
-    const set = new Set(cart.checked || []);
-    if (set.has(key)) set.delete(key);
-    else {
-      set.add(key);
-      if (!hinted.current) { hinted.current = true; showToast('Coché — retrouvez-le dans « Déjà pris », en bas de la liste'); }
+    setCart(prev => {
+      const set = new Set(prev.checked || []);
+      if (set.has(key)) set.delete(key);
+      else set.add(key);
+      return { ...prev, checked: [...set] };
+    });
+    if (!(cart.checked || []).includes(key) && !hinted.current) {
+      hinted.current = true;
+      showToast('Coché — retrouvez-le dans « Déjà pris », en bas de la liste');
     }
-    setCart({ ...cart, checked: [...set] });
   };
   const uncheckAll = () => {
-    setCart({ ...cart, checked: [] });
+    setCart(prev => ({ ...prev, checked: [] }));
     showToast(`${doneLines.length} article${doneLines.length > 1 ? 's' : ''} remis dans la liste`);
   };
 
@@ -428,42 +431,46 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
   };
 
   const remove = (key) => {
-    const isItem = (cart.items || []).some(it => it.key === key);
-    setCart({
-      ...cart,
-      items: isItem ? cart.items.filter(it => it.key !== key) : (cart.items || []),
-      skipped: isItem ? (cart.skipped || []) : [...new Set([...(cart.skipped || []), key])],
-      checked: (cart.checked || []).filter(k => k !== key),
+    setCart(prev => {
+      const isItem = (prev.items || []).some(it => it.key === key);
+      return {
+        ...prev,
+        items: isItem ? prev.items.filter(it => it.key !== key) : (prev.items || []),
+        skipped: isItem ? (prev.skipped || []) : [...new Set([...(prev.skipped || []), key])],
+        checked: (prev.checked || []).filter(k => k !== key),
+      };
     });
   };
   /* `null` efface la surcharge et rend la main à la quantité calculée. */
   const setQty = (key, value) => {
-    const q = { ...(cart.qty || {}) };
-    if (value == null || value === '') delete q[key]; else q[key] = value.trim();
-    setCart({ ...cart, qty: q });
+    setCart(prev => {
+      const q = { ...(prev.qty || {}) };
+      if (value == null || value === '') delete q[key]; else q[key] = value.trim();
+      return { ...prev, qty: q };
+    });
     setEditKey(null);
   };
 
   /* Un produit suivi entre avec son identité : l'app pourra apprendre son rythme. */
   const addProduct = (p) => {
     if ((cart.items || []).some(it => it.pid === p.id)) { showToast(`${p.name} est déjà dans la liste`); return; }
-    setCart({
-      ...cart,
-      items: [...(cart.items || []), { key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }],
-      skipped: (cart.skipped || []).filter(k => k !== 'prod:' + p.id),
-    });
+    setCart(prev => ({
+      ...prev,
+      items: [...(prev.items || []), { key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }],
+      skipped: (prev.skipped || []).filter(k => k !== 'prod:' + p.id),
+    }));
   };
   /* Nouveau produit : il rejoint le catalogue suivi, pas seulement la liste. */
   const createProduct = (name) => {
     const { courses: next, product } = cnCreateProduct(courses, name);
     setCourses(next);
-    setCart({ ...cart, items: [...(cart.items || []), { key: 'prod:' + product.id, pid: product.id, name: product.name, rayon: product.rayon, src: 'produit' }] });
+    setCart(prev => ({ ...prev, items: [...(prev.items || []), { key: 'prod:' + product.id, pid: product.id, name: product.name, rayon: product.rayon, src: 'produit' }] }));
     showToast(`${product.name} — suivi désormais`);
   };
   /* Ajout libre, sans suivi : utile pour un achat unique. */
   const addFree = (name) => {
     const key = 'man:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    setCart({ ...cart, items: [...(cart.items || []), { key, name, rayon: cnRayon(name), src: 'manuel' }] });
+    setCart(prev => ({ ...prev, items: [...(prev.items || []), { key, name, rayon: cnRayon(name), src: 'manuel' }] }));
   };
 
   /* ── Les deux copies ──

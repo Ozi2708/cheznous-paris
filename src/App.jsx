@@ -135,6 +135,7 @@ export function CNApp() {
   const [purchases, setPurchasesRaw] = React.useState(() => cnLoad(CN_PURCHASES_KEY, {}));
   const [cart, setCartRaw] = React.useState(() => cnLoad(CN_CART_KEY, CN_CART_EMPTY));
   const [foyerOpen, setFoyerOpen] = React.useState(false);
+  const cartRef = React.useRef(cart);
 
   /* ── Synchronisation du foyer ──
      Les mises à jour venues de l'autre téléphone atterrissent ici : on écrit
@@ -149,7 +150,7 @@ export function CNApp() {
     else if (key === 'batch') { const v = value || []; setBatchSelRaw(v); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(v)); }
     else if (key === 'courses') { const v = value || CN_COURSES_EMPTY; setCoursesRaw(v); localStorage.setItem(CN_COURSES_KEY, JSON.stringify(v)); }
     else if (key === 'purchases') { const v = value || {}; setPurchasesRaw(v); localStorage.setItem(CN_PURCHASES_KEY, JSON.stringify(v)); }
-    else if (key === 'cart') { const v = value || CN_CART_EMPTY; setCartRaw(v); localStorage.setItem(CN_CART_KEY, JSON.stringify(v)); }
+    else if (key === 'cart') { const v = value || CN_CART_EMPTY; cartRef.current = v; setCartRaw(v); localStorage.setItem(CN_CART_KEY, JSON.stringify(v)); }
     else if (key === 'myrecipes') { const v = Array.isArray(value) ? value : []; localStorage.setItem(CN_MYRECIPES_KEY, JSON.stringify(v)); cnSetUserRecipes(v, { persist: false }); }
   }, []);
 
@@ -161,7 +162,18 @@ export function CNApp() {
   const setPending = (p) => { setPendingRaw(p); localStorage.setItem(CN_PENDING_KEY, JSON.stringify(p)); sync.push('pending', p); };
   const setCourses = (c) => { setCoursesRaw(c); localStorage.setItem(CN_COURSES_KEY, JSON.stringify(c)); sync.push('courses', c); };
   const setPurchases = (p) => { setPurchasesRaw(p); localStorage.setItem(CN_PURCHASES_KEY, JSON.stringify(p)); sync.push('purchases', p); };
-  const setCart = (c) => { setCartRaw(c); localStorage.setItem(CN_CART_KEY, JSON.stringify(c)); sync.push('cart', c); };
+  /* ── La liste accepte une mise à jour fonctionnelle ──
+     Deux coches à moins d'un rendu d'intervalle partaient toutes deux de la
+     même valeur : la seconde écrasait la première, et un article coché
+     redevenait à prendre. On tient donc la dernière valeur écrite dans une
+     référence, sans attendre le rendu. */
+  const setCart = (c) => {
+    const next = typeof c === 'function' ? c(cartRef.current) : c;
+    cartRef.current = next;
+    setCartRaw(next);
+    localStorage.setItem(CN_CART_KEY, JSON.stringify(next));
+    sync.push('cart', next);
+  };
   const toggleFav = (id) => setFavs(favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]);
 
   const showToast = (text) => {

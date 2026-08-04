@@ -64,18 +64,18 @@ export function CNCoursesRadarScreen({ cart, setCart, recipes, courses, setCours
   const recipeInList = needs.buy.filter(l => !skipped.has(l.key)).length;
 
   const addProduct = (p) => {
-    setCart({ ...cart, items: [...(cart.items || []), { key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }] });
+    setCart(prev => ({ ...prev, items: [...(prev.items || []), { key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }] }));
   };
   const addAllDue = () => {
     const fresh = due.filter(x => !inCart.has(x.p.id));
     if (!fresh.length) { showToast('Tout est déjà dans la liste'); return; }
-    setCart({ ...cart, items: [...(cart.items || []), ...fresh.map(({ p }) => ({ key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }))] });
+    setCart(prev => ({ ...prev, items: [...(prev.items || []), ...fresh.map(({ p }) => ({ key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }))] }));
     showToast(`${fresh.length} produit${fresh.length > 1 ? 's' : ''} ajouté${fresh.length > 1 ? 's' : ''}`);
   };
   const snooze = (p) => { setCourses(cnSnooze(courses, purchases, p.id)); showToast(`${p.name} — repoussé`); };
   const togglePantry = (l) => {
-    if (inList.has(l.key)) setCart({ ...cart, items: cart.items.filter(it => it.key !== l.key), checked: (cart.checked || []).filter(k => k !== l.key) });
-    else setCart({ ...cart, items: [...(cart.items || []), { key: l.key, name: l.name, qty: l.qty, rayon: l.rayon, src: 'placard' }] });
+    if (inList.has(l.key)) setCart(prev => ({ ...prev, items: prev.items.filter(it => it.key !== l.key), checked: (prev.checked || []).filter(k => k !== l.key) }));
+    else setCart(prev => ({ ...prev, items: [...(prev.items || []), { key: l.key, name: l.name, qty: l.qty, rayon: l.rayon, src: 'placard' }] }));
   };
 
   const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.11em', textTransform: 'uppercase', color: '#767066', marginBottom: 8 };

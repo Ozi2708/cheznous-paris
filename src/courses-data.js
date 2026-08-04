@@ -40,7 +40,8 @@ export const CN_SEED_PRODUCTS = [
   { id: 'liquide-vaisselle',name: 'Liquide vaisselle',      rayon: 'entretien', days: 35 },
   { id: 'tablettes-lv',     name: 'Tablettes lave-vaisselle', rayon: 'entretien', days: 45 },
   { id: 'eponges',          name: 'Éponges',                rayon: 'entretien', days: 30 },
-  { id: 'sacs-poubelle',    name: 'Sacs poubelle',          rayon: 'entretien', days: 40 },
+  { id: 'sacs-poubelle',    name: 'Sacs poubelle',          rayon: 'entretien', days: 40,
+    exact: 'Handy Bag 50 L pour poubelle haute' },
   { id: 'essuie-tout',      name: 'Essuie-tout',            rayon: 'entretien', days: 21 },
   { id: 'nettoyant-multi',  name: 'Nettoyant multi-usage',  rayon: 'entretien', days: 60 },
   { id: 'nettoyant-sols',   name: 'Nettoyant sols',         rayon: 'entretien', days: 75 },
@@ -737,9 +738,9 @@ function cnRoundWeight(g) {
    cébette du Midi s'appelle « oignon nouveau » en rayon, et une ligne que le
    drive ne comprend pas est une ligne qu'il refuse. */
 const CN_DRIVE_SYN = [
-  ['cebette', 'Oignons blancs'],
-  ['cive', 'Oignons blancs'],
-  ['oignon nouveau', 'Oignons blancs'],
+  ['cebette', 'Oignons blancs en botte'],
+  ['cive', 'Oignons blancs en botte'],
+  ['oignon nouveau', 'Oignons blancs en botte'],
   ['pomme de terre a chair ferme', 'Pommes de terre à chair ferme'],
   /* Le mot que le rayon emploie vraiment. Attention à ne rien préciser de
      plus : une caractéristique ajoutée fait d'un produit générique une
@@ -747,6 +748,9 @@ const CN_DRIVE_SYN = [
      « sacs poubelle 30 litres » l'ont montré. */
   ['ail en poudre', 'Ail semoule'],
   ['fromage rape a l italienne', 'Mozzarella râpée'],
+  /* « pita » seul ramène de la sauce pita ; « nature » lève l'ambiguïté. */
+  ['pain pita', 'Pains pita nature'],
+  ['pains pita', 'Pains pita nature'],
 ];
 function cnDriveName(name) {
   const n = cnProdNorm(name);
