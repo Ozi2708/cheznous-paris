@@ -216,16 +216,23 @@ export function cnCartDriveText(groups) {
   const items = [];
   groups.forEach(g => g.lines.forEach(l => { if (!l.done) items.push(cnDriveLine(l)); }));
   if (!items.length) return '';
-  /* Ces trois règles viennent d'une commande réelle : « prends le plus proche
-     au-dessus » faisait acheter deux paquets de pavés pour 400 g, trois
-     sachets de fromage pour 200 g, et remplaçait des pousses de salade par
-     des pousses d'épinard sans le dire. */
+  /* Chacune de ces règles vient d'une commande réellement passée :
+       1  « sans dépasser d'un format » autorisait 2 sachets de gruyère pour
+          200 g et 3 barquettes d'épinards pour 300 g ;
+       2  « 1 boîte de maïs » a rapporté un lot de trois ;
+       3  interdire toute substitution faisait refuser des produits sans
+          variété — sacs poubelle, nettoyant multi-usage, pains pita ;
+       4  sans elle, les pousses de salade devenaient des pousses d'épinard ;
+       5  la liste des refus, elle, a parfaitement fonctionné dès le premier
+          essai : on la demande explicitement. */
   return [
     'Ajoute ces produits à mon panier Carrefour Drive.',
     '',
-    "1. Un seul article par ligne, sauf si un seul ne couvre pas la quantité demandée.",
-    "2. Prends le conditionnement le plus proche de la quantité, sans la dépasser de plus d'un format.",
-    "3. Ne remplace jamais par une autre variété ou un autre produit : si tu ne trouves pas, signale-le au lieu de choisir à ma place.",
+    "1. Un seul article par ligne. Choisis le conditionnement dont la contenance est la plus proche de la quantité demandée, au-dessus ou en dessous — mieux vaut un peu moins qu'un deuxième article. N'en prends plusieurs que si la quantité demandée dépasse le plus grand format vendu.",
+    "2. « 1 boîte », « 1 paquet », « 1 flacon » veut dire une seule unité, jamais un lot de plusieurs.",
+    "3. Quand une ligne ne précise ni marque ni variété, c'est un produit générique : prends la référence la plus courante, ne me la refuse pas.",
+    "4. Quand une ligne précise une variété, ne la remplace pas par une autre : signale-le-moi plutôt.",
+    '5. Termine par la liste de ce que tu n’as pas pu ajouter, avec la raison.',
     '',
     ...items.map(t => '- ' + t),
   ].join('\n');

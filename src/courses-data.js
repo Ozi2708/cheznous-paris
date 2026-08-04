@@ -291,7 +291,7 @@ const CN_UNIT_RULES = [
   ['fraise', 'g', 250, 500], ['framboise', 'g', 125, 250], ['myrtille', 'g', 125, 250],
   ['raisin', 'g', 250, 500], ['cerise', 'g', 250, 500],
   /* l'ail se vend à la tête, le gingembre au rhizome — jamais « 2 gousses » */
-  ['ail', 'tête', 1, 1], ['gingembre', '', 1, 1],
+  ['ail', 'tête', 1, 1], ['gingembre', 'g', 25, 50],
 ];
 
 /* Unité par défaut quand aucun motif ne correspond, d'après le rayon. */
@@ -575,7 +575,8 @@ function cnAgree(name, plural) {
    pèse fait prendre le filet d'un kilo. Un ordre de grandeur suffit à viser
    le bon conditionnement. */
 const CN_PIECE_G = [
-  ['echalote', 25], ['gousse', 5], ['cebette', 20], ['citron vert', 70], ['citron', 100],
+  ['echalote', 25], ['gousse', 5], ['cebette', 25], ['oignon nouveau', 25],
+  ['citron vert', 70], ['citron', 100],
   ['champignon', 20], ['radis', 15], ['abricot', 50], ['figue', 60],
   ['kiwi', 90], ['carotte', 90], ['endive', 100], ['banane', 120],
   ['oignon nouveau', 40], ['oignon', 110], ['tomate cerise', 10], ['tomate', 120],
@@ -601,10 +602,28 @@ function cnRoundWeight(g) {
   return cnFormatQty(Math.max(25, Math.round(g / step) * step), 'g');
 }
 
+/* ── Le mot du drive ──
+   Une recette peut employer un régionalisme que le catalogue ignore : la
+   cébette du Midi s'appelle « oignon nouveau » en rayon, et une ligne que le
+   drive ne comprend pas est une ligne qu'il refuse. */
+const CN_DRIVE_SYN = [
+  ['cebette', 'Oignons nouveaux'],
+  ['cive', 'Oignons nouveaux'],
+  ['pomme de terre a chair ferme', 'Pommes de terre à chair ferme'],
+];
+function cnDriveName(name) {
+  const n = cnProdNorm(name);
+  for (const [pat, to] of CN_DRIVE_SYN) if (cnStartsWord(n, pat)) return to;
+  /* « Thé / infusions », « Chips / apéritif » : la barre oblique se lit comme
+     un choix à faire, et le drive prend la seconde branche. */
+  return name.split('/')[0].trim();
+}
+
 export function cnDriveLine(line) {
   const q = cnSplitQty(line.qty || '');
   /* Un nom de produit se dit en minuscule au fil de la phrase. */
-  let name = line.name ? line.name[0].toLowerCase() + line.name.slice(1) : '';
+  const brut = cnDriveName(line.name || '');
+  let name = brut ? brut[0].toLowerCase() + brut.slice(1) : '';
   /* On n'accorde que ce qui se compte : « 400 g de tomates cerises » garde son
      pluriel quel que soit le poids. */
   if (q.n != null && !q.unit) name = cnAgree(name, q.n >= 2);
@@ -615,7 +634,7 @@ export function cnDriveLine(line) {
 
   /* La référence mémorisée précise, elle ne remplace pas : le nom générique
      reste ce sur quoi l'assistant cherche si la marque manque en rayon. */
-  if (line.exact) return `${base} (${line.exact})`;
+  if (line.exact) return `${base} (de préférence ${line.exact})`;
 
   /* Sinon, l'indice qui évite le filet d'un kilo : ce que pèsent ces pièces.
      Le drive vend le vrac au poids — sans repère, « 4 oignons » devient 1 kg. */
