@@ -438,7 +438,8 @@ function cnFormatMass(n, unit) {
    recettes, mot pour mot ; la valeur rendue est ce qu'on met dans le panier. */
 export function cnBuyQty(name, rayon, need) {
   const u = cnUnitFor(name, rayon);
-  const courant = cnFormatQty(u.qty, u.unit);
+  const courant = u.unit === 'g' || u.unit === 'ml'
+    ? cnFormatMass(u.qty, u.unit) : cnFormatQty(u.qty, u.unit);
   const { n, unit } = cnSplitQty(need);
   if (!need || n == null) return courant;
   const nu = cnProdNorm(unit);
@@ -524,28 +525,35 @@ export function cnBuyName(name) {
 const CN_H_MUET = ['huile', 'huitre', 'herbe'];   // « d'huile », mais « de haricots »
 function cnDe(name) {
   const n = cnProdNorm(name);
-  if (/^[aeiouy]/.test(n) || CN_H_MUET.some(h => n.startsWith(h))) return "d'";
+  if (/^[aeiou]/.test(n) || CN_H_MUET.some(h => n.startsWith(h))) return "d'";
   return 'de ';
 }
 
 /* Ces noms s'écrivent avec un s au singulier. */
 const CN_INVARIABLE = ['ananas', 'mais', 'jus', 'riz', 'pois', 'cassis', 'anis',
   'couscous', 'houmous', 'brebis', 'radis', 'poids', 'os', 'temps', 'velours',
-  'panais', 'chips', 'noix', 'cresson'];
+  'panais', 'chips', 'noix', 'cresson',
+  /* adjectifs déjà terminés en s ou x */
+  'frais', 'gras', 'epais', 'gris', 'doux', 'roux', 'vieux', 'faux'];
 const CN_PREPS = ['de', 'du', 'des', 'a', 'au', 'aux', 'en', 'pour', 'sans', 'avec'];
 
 /* Les sept noms en -ou qui font leur pluriel en -x. */
 const CN_OU_X = ['bijou', 'caillou', 'chou', 'genou', 'hibou', 'joujou', 'pou'];
 
+/* Une variété ne s'accorde pas : « pains pita », « courges butternut ». */
+const CN_QUALIF_INV = ['pita', 'butternut', 'basmati', 'arborio', 'bio', 'nature',
+  'extra', 'thai', 'roma', 'maison', 'express', 'label', 'primeur'];
+
 function cnNumberWord(w, plural) {
   const n = cnProdNorm(w);
-  if (n.length < 4 || CN_INVARIABLE.includes(n)) return w;
+  if (n.length < 4 || CN_INVARIABLE.includes(n) || CN_QUALIF_INV.includes(n)) return w;
   if (plural) {
     if (/[sxz]$/i.test(w)) return w;
     if (/(eau|au|eu)$/i.test(w) || CN_OU_X.includes(n)) return w + 'x';   // poireaux, choux
     return w + 's';
   }
-  if (/ux$/i.test(w)) return w.slice(0, -1);          // « choux » → « chou »
+  /* « poireaux » → « poireau », « choux » → « chou » — mais « noix » ne bouge pas. */
+  if (/(eaux|aux|eux)$/i.test(w) || (/ux$/i.test(w) && CN_OU_X.includes(n.slice(0, -1)))) return w.slice(0, -1);
   return /[^s]s$/i.test(w) ? w.slice(0, -1) : w;
 }
 
@@ -557,7 +565,7 @@ function cnAgree(name, plural) {
   const words = name.split(' ');
   let head = words.length;
   for (let i = 1; i < words.length; i++) {
-    if (CN_PREPS.includes(cnProdNorm(words[i])) || /^d[’']/.test(words[i])) { head = i; break; }
+    if (CN_PREPS.includes(cnProdNorm(words[i])) || /^[d][’']/.test(words[i]) || words[i].startsWith('(')) { head = i; break; }
   }
   return words.map((w, i) => (i < head ? cnNumberWord(w, plural) : w)).join(' ');
 }
@@ -567,7 +575,7 @@ function cnAgree(name, plural) {
    pèse fait prendre le filet d'un kilo. Un ordre de grandeur suffit à viser
    le bon conditionnement. */
 const CN_PIECE_G = [
-  ['echalote', 25], ['gousse', 5], ['citron vert', 70], ['citron', 100],
+  ['echalote', 25], ['gousse', 5], ['cebette', 20], ['citron vert', 70], ['citron', 100],
   ['champignon', 20], ['radis', 15], ['abricot', 50], ['figue', 60],
   ['kiwi', 90], ['carotte', 90], ['endive', 100], ['banane', 120],
   ['oignon nouveau', 40], ['oignon', 110], ['tomate cerise', 10], ['tomate', 120],
@@ -582,7 +590,9 @@ const CN_PIECE_G = [
 ];
 function cnPieceWeight(name) {
   const n = cnProdNorm(name);
-  for (const [pat, g] of CN_PIECE_G) if (cnStartsWord(n, pat)) return g;
+  /* « patates douces » doit retrouver « patate douce ». */
+  const sing = n.split(' ').map(w => (w.length > 4 && /[^s]s$/.test(w) ? w.slice(0, -1) : w)).join(' ');
+  for (const [pat, g] of CN_PIECE_G) if (cnStartsWord(n, pat) || cnStartsWord(sing, pat)) return g;
   return null;
 }
 function cnRoundWeight(g) {
@@ -611,7 +621,7 @@ export function cnDriveLine(line) {
      Le drive vend le vrac au poids — sans repère, « 4 oignons » devient 1 kg. */
   if (q.n != null && !q.unit && line.rayon === 'legumes') {
     const g = cnPieceWeight(line.name);
-    if (g) return `${base} (environ ${cnRoundWeight(g * q.n)})`;
+    if (g) return `${base} — environ ${cnRoundWeight(g * q.n)}`;
   }
   return base;
 }
