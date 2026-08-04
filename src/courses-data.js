@@ -124,13 +124,21 @@ function cnStartsWord(hay, kw) {
   }
 }
 
-export function cnRayon(name) {
+/* `null` quand aucune règle ne reconnaît le nom. La différence compte : un
+   ingrédient inconnu est presque toujours de l'épicerie, mais un produit que
+   vous créez à la main peut être n'importe quoi — et on ne va pas lui inventer
+   un poids d'achat. */
+export function cnRayonOrNull(name) {
   const n = cnProdNorm(name);
-  if (!n) return 'epicerie';
+  if (!n) return null;
   for (const [rayon, kws] of CN_RAYON_RULES) {
     if (kws.some(kw => cnStartsWord(n, kw))) return rayon;
   }
-  return 'epicerie';
+  return null;
+}
+
+export function cnRayon(name) {
+  return cnRayonOrNull(name) || 'epicerie';
 }
 
 /* Entrées parasites présentes dans les données de recettes. */

@@ -1,8 +1,8 @@
 import React from 'react';
 import { CN_FONTS, CNIcon, parseQty, fmtNum } from '../helpers.jsx';
 import { CN_C, CN_T, CN_R } from '../tokens.js';
-import { cnCartLines, cnCartCopyText } from '../courses.js';
-import { cnRayon, cnQtyStep, cnQtyChoices, cnUnitHint, cnIsSpoonUnit } from '../courses-data.js';
+import { cnCartLines, cnCartCopyText, cnSearchProducts, cnFindProduct, cnCreateProduct } from '../courses.js';
+import { cnRayon, cnRayonOrNull, cnRayonMeta, cnQtyStep, cnQtyChoices, cnUnitHint, cnIsSpoonUnit, cnUnitFor } from '../courses-data.js';
 
 const CN_ACCENT = CN_C.terra;
 
@@ -28,26 +28,22 @@ async function cnCopy(text) {
 }
 
 /* ── Une ligne, une seule hauteur ──
-   L'ancienne version empilait nom + badge sur deux niveaux : quatre lignes
-   tenaient à l'écran sur vingt-six. Tout tient désormais sur un rang, la
-   quantité alignée à droite en chiffres à chasse fixe, comme les macros des
-   recettes côté Cuisine. */
+   Tout tient sur un rang, la quantité alignée à droite en chiffres à chasse
+   fixe, comme les macros des recettes côté Cuisine. */
 function CNCartRow({ line, onToggle, onEdit, onRemove }) {
   const src = CN_SRC_META[line.srcs[0]];
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 2, borderBottom: `1px solid ${CN_C.hair}`,
-      opacity: line.done ? .45 : 1, transition: 'opacity .15s ease',
     }}>
       <button onClick={onToggle} style={{
         flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
-        background: 'none', border: 'none', padding: '11px 0', cursor: 'pointer', minHeight: 44,
+        background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', minHeight: 46,
       }}>
         <span style={{
-          width: 20, height: 20, borderRadius: CN_R.sm, flexShrink: 0,
-          border: `1.5px solid ${line.done ? CN_ACCENT : CN_C.edge}`, background: line.done ? CN_ACCENT : CN_C.card,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>{line.done && <CNIcon name="check" size={12} color={CN_C.card} strokeWidth={2.5} />}</span>
+          width: 21, height: 21, borderRadius: CN_R.sm, flexShrink: 0,
+          border: `1.5px solid ${CN_C.edge}`, background: CN_C.card,
+        }}></span>
 
         {/* Pastille de provenance : présente seulement quand ce n'est pas une recette. */}
         {src && <span title={src.label} style={{
@@ -55,9 +51,8 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
         }}></span>}
 
         <span style={{
-          flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.ink,
-          lineHeight: 1.3, textDecoration: line.done ? 'line-through' : 'none',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base, color: CN_C.ink,
+          lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{line.name}</span>
 
         {line.count > 1 && (
@@ -87,18 +82,134 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
   );
 }
 
+/* ── Ajouter un article ──
+   Taper « pap » propose ce qu'on suit déjà — papier toilette, papier
+   aluminium, papier cuisson — pour ne pas créer un quatrième « PQ » à côté.
+   Et si le produit n'existe vraiment pas, on le crée en connaissant déjà son
+   rayon et son unité d'achat. */
+function CNAddField({ courses, inCartNames, onPickProduct, onCreate, onQuickAdd }) {
+  const [draft, setDraft] = React.useState('');
+  const [focused, setFocused] = React.useState(false);
+  const input = React.useRef(null);
+  const q = draft.trim();
+
+  const found = React.useMemo(() => cnSearchProducts(courses, q), [courses, q]);
+  const exact = React.useMemo(() => (q ? cnFindProduct(courses, q) : null), [courses, q]);
+  const open = focused && q.length >= 2;
+  const already = (name) => inCartNames.has(name.toLowerCase());
+
+  const reset = () => { setDraft(''); setFocused(false); };
+  /* On enchaîne souvent plusieurs ajouts : le champ se vide mais garde le
+     curseur, prêt pour le suivant. */
+  const keepTyping = () => { setDraft(''); if (input.current) input.current.focus(); };
+  const pick = (p) => { onPickProduct(p); keepTyping(); };
+  const create = () => { onCreate(q); keepTyping(); };
+
+  /* Entrée : le produit connu s'il existe, sinon l'ajout libre habituel. */
+  const submit = () => {
+    if (!q) return;
+    if (exact) { pick(exact); return; }
+    if (found.length === 1) { pick(found[0]); return; }
+    onQuickAdd(q); reset();
+  };
+
+  /* Aperçu de ce que la création donnera, exactement comme cnCreateProduct. */
+  const guessRayon = q ? (cnRayonOrNull(q) || 'maison') : null;
+  const unitLabel = q ? cnUnitHint(cnUnitFor(q, guessRayon).unit) : '';
+  const rayonLabel = guessRayon ? cnRayonMeta(guessRayon) : null;
+
+  return (
+    <div style={{ position: 'relative', marginBottom: open ? 8 : 0, zIndex: 20 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input ref={input} value={draft} onChange={e => setDraft(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 180)}
+          onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') reset(); }}
+          placeholder="Ajouter un article…" style={{
+            flex: 1, minWidth: 0, height: 44, borderRadius: CN_R.pill,
+            border: `1.5px solid ${open ? CN_ACCENT : CN_C.rule}`, background: CN_C.card,
+            padding: '0 16px', fontFamily: CN_FONTS.body, fontSize: CN_T.base, color: CN_C.ink, outline: 'none',
+          }} />
+        <button onClick={submit} aria-label="Ajouter" style={{
+          width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0,
+          background: q ? CN_ACCENT : CN_C.rule, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background .15s ease',
+        }}><CNIcon name="plus" size={20} color={CN_C.card} strokeWidth={2.2} /></button>
+      </div>
+
+      {open && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, top: 50, background: CN_C.card,
+          border: `1.5px solid ${CN_C.rule}`, borderRadius: CN_R.md, overflow: 'hidden',
+          boxShadow: '0 12px 32px rgba(26,25,24,.14)',
+        }}>
+          {found.map(p => {
+            const ray = cnRayonMeta(p.rayon);
+            const here = already(p.name);
+            return (
+              <button key={p.id} onMouseDown={e => e.preventDefault()} onClick={() => !here && pick(p)}
+                disabled={here} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', minHeight: 48,
+                  background: 'none', border: 'none', borderBottom: `1px solid ${CN_C.hair}`,
+                  padding: '9px 13px', cursor: here ? 'default' : 'pointer', opacity: here ? .5 : 1,
+                }}>
+                <span style={{
+                  width: 26, height: 26, borderRadius: CN_R.pill, background: ray.soft, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}><CNIcon name={ray.icon} size={13} color={ray.color} /></span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{
+                    display: 'block', fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.ink,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{p.name}</span>
+                  <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: CN_T.micro, color: CN_C.muted, marginTop: 1 }}>
+                    {here ? 'déjà dans la liste' : ray.label}
+                  </span>
+                </span>
+                {!here && <CNIcon name="plus" size={15} color={CN_ACCENT} strokeWidth={2.2} />}
+              </button>
+            );
+          })}
+
+          {/* Rien ne correspond, ou rien exactement : on propose de le suivre
+              pour de bon — l'app connaîtra ensuite son rythme. */}
+          {!exact && (
+            <button onMouseDown={e => e.preventDefault()} onClick={create} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', minHeight: 48,
+              /* Mis en avant quand rien ne correspond, discret quand on a déjà
+                 des propositions valables. */
+              background: found.length ? 'none' : CN_C.terraSoft,
+              border: 'none', padding: '10px 13px', cursor: 'pointer',
+            }}>
+              <span style={{
+                width: 26, height: 26, borderRadius: CN_R.pill, background: CN_ACCENT, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}><CNIcon name="plus" size={14} color={CN_C.card} strokeWidth={2.4} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{
+                  display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.base - 1, color: CN_ACCENT,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>Créer « {q} »</span>
+                <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: CN_T.micro, color: CN_C.brun, marginTop: 1 }}>
+                  {rayonLabel.label} · se compte {unitLabel}
+                </span>
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Ajuster une quantité ──
    Les recettes donnent un besoin, le drive vend un format. On affiche donc les
-   deux : ce que réclament vos plats, et ce qu'on a traduit pour le panier.
-
-   Le pas et les raccourcis suivent l'unité du produit : + sur du chocolat
-   ajoute 50 g, + sur une courgette ajoute une courgette. */
+   deux : ce que réclament vos plats, et ce qu'on a traduit pour le panier. */
 function CNQtySheet({ line, onClose, onSet, onRemove }) {
   const [val, setVal] = React.useState('');
   React.useEffect(() => { if (line) setVal(line.qty || ''); }, [line && line.key, line && line.qty]);
   const open = !!line;
 
-  /* Unité effective : celle écrite dans le champ si elle existe, sinon celle du produit. */
   const parsed = parseQty(val);
   const unit = parsed.n != null && parsed.unit ? parsed.unit : (line ? line.unit || '' : '');
   const known = line && unit === (line.unit || '');
@@ -209,39 +320,28 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
   );
 }
 
-/* Un rayon entièrement coché se replie de lui-même : il n'a plus rien à dire,
-   il ne doit plus prendre la place de ceux qui restent. */
-function CNRayonGroup({ group, collapsed, onToggleCollapse, children }) {
-  return (
-    <div style={{ marginBottom: collapsed ? 6 : 18 }}>
-      <button onClick={onToggleCollapse} style={{
-        display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left',
-        background: 'none', border: 'none', padding: '4px 0 5px', cursor: 'pointer',
-      }}>
-        <span style={{
-          width: 24, height: 24, borderRadius: CN_R.pill, background: group.soft, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}><CNIcon name={group.icon} size={13} color={group.color} /></span>
-        <span style={{
-          flex: 1, minWidth: 0, fontFamily: CN_FONTS.serif, fontSize: CN_T.lead, color: CN_C.ink,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>{group.label}</span>
-        <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.micro, color: CN_C.faint, flexShrink: 0 }}>
-          {collapsed ? `${group.lines.length} ✓` : group.lines.length}
-        </span>
-      </button>
-      {!collapsed && children}
-    </div>
-  );
-}
-
-export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar }) {
-  const [draft, setDraft] = React.useState('');
+export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar }) {
   const [editKey, setEditKey] = React.useState(null);
-  const [opened, setOpened] = React.useState([]);    // rayons finis qu'on a rouverts à la main
+  const [focusRayon, setFocusRayon] = React.useState(null);   // un rayon à la fois, quand la liste est longue
+  const [showDone, setShowDone] = React.useState(false);
   const { groups, lines, total, done, eurosLabel } = React.useMemo(
     () => cnCartLines(cart, recipes, courses, purchases), [cart, recipes, courses, purchases]);
   const editLine = lines.find(l => l.key === editKey) || null;
+
+  /* Ce qui est coché quitte la liste et rejoint « Déjà pris » : la liste
+     rétrécit à mesure qu'on avance, au lieu de rester longue et grisée. */
+  const openGroups = React.useMemo(() => groups
+    .map(g => ({ ...g, lines: g.lines.filter(l => !l.done) }))
+    .filter(g => g.lines.length), [groups]);
+  const doneLines = React.useMemo(() => lines.filter(l => l.done), [lines]);
+  const shown = focusRayon ? openGroups.filter(g => g.id === focusRayon) : openGroups;
+  const inCartNames = React.useMemo(() => new Set(lines.map(l => l.name.toLowerCase())), [lines]);
+  const remaining = total - done;
+
+  /* Un rayon vidé ne doit pas laisser l'écran vide : on revient à tout. */
+  React.useEffect(() => {
+    if (focusRayon && !openGroups.some(g => g.id === focusRayon)) setFocusRayon(null);
+  }, [focusRayon, openGroups]);
 
   const toggle = (key) => {
     const set = new Set(cart.checked || []);
@@ -265,28 +365,40 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases
     setEditKey(null);
   };
 
-  const addManual = () => {
-    const name = draft.trim();
-    if (!name) return;
+  /* Un produit suivi entre avec son identité : l'app pourra apprendre son rythme. */
+  const addProduct = (p) => {
+    if ((cart.items || []).some(it => it.pid === p.id)) { showToast(`${p.name} est déjà dans la liste`); return; }
+    setCart({
+      ...cart,
+      items: [...(cart.items || []), { key: 'prod:' + p.id, pid: p.id, name: p.name, rayon: p.rayon, src: 'produit' }],
+      skipped: (cart.skipped || []).filter(k => k !== 'prod:' + p.id),
+    });
+  };
+  /* Nouveau produit : il rejoint le catalogue suivi, pas seulement la liste. */
+  const createProduct = (name) => {
+    const { courses: next, product } = cnCreateProduct(courses, name);
+    setCourses(next);
+    setCart({ ...cart, items: [...(cart.items || []), { key: 'prod:' + product.id, pid: product.id, name: product.name, rayon: product.rayon, src: 'produit' }] });
+    showToast(`${product.name} — suivi désormais`);
+  };
+  /* Ajout libre, sans suivi : utile pour un achat unique. */
+  const addFree = (name) => {
     const key = 'man:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     setCart({ ...cart, items: [...(cart.items || []), { key, name, rayon: cnRayon(name), src: 'manuel' }] });
-    setDraft('');
   };
 
-  /* Le geste principal : la liste part chez le drive. On ne copie que ce qui
-     reste à acheter. */
+  /* Le geste principal : la liste part chez le drive, sans ce qui est déjà pris. */
   const copy = async () => {
     const text = cnCartCopyText(groups);
     if (!text) { showToast('Tout est déjà coché'); return; }
     const ok = await cnCopy(text);
-    showToast(ok ? `${total - done} article${total - done > 1 ? 's' : ''} copié${total - done > 1 ? 's' : ''} — collez-les au drive` : 'Copie impossible');
+    showToast(ok ? `${remaining} article${remaining > 1 ? 's' : ''} copié${remaining > 1 ? 's' : ''} — collez-les au drive` : 'Copie impossible');
   };
 
-  const remaining = total - done;
+  const lbl = { fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.micro, letterSpacing: '.11em', textTransform: 'uppercase', color: CN_C.muted };
 
   return (
     <div data-screen-label="Le Panier — Ma liste" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CN_C.paper }}>
-      {/* L'en-tête défile avec la liste : figé, il mangeait un tiers de l'écran. */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: `4px 20px calc(120px + ${bottomInset})` }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ fontFamily: CN_FONTS.serif, fontSize: CN_T.display, color: CN_C.ink }}>Ma liste</span>
@@ -296,25 +408,54 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases
             </span>
           )}
         </div>
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.muted, fontStyle: 'italic', marginTop: 2 }}>
-          {total === 0
-            ? 'Rien à acheter pour le moment.'
-            : <>Rangée dans l’ordre des rayons · <span style={{ fontFamily: CN_FONTS.mono, fontStyle: 'normal', color: CN_C.brun }}>≈ {eurosLabel}</span></>}
-        </div>
 
-        <div style={{ display: 'flex', gap: 8, margin: '14px 0 18px' }}>
-          <input value={draft} onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') addManual(); }}
-            placeholder="Ajouter un article…" style={{
-              flex: 1, minWidth: 0, height: 44, borderRadius: CN_R.pill, border: `1.5px solid ${CN_C.rule}`, background: CN_C.card,
-              padding: '0 16px', fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.ink, outline: 'none',
-            }} />
-          <button onClick={addManual} aria-label="Ajouter" style={{
-            width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0,
-            background: draft.trim() ? CN_ACCENT : CN_C.rule, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background .15s ease',
-          }}><CNIcon name="plus" size={20} color={CN_C.card} strokeWidth={2.2} /></button>
-        </div>
+        {total > 0 ? (
+          <>
+            {/* Où en est-on ? Une phrase et un trait valent mieux qu'un compteur seul. */}
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.muted, fontStyle: 'italic', marginTop: 2 }}>
+              {remaining
+                ? <>Il reste {remaining} article{remaining > 1 ? 's' : ''} · <span style={{ fontFamily: CN_FONTS.mono, fontStyle: 'normal', color: CN_C.brun }}>≈&nbsp;{eurosLabel}</span></>
+                : 'Tout est coché — bonnes courses.'}
+            </div>
+            <div style={{ height: 4, borderRadius: CN_R.pill, background: CN_C.hair, margin: '10px 0 14px', overflow: 'hidden' }}>
+              <div style={{
+                width: `${Math.round(done / total * 100)}%`, height: '100%', background: CN_ACCENT,
+                borderRadius: CN_R.pill, transition: 'width .25s ease',
+              }}></div>
+            </div>
+          </>
+        ) : (
+          <div style={{ fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.muted, fontStyle: 'italic', marginTop: 2, marginBottom: 14 }}>
+            Rien à acheter pour le moment.
+          </div>
+        )}
+
+        <CNAddField courses={courses} inCartNames={inCartNames}
+          onPickProduct={addProduct} onCreate={createProduct} onQuickAdd={addFree} />
+
+        {/* Un rayon à la fois : c'est ainsi qu'on remplit un panier, et ça évite
+            de relire vingt-six lignes à chaque article. */}
+        {openGroups.length > 1 && (
+          <div style={{ display: 'flex', gap: 7, overflowX: 'auto', margin: '14px -20px 4px', padding: '0 20px 2px', WebkitOverflowScrolling: 'touch' }}>
+            {[{ id: null, label: 'Tout', color: CN_C.body, n: remaining }, ...openGroups.map(g => ({ id: g.id, label: g.label, color: g.color, n: g.lines.length }))]
+              .map(c => {
+                const on = focusRayon === c.id;
+                return (
+                  <button key={c.id || 'all'} onClick={() => setFocusRayon(c.id)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer',
+                    fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.small - .5,
+                    padding: '7px 13px', borderRadius: CN_R.pill, minHeight: 34, whiteSpace: 'nowrap',
+                    border: `1.5px solid ${on ? c.color : CN_C.edge}`,
+                    background: on ? c.color : CN_C.card, color: on ? CN_C.card : CN_C.body,
+                    transition: 'all .15s ease',
+                  }}>
+                    {c.label}
+                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.micro - 1, opacity: .75 }}>{c.n}</span>
+                  </button>
+                );
+              })}
+          </div>
+        )}
 
         {total === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -325,13 +466,66 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, purchases
               borderRadius: CN_R.pill, padding: '11px 20px', cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.base - 1,
             }}>Voir ce qu’il faut prévoir →</button>
           </div>
-        ) : groups.map(g => (
-          <CNRayonGroup key={g.id} group={g} collapsed={g.done && !opened.includes(g.id)}
-            onToggleCollapse={() => setOpened(opened.includes(g.id) ? opened.filter(x => x !== g.id) : [...opened, g.id])}>
-            {g.lines.map(l => <CNCartRow key={l.key} line={l} onToggle={() => toggle(l.key)}
-              onEdit={() => setEditKey(l.key)} onRemove={() => remove(l.key)} />)}
-          </CNRayonGroup>
-        ))}
+        ) : (
+          <div style={{ marginTop: 14 }}>
+            {shown.map(g => (
+              <div key={g.id} style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 0 5px' }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: CN_R.pill, background: g.soft, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}><CNIcon name={g.icon} size={13} color={g.color} /></span>
+                  <span style={{
+                    flex: 1, minWidth: 0, fontFamily: CN_FONTS.serif, fontSize: CN_T.lead, color: CN_C.ink,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{g.label}</span>
+                  <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.micro, color: CN_C.faint, flexShrink: 0 }}>{g.lines.length}</span>
+                </div>
+                {g.lines.map(l => <CNCartRow key={l.key} line={l} onToggle={() => toggle(l.key)}
+                  onEdit={() => setEditKey(l.key)} onRemove={() => remove(l.key)} />)}
+              </div>
+            ))}
+
+            {!shown.length && (
+              <div style={{
+                border: `1.5px dashed ${CN_C.rule}`, borderRadius: CN_R.md, padding: '22px 16px', textAlign: 'center',
+                fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.muted,
+              }}>Ce rayon est fait.</div>
+            )}
+
+            {/* Déjà pris : replié par défaut, à portée si on s'est trompé. */}
+            {doneLines.length > 0 && (
+              <div style={{ marginTop: 10, borderTop: `1px solid ${CN_C.rule}`, paddingTop: 12 }}>
+                <button onClick={() => setShowDone(!showDone)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+                  background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', minHeight: 40,
+                }}>
+                  <CNIcon name="check" size={15} color={CN_ACCENT} strokeWidth={2.4} />
+                  <span style={{ ...lbl, flex: 1 }}>Déjà pris · {doneLines.length}</span>
+                  <span style={{ display: 'inline-flex', transform: showDone ? 'rotate(90deg)' : 'none', transition: 'transform .18s ease' }}>
+                    <CNIcon name="chevR" size={15} color={CN_C.faint} />
+                  </span>
+                </button>
+                {showDone && doneLines.map(l => (
+                  <button key={l.key} onClick={() => toggle(l.key)} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', minHeight: 44,
+                    background: 'none', border: 'none', borderBottom: `1px solid ${CN_C.hair}`, padding: '10px 0', cursor: 'pointer',
+                  }}>
+                    <span style={{
+                      width: 21, height: 21, borderRadius: CN_R.sm, flexShrink: 0, background: CN_ACCENT,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}><CNIcon name="check" size={12} color={CN_C.card} strokeWidth={2.5} /></span>
+                    <span style={{
+                      flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.muted,
+                      textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{l.name}</span>
+                    <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.faint, flexShrink: 0 }}>{l.qty}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <CNQtySheet line={editLine} onClose={() => setEditKey(null)}

@@ -8,7 +8,7 @@
 
 import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
 import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor,
-  cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro } from './courses-data.js';
+  cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro, cnRayonOrNull } from './courses-data.js';
 
 export const CN_COURSES_EMPTY = { prefs: {}, custom: [] };
 /* `qty` : quantités que vous avez ajustées à la main, par clé de ligne. Elles
@@ -198,6 +198,45 @@ export function cnCartCopyText(groups) {
     out.push('');
   });
   return out.join('\n').trim();
+}
+
+/* ── Chercher dans ce qu'on suit déjà ──
+   Avant de créer « papier toilette » pour la troisième fois sous trois
+   orthographes, on montre ce qui existe. Ce qui commence par ce que vous
+   tapez remonte en premier, le reste suit. */
+export function cnSearchProducts(courses, q, limit = 6) {
+  const n = cnProdNorm(q);
+  if (!n) return [];
+  const scored = [];
+  cnProducts(courses).forEach(p => {
+    const pn = cnProdNorm(p.name);
+    /* 0 = le nom commence par la saisie · 1 = un mot commence par elle ·
+       2 = elle apparaît quelque part dedans */
+    const rank = pn.startsWith(n) ? 0 : new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(pn) ? 1 : pn.includes(n) ? 2 : -1;
+    if (rank >= 0) scored.push({ p, rank });
+  });
+  scored.sort((a, b) => a.rank - b.rank || a.p.name.localeCompare(b.p.name));
+  return scored.slice(0, limit).map(s => s.p);
+}
+
+/* Le nom saisi désigne-t-il déjà un produit suivi ? Sert à ne proposer la
+   création que lorsqu'elle est vraiment nécessaire. */
+export function cnFindProduct(courses, name) {
+  const n = cnProdNorm(name);
+  return cnProducts(courses).find(p => cnProdNorm(p.name) === n) || null;
+}
+
+/* Crée un produit suivi à partir d'un nom libre. Le rayon et l'unité d'achat
+   se déduisent du nom : « papier cadeau » part au rayon Maison et se compte au
+   lot, sans que vous ayez à le dire. */
+export function cnCreateProduct(courses, name) {
+  const clean = String(name || '').trim();
+  const id = 'u-' + cnProdNorm(clean).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Math.random().toString(36).slice(2, 5);
+  /* Faute de reconnaître le nom, on le range dans « Maison & divers » plutôt
+     qu'en Épicerie : c'est le rayon fourre-tout, et on l'y compte à la pièce
+     au lieu de lui inventer 250 g. Le rayon reste modifiable dans la fiche. */
+  const product = { id, name: clean[0].toUpperCase() + clean.slice(1), rayon: cnRayonOrNull(clean) || 'maison', days: null };
+  return { courses: { ...courses, custom: [...(courses.custom || []), product] }, product };
 }
 
 /* ── Validation d'une sortie courses ──

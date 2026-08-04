@@ -298,7 +298,7 @@ export function CNApp() {
             </div>
             <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
               {tab === 'liste' && <CNCoursesListScreen cart={cart} setCart={setCart} recipes={shopRecipes}
-                courses={courses} purchases={purchases} onFinish={finishTrip} showToast={showToast}
+                courses={courses} setCourses={setCourses} purchases={purchases} onFinish={finishTrip} showToast={showToast}
                 bottomInset={tabBarH} onGoRadar={() => navigate({ tab: 'radar', screen: 'tab' })} />}
               {tab === 'radar' && <CNCoursesRadarScreen cart={cart} setCart={setCart} recipes={shopRecipes}
                 courses={courses} setCourses={setCourses} purchases={purchases} showToast={showToast}
