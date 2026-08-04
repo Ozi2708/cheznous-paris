@@ -610,6 +610,13 @@ const CN_DRIVE_SYN = [
   ['cebette', 'Oignons nouveaux'],
   ['cive', 'Oignons nouveaux'],
   ['pomme de terre a chair ferme', 'Pommes de terre à chair ferme'],
+  /* Certains produits n'existent au catalogue qu'avec leur caractéristique :
+     un sac poubelle se vend par contenance, un pain pita sous deux noms. */
+  ['sacs poubelle', 'Sacs poubelle 30 litres'],
+  ['sac poubelle', 'Sacs poubelle 30 litres'],
+  ['pain pita', 'Pains pita (pain libanais)'],
+  ['pains pita', 'Pains pita (pain libanais)'],
+  ['sac congelation', 'Sacs de congélation 3 litres'],
 ];
 function cnDriveName(name) {
   const n = cnProdNorm(name);

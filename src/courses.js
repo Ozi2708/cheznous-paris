@@ -235,6 +235,11 @@ export function cnCartDriveText(groups) {
     '5. Termine par la liste de ce que tu n’as pas pu ajouter, avec la raison.',
     '',
     ...items.map(t => '- ' + t),
+    '',
+    /* Répétée après la liste : sur un envoi de 91 lignes, la consigne placée
+       en tête seule s'était perdue et huit articles avaient disparu sans un
+       mot. Une ligne manquante qu'on ignore est pire qu'un refus. */
+    "Reprends maintenant la règle 5 : liste les lignes que tu n'as pas ajoutées, une par une, avec la raison. N'en oublie aucune, même si la liste est longue.",
   ].join('\n');
 }
 
