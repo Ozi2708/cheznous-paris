@@ -2844,7 +2844,8 @@ export const CHEZNOUS_DATA = {
     "Saumon"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p22.jpg"
   },
   {
    "id": "p23",
@@ -3604,7 +3605,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p28.jpg"
   },
   {
    "id": "p29",
@@ -5758,7 +5760,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf haché"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p45.jpg"
   },
   {
    "id": "p46",
@@ -5887,7 +5890,8 @@ export const CHEZNOUS_DATA = {
     "Bœuf haché"
    ],
    "isVegan": false,
-   "isVeggie": false
+   "isVeggie": false,
+   "image": "/plats/p46.jpg"
   },
   {
    "id": "p47",
