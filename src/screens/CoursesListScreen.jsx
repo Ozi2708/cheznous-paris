@@ -55,15 +55,17 @@ function CNCartRow({ line, onToggle, onEdit, onRemove }) {
           lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{line.name}</span>
 
+        {/* Vient de plusieurs plats : la toque le dit, et le détail les nomme. */}
         {line.count > 1 && (
-          <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.micro - 1, color: CN_C.faint, flexShrink: 0 }}>
-            ×{line.count}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            <CNIcon name="chef" size={12} color={CN_C.faint} />
+            <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.micro - 1, color: CN_C.faint }}>{line.count}</span>
           </span>
         )}
       </button>
 
       {/* La quantité est un bouton à part : on l'ajuste sans cocher la ligne. */}
-      <button onClick={onEdit} aria-label={`Modifier la quantité de ${line.name}`} style={{
+      <button onClick={onEdit} aria-label={`Quantité et détail de ${line.name}`} style={{
         display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, cursor: 'pointer',
         border: `1.5px solid ${line.edited ? CN_ACCENT : 'transparent'}`,
         background: line.edited ? CN_C.terraSoft : 'transparent',
@@ -205,7 +207,7 @@ function CNAddField({ courses, inCartNames, onPickProduct, onCreate, onQuickAdd 
 /* ── Ajuster une quantité ──
    Les recettes donnent un besoin, le drive vend un format. On affiche donc les
    deux : ce que réclament vos plats, et ce qu'on a traduit pour le panier. */
-function CNQtySheet({ line, onClose, onSet, onRemove }) {
+function CNQtySheet({ line, onClose, onSet, onRemove, onOpenRecipe }) {
   const [val, setVal] = React.useState('');
   React.useEffect(() => { if (line) setVal(line.qty || ''); }, [line && line.key, line && line.qty]);
   const open = !!line;
@@ -262,6 +264,7 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
         transition: open ? 'transform .3s cubic-bezier(.32,.72,.25,1)'
                          : 'transform .3s cubic-bezier(.32,.72,.25,1), visibility 0s linear .3s',
         padding: '14px 22px calc(env(safe-area-inset-bottom, 0px) + 18px)', boxShadow: '0 -8px 40px rgba(26,25,24,.18)',
+        maxHeight: '88%', overflowY: 'auto',
       }}>
         <div style={{ width: 38, height: 4, borderRadius: CN_R.pill, background: CN_C.edge, margin: '0 auto 14px' }}></div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
@@ -287,6 +290,38 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
             }} />
           <button onClick={() => bump(1)} style={btn} aria-label="Augmenter"><CNIcon name="plus" size={20} color={CN_C.body} strokeWidth={2.2} /></button>
         </div>
+
+        {/* ── D'où ça vient ──
+            Un ingrédient dans la liste sans savoir pour quel plat, c'est une
+            énigme. On nomme les recettes, avec ce que chacune en demande, et
+            on peut ouvrir la fiche sans quitter ses courses. */}
+        {line && line.uses && line.uses.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{
+              fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: CN_T.micro, letterSpacing: '.11em',
+              textTransform: 'uppercase', color: CN_C.muted, marginBottom: 6,
+            }}>{line.uses.length > 1 ? `Pour ${line.uses.length} de vos plats` : 'Pour votre plat'}</div>
+            {line.uses.map((u, i) => (
+              <button key={u.id + '-' + i} onClick={() => onOpenRecipe && onOpenRecipe(u.id)}
+                disabled={!onOpenRecipe} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', minHeight: 46,
+                  background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: CN_R.md,
+                  padding: '9px 12px', marginBottom: 6, cursor: onOpenRecipe ? 'pointer' : 'default',
+                }}>
+                <span style={{
+                  width: 28, height: 28, borderRadius: CN_R.pill, background: CN_C.oliveSoft, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}><CNIcon name="chef" size={15} color={CN_C.olive} /></span>
+                <span style={{
+                  flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.base - 1, color: CN_C.ink,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{u.title}</span>
+                {u.q && <span style={{ fontFamily: CN_FONTS.mono, fontSize: CN_T.small, color: CN_C.muted, flexShrink: 0 }}>{u.q}</span>}
+                {onOpenRecipe && <CNIcon name="chevR" size={15} color={CN_C.faint} />}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Raccourcis : les quantités qu'on achète vraiment dans cette unité. */}
         {known && (
@@ -320,7 +355,7 @@ function CNQtySheet({ line, onClose, onSet, onRemove }) {
   );
 }
 
-export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar }) {
+export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar, onOpenRecipe }) {
   const [editKey, setEditKey] = React.useState(null);
   const [focusRayon, setFocusRayon] = React.useState(null);   // un rayon à la fois, quand la liste est longue
   const [showDone, setShowDone] = React.useState(false);
@@ -530,7 +565,8 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
 
       <CNQtySheet line={editLine} onClose={() => setEditKey(null)}
         onSet={(v) => setQty(editKey, v)}
-        onRemove={() => { remove(editKey); setEditKey(null); }} />
+        onRemove={() => { remove(editKey); setEditKey(null); }}
+        onOpenRecipe={onOpenRecipe && ((id) => { setEditKey(null); onOpenRecipe(id); })} />
 
       {/* Vous commandez au drive : copier la liste EST le geste principal.
           Enregistrer la sortie courses vient après, une fois la commande passée. */}

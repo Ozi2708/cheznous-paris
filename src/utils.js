@@ -298,7 +298,7 @@ export function cnShoppingList(recipes) {
     const k = cnIngKey(it.name);
     if (!map[k]) map[k] = { key: k, name: it.name, section: sec.section, uses: [] };
     if ((secOrder[sec.section] ?? 0) < (secOrder[map[k].section] ?? 0)) map[k].section = sec.section;
-    map[k].uses.push({ title: r.title, q: it.q });
+    map[k].uses.push({ id: r.id, title: r.title, q: it.q });
   })));
   const entries = Object.values(map).map(e => {
     const byUnit = {};

@@ -106,6 +106,9 @@ export function cnRecipeNeeds(recipes) {
   const mk = (e) => ({
     key: 'rec:' + e.key, ingKey: e.key, name: cnBuyName(cnCleanName(e.name)), qty: e.total || '',
     rayon: cnRayon(e.name), src: 'recette', count: e.count,
+    /* De quels plats vient cet ingrédient, et combien chacun en demande —
+       pour pouvoir remonter à la recette depuis la liste de courses. */
+    uses: e.uses,
   });
   const clean = (list) => (list || []).filter(e => !cnIsJunkIngredient(e.name)).map(mk);
   return {
@@ -134,6 +137,7 @@ export function cnCartLines(cart, recipes, courses, purchases) {
       if (line.prefQty && !prev.prefQty) prev.prefQty = line.prefQty;
       if (line.exact && !prev.exact) prev.exact = line.exact;
       if (line.price != null && prev.price == null) prev.price = line.price;
+      if (line.uses) prev.uses = [...(prev.uses || []), ...line.uses];
       if (!prev.srcs.includes(line.src)) prev.srcs.push(line.src);
       return;
     }

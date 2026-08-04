@@ -299,7 +299,8 @@ export function CNApp() {
             <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
               {tab === 'liste' && <CNCoursesListScreen cart={cart} setCart={setCart} recipes={shopRecipes}
                 courses={courses} setCourses={setCourses} purchases={purchases} onFinish={finishTrip} showToast={showToast}
-                bottomInset={tabBarH} onGoRadar={() => navigate({ tab: 'radar', screen: 'tab' })} />}
+                bottomInset={tabBarH} onGoRadar={() => navigate({ tab: 'radar', screen: 'tab' })}
+                onOpenRecipe={(id) => { setPortions(2); navigate({ screen: 'recipe', recipeId: id, ctxIds: null }); }} />}
               {tab === 'radar' && <CNCoursesRadarScreen cart={cart} setCart={setCart} recipes={shopRecipes}
                 courses={courses} setCourses={setCourses} purchases={purchases} showToast={showToast}
                 bottomInset={tabBarH} onGoList={() => navigate({ tab: 'liste', screen: 'tab' })} />}
