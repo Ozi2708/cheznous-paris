@@ -1,5 +1,9 @@
 import React from 'react';
-import { supa, cnHumanError } from './supabase.js';
+import {
+  supa, cnHumanError,
+  cnLireCookie, cnEcrireCookie, cnEffacerCookie, CN_COOKIE_JETON,
+  cnDemanderPersistance, cnReleverOuverture,
+} from './supabase.js';
 
 /* ── Comptes ──
    Chacun son adresse et son mot de passe ; le partage se fait ensuite au
@@ -21,26 +25,104 @@ export function cnCheckPassword(mdp) {
   return null;
 }
 
+/* Un jeton rejeté par le serveur ne sert plus à rien et doit partir. Un
+   jeton qui n'a pas pu être présenté — réseau coupé, serveur injoignable —
+   est au contraire la seule chose qui permettra de revenir : l'effacer
+   ferait exactement le dégât qu'on cherche à éviter. */
+export function jetonRefuse(error) {
+  if (!error) return false;
+  const nom = error.name || '';
+  if (nom === 'AuthRetryableFetchError') return false;
+  const m = (error.message || '').toLowerCase();
+  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('load failed') || m.includes('timeout')) return false;
+  const s = error.status;
+  if (typeof s === 'number') return s >= 400 && s < 500;
+  return m.includes('refresh token') || m.includes('invalid') || m.includes('expired');
+}
+
+async function reprendreDuCookie(apresEffacement, vivant, setReprise) {
+  const jeton = cnLireCookie(CN_COOKIE_JETON);
+  if (!jeton) return null;
+  try {
+    const { data, error } = await supa.auth.refreshSession({ refresh_token: jeton });
+    if (!error && data && data.session) {
+      if (vivant && apresEffacement) setReprise(true);
+      return data.session;
+    }
+    if (jetonRefuse(error)) cnEffacerCookie(CN_COOKIE_JETON);
+    return null;
+  } catch (e) {
+    if (jetonRefuse(e)) cnEffacerCookie(CN_COOKIE_JETON);
+    return null;
+  }
+}
+
 export function useAuth() {
   const [session, setSession] = React.useState(null);
   /* Tant que Supabase n'a pas relu la session stockée, on n'affiche ni
      « connecté » ni « déconnecté » : sinon l'écran clignote au lancement. */
   const [ready, setReady] = React.useState(!supa);
+  /* Vrai quand la session a été rétablie depuis le cookie après un
+     effacement du stockage — l'écran le signale plutôt que de laisser
+     croire à une déconnexion. */
+  const [reprise, setReprise] = React.useState(false);
 
   React.useEffect(() => {
     if (!supa) return;
     let vivant = true;
 
-    supa.auth.getSession()
-      .then(({ data }) => { if (vivant) { setSession(data ? data.session : null); setReady(true); } })
-      .catch(() => { if (vivant) setReady(true); });
+    /* Deux gestes au lancement : réclamer le stockage persistant, et noter
+       si le stockage local avait disparu depuis la dernière ouverture. */
+    cnDemanderPersistance();
+    const releve = cnReleverOuverture();
 
-    const { data: sub } = supa.auth.onAuthStateChange((_evt, s) => {
-      if (vivant) { setSession(s); setReady(true); }
+    (async () => {
+      try {
+        const { data } = await supa.auth.getSession();
+        let s = data ? data.session : null;
+
+        /* Rien en localStorage, mais un jeton dans le cookie : le stockage
+           du site a été vidé (place manquante, nettoyage du navigateur).
+           On rouvre la session sans rien demander. */
+        if (!s) s = await reprendreDuCookie(releve.efface, vivant, setReprise);
+        if (vivant) { setSession(s); setReady(true); }
+      } catch (e) {
+        if (vivant) setReady(true);
+      }
+    })();
+
+    const { data: sub } = supa.auth.onAuthStateChange((evt, s) => {
+      if (!vivant) return;
+      setSession(s);
+      setReady(true);
+      /* Le jeton de rafraîchissement est recopié dans le cookie à chaque
+         renouvellement : c'est lui qui permettra la reprise. */
+      if (s && s.refresh_token) cnEcrireCookie(CN_COOKIE_JETON, s.refresh_token);
+      else if (evt === 'SIGNED_OUT') cnEffacerCookie(CN_COOKIE_JETON);
     });
 
     return () => { vivant = false; if (sub && sub.subscription) sub.subscription.unsubscribe(); };
   }, []);
+
+  /* Si la reprise a échoué faute de réseau, on retente au retour de la
+     connexion ou de l'app — sans jamais rien demander à l'utilisateur. */
+  React.useEffect(() => {
+    if (!supa || session) return;
+    if (!cnLireCookie(CN_COOKIE_JETON)) return;
+    let vivant = true;
+    const reessayer = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const s = await reprendreDuCookie(false, vivant, setReprise);
+      if (vivant && s) setSession(s);
+    };
+    window.addEventListener('online', reessayer);
+    document.addEventListener('visibilitychange', reessayer);
+    return () => {
+      vivant = false;
+      window.removeEventListener('online', reessayer);
+      document.removeEventListener('visibilitychange', reessayer);
+    };
+  }, [session]);
 
   const signUp = React.useCallback(async (email, mdp, prenom) => {
     if (!supa) return { ok: false, message: 'Synchronisation non configurée.' };
@@ -75,6 +157,7 @@ export function useAuth() {
   }, []);
 
   const signOut = React.useCallback(async () => {
+    cnEffacerCookie(CN_COOKIE_JETON);
     if (!supa) return { ok: true };
     try {
       await supa.auth.signOut();
@@ -98,5 +181,5 @@ export function useAuth() {
   const user = session ? session.user : null;
   const prenom = user ? ((user.user_metadata && user.user_metadata.prenom) || '') : '';
 
-  return { session, user, prenom, ready, signUp, signIn, signOut, resetPassword };
+  return { session, user, prenom, ready, reprise, signUp, signIn, signOut, resetPassword };
 }

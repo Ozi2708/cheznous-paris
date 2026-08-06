@@ -2,6 +2,7 @@ import React from 'react';
 import { CN_FONTS, CNIcon } from '../helpers.jsx';
 import { CN_C, CN_T, CN_R, CN_S } from '../tokens.js';
 import { cnTestConnection, cnNormalizeCode, CN_FOYER_KEY } from '../sync.js';
+import { cnDiagnosticStockage } from '../supabase.js';
 
 const STATUS_META = {
   off: { dot: CN_C.faint, label: 'Hors ligne · données sur cet appareil uniquement' },
@@ -75,6 +76,106 @@ function CNMessage({ diag }) {
     }}>
       <CNIcon name={diag.ok ? 'check' : 'bulb'} size={15} color={diag.ok ? CN_C.olive : '#C0483F'} style={{ flexShrink: 0, marginTop: 2 }} />
       <span style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: diag.ok ? '#3C5030' : '#8A3A33', lineHeight: 1.55 }}>{diag.message}</span>
+    </div>
+  );
+}
+
+/* ── Diagnostic de l'appareil ──
+   Une connexion qui se perd peut venir de plusieurs causes, et elles ne se
+   distinguent pas de l'extérieur. Ce relevé se fait sur le téléphone
+   concerné : il compte les fois où le stockage du site a disparu entre deux
+   ouvertures, et montre les trois réglages qui décident du sort de ce
+   stockage. */
+function cnVerdict(d) {
+  if (!d.stockageOk) {
+    return {
+      grave: true,
+      texte: "Le navigateur refuse d’enregistrer quoi que ce soit. C’est le comportement d’une fenêtre de navigation privée : tout est effacé à la fermeture. Ouvrez l’app dans une fenêtre normale.",
+    };
+  }
+  if (d.effacements === 0) {
+    return {
+      grave: false,
+      texte: d.ouvertures < 3
+        ? "Trop tôt pour conclure : le relevé commence à peine. Revenez ici après quelques jours."
+        : `Aucun effacement constaté sur ${d.ouvertures} ouvertures. Le stockage tient.`,
+    };
+  }
+  if (!d.installee) {
+    return {
+      grave: true,
+      texte: `Stockage vidé ${d.effacements} fois sur ${d.ouvertures} ouvertures. L’app est ouverte depuis le navigateur, pas depuis l’écran d’accueil : dans ce cas le téléphone se donne le droit de faire le ménage. Installez-la (menu Partager → « Sur l’écran d’accueil ») et ouvrez-la toujours par cette icône.`,
+    };
+  }
+  if (d.persistant === false) {
+    return {
+      grave: true,
+      texte: `Stockage vidé ${d.effacements} fois malgré l’installation, et le téléphone n’accorde pas le stockage permanent — c’est ce qu’il fait quand il manque de place. Libérer quelques gigaoctets suffit en général.`,
+    };
+  }
+  return {
+    grave: true,
+    texte: `Stockage vidé ${d.effacements} fois sur ${d.ouvertures} ouvertures, sans cause évidente. Vérifiez que le navigateur n’est pas réglé pour effacer les données de sites à la fermeture.`,
+  };
+}
+
+function CNDiagnosticAppareil() {
+  const [d, setD] = React.useState(null);
+  const [ouvert, setOuvert] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ouvert || d) return;
+    let vivant = true;
+    cnDiagnosticStockage().then(r => { if (vivant) setD(r); });
+    return () => { vivant = false; };
+  }, [ouvert, d]);
+
+  if (!ouvert) {
+    return <button style={lien} onClick={() => setOuvert(true)}>Diagnostic de cet appareil</button>;
+  }
+
+  const v = d ? cnVerdict(d) : null;
+  const ligne = (etiquette, valeur) => (
+    <div style={{ display: 'flex', gap: CN_S.md, padding: '7px 0', borderTop: `1px solid ${CN_C.hair}` }}>
+      <span style={{ flex: '0 0 44%', fontFamily: CN_FONTS.body, fontSize: 12, color: CN_C.muted }}>{etiquette}</span>
+      <span style={{ flex: 1, fontFamily: CN_FONTS.body, fontSize: 12, color: CN_C.body, wordBreak: 'break-word' }}>{valeur}</span>
+    </div>
+  );
+
+  return (
+    <div style={{ background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: 14, padding: '12px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: CN_S.xs }}>
+        <span style={{ ...surtitre, marginBottom: 0, flex: 1 }}>Diagnostic de cet appareil</span>
+        <button onClick={() => setOuvert(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+          <CNIcon name="x" size={15} color={CN_C.faint} />
+        </button>
+      </div>
+
+      {!d ? (
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: CN_C.muted, padding: '8px 0' }}>Relevé en cours…</div>
+      ) : (
+        <React.Fragment>
+          <div style={{
+            background: v.grave ? '#FBEFEE' : '#EEF3E8',
+            border: `1.5px solid ${v.grave ? '#EFD3D0' : '#D3E0C4'}`,
+            borderRadius: CN_R.md, padding: '10px 12px', margin: '4px 0 10px',
+            fontFamily: CN_FONTS.body, fontSize: 12.5, lineHeight: 1.55,
+            color: v.grave ? '#8A3A33' : '#3C5030',
+          }}>{v.texte}</div>
+
+          {ligne('Ouverte depuis', d.installee ? 'l’écran d’accueil' : 'le navigateur')}
+          {ligne('Stockage permanent', d.persistant === true ? 'accordé' : d.persistant === false ? 'refusé' : 'inconnu')}
+          {ligne('Écriture possible', d.stockageOk ? 'oui' : 'non')}
+          {d.quotaMo != null && ligne('Espace du site', `${d.utiliseMo != null ? d.utiliseMo : '?'} Mo utilisés sur ${d.quotaMo} Mo`)}
+          {ligne('Effacements', `${d.effacements} sur ${d.ouvertures} ouvertures${d.depuis ? `, depuis le ${d.depuis}` : ''}`)}
+          {d.dernier && ligne('Dernier effacement', d.dernier)}
+          {ligne('Adresse', d.origine)}
+
+          <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: CN_C.muted, marginTop: 10, lineHeight: 1.5 }}>
+            L’adresse compte : deux adresses différentes sont deux stockages différents. Ouvrez toujours l’app par le même chemin.
+          </div>
+        </React.Fragment>
+      )}
     </div>
   );
 }
@@ -158,9 +259,11 @@ function CNConnexion({ auth, showToast }) {
 
       <CNMessage diag={diag} />
 
-      <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: CN_C.muted, marginTop: CN_S.md, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: CN_C.muted, margin: `${CN_S.md}px 0`, lineHeight: 1.5 }}>
         Sans compte, l’app fonctionne entièrement sur cet appareil. Se connecter ne sert qu’au partage.
       </div>
+
+      <CNDiagnosticAppareil />
     </React.Fragment>
   );
 }
@@ -329,6 +432,8 @@ function CNFoyerActif({ auth, sync, showToast }) {
           <CNIcon name="refresh" size={15} color={CN_C.body} /> {busy ? 'Test en cours…' : 'Tester la connexion'}
         </button>
 
+        <CNDiagnosticAppareil />
+
         {!confirmLeave ? (
           <button onClick={() => setConfirmLeave(true)} style={lien}>Quitter ce foyer</button>
         ) : (
@@ -399,6 +504,17 @@ export function CNFoyerSheet({ open, onClose, auth, sync, showToast }) {
             {meta.label}{attente > 0 ? ` · ${attente} modification${attente > 1 ? 's' : ''} en attente` : ''}
           </span>
         </div>
+
+        {auth.reprise && (
+          <div style={{
+            background: CN_C.oliveSoft, border: '1.5px solid #D3E0C4', borderRadius: CN_R.md,
+            padding: '10px 12px', marginBottom: CN_S.md,
+            fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#3C5030', lineHeight: 1.55,
+          }}>
+            Le téléphone avait vidé les données du site. La session a été rouverte toute seule et le foyer
+            retrouvé — rien à ressaisir. Le diagnostic plus bas dit pourquoi.
+          </div>
+        )}
 
         {connecte && auth.prenom && !sync.foyer && (
           <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: CN_C.muted, marginBottom: CN_S.md }}>

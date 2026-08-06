@@ -41,6 +41,35 @@ Vercel du site. Elle ne sert qu'au lien « mot de passe oublié ».
    Son contenu local est remplacé par celui du foyer : c'est annoncé à
    l'écran avant de valider.
 
+## Si la connexion se perd régulièrement sur un téléphone
+
+C'était le cas avec l'ancien partage : la seule preuve qu'un téléphone
+appartenait au foyer était un code rangé dans le stockage du navigateur. Ce
+stockage vidé, la connexion était perdue et il fallait ressaisir le code.
+
+L'appartenance vit maintenant dans la base, attachée au compte. Un
+téléphone qui perd tout se reconnecte et retrouve son foyer.
+
+Trois protections ont été ajoutées par-dessus :
+
+- l'app **réclame le stockage permanent** au lancement, ce qui la met à
+  l'abri du ménage que fait le téléphone quand il manque de place ;
+- le jeton de reprise est recopié dans un **cookie**, qui ne vit pas au même
+  endroit et survit à ce ménage : la session se rouvre toute seule, sans
+  rien ressaisir ;
+- l'app **compte les effacements**. Dans **Mon foyer → Diagnostic de cet
+  appareil**, le relevé dit combien de fois le stockage a disparu, si l'app
+  est ouverte depuis l'écran d'accueil, si le stockage permanent est
+  accordé, et sur quelle adresse elle tourne.
+
+Le geste qui change le plus de choses : **installer l'app sur l'écran
+d'accueil** (menu Partager → « Sur l'écran d'accueil ») et l'ouvrir toujours
+par cette icône. Une app installée est traitée tout autrement qu'un onglet.
+
+Attention aussi à l'adresse : deux adresses différentes sont deux stockages
+différents. Un lien vers une préversion Vercel n'est pas le même site que
+l'adresse habituelle.
+
 ## Ce que remplace ce script
 
 L'ancien partage reposait sur la seule table `foyer_state` et un code de
