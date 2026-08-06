@@ -20,6 +20,7 @@ import { CNCoursesRadarScreen } from './screens/CoursesRadarScreen.jsx';
 import { CNCoursesProductsScreen } from './screens/CoursesProductsScreen.jsx';
 import { CN_COURSES_EMPTY, CN_CART_EMPTY, cnCartLines, cnFinishTrip } from './courses.js';
 import { useFoyerSync } from './sync.js';
+import { useAuth } from './auth.js';
 
 const CN_TWEAK_DEFAULTS = { cookTheme: 'olive', cookTextSize: 25 };
 
@@ -154,7 +155,8 @@ export function CNApp() {
     else if (key === 'myrecipes') { const v = Array.isArray(value) ? value : []; localStorage.setItem(CN_MYRECIPES_KEY, JSON.stringify(v)); cnSetUserRecipes(v, { persist: false }); }
   }, []);
 
-  const sync = useFoyerSync({ onRemote: applyRemote, getLocal: () => stateRef.current });
+  const auth = useAuth();
+  const sync = useFoyerSync({ session: auth.session, onRemote: applyRemote, getLocal: () => stateRef.current });
 
   const setWeek = (w) => { setWeekRaw(w); localStorage.setItem(CN_WEEK_KEY, JSON.stringify(w)); sync.push('week', w); };
   const setBatchSel = (s) => { setBatchSelRaw(s); localStorage.setItem(CN_BATCH_KEY, JSON.stringify(s)); sync.push('batch', s); };
@@ -392,7 +394,7 @@ export function CNApp() {
             showToast(`${title} → ${label}`);
           }} />
 
-        <CNFoyerSheet open={foyerOpen} onClose={() => setFoyerOpen(false)} sync={sync} showToast={showToast} />
+        <CNFoyerSheet open={foyerOpen} onClose={() => setFoyerOpen(false)} auth={auth} sync={sync} showToast={showToast} />
       </div>
 
       <TweaksPanel>

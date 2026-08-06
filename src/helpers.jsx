@@ -60,6 +60,11 @@ export function CNIcon({ name, size = 20, color = 'currentColor', strokeWidth = 
     chef: <><path d="M7 13.5A3.8 3.8 0 0 1 8.4 6a3.9 3.9 0 0 1 7.2 0A3.8 3.8 0 0 1 17 13.5v1H7v-1z"/><path d="M7 17.5h10v1.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 7 19v-1.5z"/></>,
     camera: <><path d="M3 8.5a2 2 0 0 1 2-2h2.2l1.3-2h6.9l1.3 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/><circle cx="12" cy="13" r="3.6"/></>,
     image: <><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="m4 17 4.8-4.2a1.6 1.6 0 0 1 2.1 0L16 17M14 14.2l1.6-1.4a1.6 1.6 0 0 1 2.1 0L20 15"/></>,
+    mail: <><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.8 7 7.1 5.4a1.8 1.8 0 0 0 2.2 0L20.2 7"/></>,
+    lock: <><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></>,
+    logout: <><path d="M14.5 4.5H18a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3.5"/><path d="M10 8.5 6.5 12 10 15.5M6.5 12H15"/></>,
+    eye: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></>,
+    eyeOff: <><path d="M4 4l16 16"/><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.3 4.1M6.6 7.9A17 17 0 0 0 2.5 12S6 18.5 12 18.5c1 0 1.9-.2 2.7-.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></>,
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || 'none'} stroke={color}

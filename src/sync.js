@@ -1,186 +1,372 @@
 import React from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supa, CN_DEVICE, cnHumanError } from './supabase.js';
 
-/* ── Configuration ──
-   La clé « anon » est publique par conception (elle est livrée dans le bundle) :
-   la protection réelle vient du code de foyer et des règles RLS côté Supabase.
-   Les variables d'environnement Vercel, si présentes, prennent le dessus. */
-const RAW_URL = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || 'https://wvrdumjqjwdevpcbqamf.supabase.co';
-const ANON_KEY = (import.meta.env && import.meta.env.VITE_SUPABASE_ANON_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2cmR1bWpxandkZXZwY2JxYW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNjU0NTYsImV4cCI6MjEwMDc0MTQ1Nn0.1F4eDcE5v57uqPH6KYhb-P1lJx3p5VbJ21vPp01svso';
+export { supa, cnHumanError };
 
-/* Tolère aussi bien l'URL de base que l'URL REST complète (.../rest/v1/). */
-const SUPABASE_URL = RAW_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-
-export const supa = (SUPABASE_URL && ANON_KEY)
-  ? createClient(SUPABASE_URL, ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      realtime: { params: { eventsPerSecond: 5 } },
-    })
-  : null;
-
-export const CN_FOYER_KEY = 'cheznous_foyer_v1';
 export const SYNC_KEYS = ['week', 'pending', 'favs', 'batch', 'courses', 'purchases', 'cart', 'myrecipes'];
 
-/* Alphabet sans caractères ambigus (ni I, O, 0, 1) — code lisible à voix haute. */
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export function cnGenerateCode() {
-  const pick = () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
-  const block = () => Array.from({ length: 4 }, pick).join('');
-  return `${block()}-${block()}`;
-}
+/* Clé héritée du partage par code, conservée pour prévenir l'utilisateur
+   que son ancien foyer n'est plus actif. */
+export const CN_FOYER_KEY = 'cheznous_foyer_v1';
+/* Noms des clés en attente d'envoi, pour survivre à une fermeture de l'app. */
+const CN_QUEUE_KEY = 'cheznous_attente_v1';
+
 export function cnNormalizeCode(input) {
   const clean = (input || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   return clean.length > 4 ? `${clean.slice(0, 4)}-${clean.slice(4, 8)}` : clean;
 }
+/* Le code circule sans tiret côté base ; il ne s'affiche joliment qu'à l'écran. */
+const brut = (code) => (code || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 
-/* Traduit les erreurs techniques en messages compréhensibles. */
-export function cnHumanError(err) {
-  const raw = typeof err === 'string' ? err : (err && err.message) || '';
-  const m = raw.toLowerCase();
-  const code = err && err.code;
-  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('load failed') || m.includes('timeout')) {
-    return "Réseau injoignable. Vérifiez votre connexion — l'app continue de fonctionner sur cet appareil.";
-  }
-  if (m.includes('does not exist') || code === '42P01' || m.includes('schema cache')) {
-    return "Projet accessible, mais la table « foyer_state » est absente : lancez le script SQL dans Supabase.";
-  }
-  if (m.includes('jwt') || m.includes('api key') || m.includes('apikey') || code === '401' || code === 'PGRST301') {
-    return 'Clé Supabase refusée — vérifiez la clé « anon public ».';
-  }
-  if (m.includes('row-level security') || m.includes('violates') || code === '42501') {
-    return "Écriture refusée par la sécurité Supabase — vérifiez que le script SQL a bien été exécuté en entier.";
-  }
-  return raw ? `Erreur : ${raw}` : 'Erreur inconnue.';
+/* ── Horodatages ──
+   Le même instant n'arrive pas sous la même forme selon la route : l'API
+   REST rend « 2026-08-06T18:53:12.12+00:00 », le temps réel lit le journal
+   de Postgres et rend « 2026-08-06 18:53:12.12+00 ». Comparés comme du
+   texte, ces deux-là ne s'ordonnent pas. On les ramène donc en
+   millisecondes avant toute comparaison. */
+export function cnInstant(v) {
+  if (!v) return 0;
+  if (typeof v === 'number') return v;
+  const t = Date.parse(String(v).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'));
+  return Number.isFinite(t) ? t : 0;
 }
 
-/* Diagnostic lisible — utilisé par le bouton « Tester la connexion ». */
+/* ── La règle de décision ──
+   Isolée du composant pour être vérifiable telle qu'elle est livrée : c'est
+   ici que se jouaient les régressions où une modification disparaissait.
+   Rend 'ignore', 'echo' (notre écriture, on retient l'horodatage) ou
+   'appliquer'. */
+export function cnDecideApply(row, { device, enFile, vu }) {
+  if (!row || !SYNC_KEYS.includes(row.cle)) return 'ignore';
+  const quand = cnInstant(row.updated_at);
+  const dejaVu = vu || 0;
+  if (row.appareil === device) return 'echo';
+  if (enFile) return 'ignore';
+  if (quand && dejaVu && quand <= dejaVu) return 'ignore';
+  return 'appliquer';
+}
+
 export async function cnTestConnection() {
   if (!supa) return { ok: false, message: "Synchronisation non configurée dans l'app." };
   try {
-    const { error } = await supa.from('foyer_state').select('code').limit(1);
-    if (!error) return { ok: true, message: 'Connexion établie — tout est prêt.' };
-    return { ok: false, message: cnHumanError(error) };
+    const { data: sess } = await supa.auth.getSession();
+    if (!sess || !sess.session) return { ok: false, message: 'Connectez-vous pour synchroniser.' };
+    const { error } = await supa.rpc('cn_mon_foyer');
+    if (error) return { ok: false, message: cnHumanError(error) };
+    return { ok: true, message: 'Connexion établie — tout est prêt.' };
   } catch (e) {
     return { ok: false, message: cnHumanError(e) };
   }
 }
 
-/* ── Moteur de synchronisation ──
-   Une ligne par (code de foyer, clé). N'écrire qu'une clé à la fois évite
-   que la liste de courses écrase le planning. Temps réel + sondage de secours :
-   si le WebSocket échoue, la synchro continue de fonctionner. */
-export function useFoyerSync({ onRemote, getLocal }) {
-  const [code, setCode] = React.useState(() => {
-    try { return localStorage.getItem(CN_FOYER_KEY) || ''; } catch (e) { return ''; }
-  });
-  const [status, setStatus] = React.useState('off'); // off | connecting | live | error
-  const [lastSync, setLastSync] = React.useState(null);
-  const echoRef = React.useRef({});      // valeurs poussées par nous → ignorer l'écho
-  const onRemoteRef = React.useRef(onRemote);
-  onRemoteRef.current = onRemote;
+const lireAttente = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem(CN_QUEUE_KEY));
+    return Array.isArray(v) ? v.filter(k => SYNC_KEYS.includes(k)) : [];
+  } catch (e) { return []; }
+};
+const ecrireAttente = (cles) => {
+  try { localStorage.setItem(CN_QUEUE_KEY, JSON.stringify(cles)); } catch (e) { /* quota */ }
+};
 
-  const applyRow = React.useCallback((key, value) => {
-    if (!SYNC_KEYS.includes(key)) return;
-    const serialized = JSON.stringify(value);
-    if (echoRef.current[key] === serialized) return;   // c'est notre propre écriture
-    onRemoteRef.current(key, value);
+/* ── Moteur de synchronisation ──
+   Une ligne par (foyer, clé) : n'écrire qu'une clé à la fois évite que la
+   liste de courses écrase le planning.
+
+   Quatre garde-fous, chacun contre une panne observée :
+
+   1. L'écho est reconnu par l'identifiant d'appareil, pas par la valeur.
+      Comparer les valeurs ne tenait que pour une écriture à la fois : deux
+      coches rapprochées et l'écho de la première, ne correspondant plus à
+      la dernière valeur mémorisée, était pris pour une modification
+      extérieure — la liste revenait toute seule en arrière.
+
+   2. L'horodatage vient du serveur et rien d'antérieur n'est appliqué. Un
+      sondage de rattrapage ne peut donc plus réinstaller une version
+      périmée par-dessus une modification récente.
+
+   3. Une clé en attente d'envoi n'est jamais écrasée par le distant : ce
+      qu'on vient de faire sur ce téléphone a la priorité jusqu'à ce qu'il
+      soit parti.
+
+   4. Une écriture qui échoue reste en file et repart. Avant, elle était
+      perdue en silence, puis le sondage suivant écrivait par-dessus la
+      version du serveur : la modification disparaissait pour de bon. */
+export function useFoyerSync({ session, onRemote, getLocal }) {
+  const [foyer, setFoyer] = React.useState(null);      // { id, code, nom, membres }
+  const [status, setStatus] = React.useState('off');   // off | connecting | live | error
+  const [lastSync, setLastSync] = React.useState(null);
+  const [enAttente, setEnAttente] = React.useState(() => lireAttente().length);
+
+  const queueRef = React.useRef({});   // clé → valeur pas encore acceptée par le serveur
+  const seenRef = React.useRef({});    // clé → horodatage serveur déjà pris en compte
+  const foyerRef = React.useRef(null);
+  const busyRef = React.useRef(false);
+  const timerRef = React.useRef(null);
+  const backoffRef = React.useRef(0);
+
+  const onRemoteRef = React.useRef(onRemote); onRemoteRef.current = onRemote;
+  const getLocalRef = React.useRef(getLocal); getLocalRef.current = getLocal;
+
+  const userId = session && session.user ? session.user.id : null;
+
+  const majAttente = React.useCallback(() => {
+    const cles = Object.keys(queueRef.current);
+    ecrireAttente(cles);
+    setEnAttente(cles.length);
   }, []);
 
-  const pull = React.useCallback(async (theCode) => {
-    if (!supa || !theCode) return;
+  /* ── Réception ── */
+  const applyRow = React.useCallback((row) => {
+    if (!row || !SYNC_KEYS.includes(row.cle)) return;
+    const quand = cnInstant(row.updated_at);
+    const vu = seenRef.current[row.cle] || 0;
+    const verdict = cnDecideApply(row, {
+      device: CN_DEVICE,
+      enFile: Object.prototype.hasOwnProperty.call(queueRef.current, row.cle),
+      vu,
+    });
+    if (verdict === 'ignore') return;
+    if (verdict === 'echo') { if (quand > vu) seenRef.current[row.cle] = quand; return; }
+    seenRef.current[row.cle] = quand;
+    onRemoteRef.current(row.cle, row.valeur);
+  }, []);
+
+  const pull = React.useCallback(async (foyerId) => {
+    if (!supa || !foyerId) return;
     try {
-      const { data, error } = await supa.from('foyer_state').select('key,value').eq('code', theCode);
+      const { data, error } = await supa.from('foyer_data')
+        .select('cle,valeur,updated_at,appareil').eq('foyer_id', foyerId);
       if (error) { setStatus('error'); return; }
-      (data || []).forEach(row => applyRow(row.key, row.value));
-      setStatus('live');
+      (data || []).forEach(applyRow);
+      setStatus(Object.keys(queueRef.current).length ? 'connecting' : 'live');
       setLastSync(Date.now());
     } catch (e) { setStatus('error'); }
   }, [applyRow]);
 
-  /* Abonnement temps réel + sondages de secours. */
-  React.useEffect(() => {
-    if (!supa || !code) { setStatus('off'); return; }
+  /* ── Envoi ──
+     La file se vide clé par clé. Une clé réécrite pendant son envoi reste
+     en file : c'est la version la plus récente qui repartira. */
+  const flush = React.useCallback(async () => {
+    const f = foyerRef.current;
+    if (!supa || !f || busyRef.current) return;
+    const cles = Object.keys(queueRef.current);
+    if (!cles.length) { backoffRef.current = 0; return; }
+
+    busyRef.current = true;
+    let echec = null;
+
+    for (const cle of cles) {
+      const valeur = queueRef.current[cle];
+      const empreinte = JSON.stringify(valeur);
+      try {
+        const { data, error } = await supa.from('foyer_data')
+          .upsert({
+            foyer_id: f.id, cle, valeur,
+            maj_par: userId, appareil: CN_DEVICE,
+          }, { onConflict: 'foyer_id,cle' })
+          .select('updated_at')
+          .single();
+        if (error) { echec = error; break; }
+        /* Réécrite entre-temps ? on la laisse en file pour le tour suivant. */
+        if (JSON.stringify(queueRef.current[cle]) === empreinte) delete queueRef.current[cle];
+        if (data && data.updated_at) seenRef.current[cle] = cnInstant(data.updated_at);
+      } catch (e) { echec = e; break; }
+    }
+
+    busyRef.current = false;
+    majAttente();
+
+    if (echec) {
+      setStatus('error');
+      /* Reprise espacée : 2 s, 4 s, 8 s… plafonnée à 30 s. */
+      backoffRef.current = Math.min((backoffRef.current || 1) * 2, 30);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => flush(), backoffRef.current * 1000);
+    } else {
+      backoffRef.current = 0;
+      setStatus('live');
+      setLastSync(Date.now());
+    }
+  }, [userId, majAttente]);
+
+  const flushRef = React.useRef(flush); flushRef.current = flush;
+
+  const push = React.useCallback((cle, valeur) => {
+    if (!SYNC_KEYS.includes(cle)) return;
+    /* Sans compte, l'app est purement locale : rien à mettre en file.
+       Connecté mais foyer pas encore chargé, on garde quand même : une
+       modification faite dans la seconde qui suit le lancement partira dès
+       que le foyer sera là, au lieu d'être perdue. */
+    if (!userId) return;
+    queueRef.current[cle] = valeur;
+    majAttente();
     setStatus('connecting');
-    let cancelled = false;
-    pull(code);
+    clearTimeout(timerRef.current);
+    /* Court délai : plusieurs coches d'affilée ne font qu'un seul envoi. */
+    timerRef.current = setTimeout(() => flushRef.current(), 250);
+  }, [majAttente, userId]);
 
-    const channel = supa
-      .channel(`foyer:${code}`)
+  /* ── Chargement du foyer ── */
+  const chargerFoyer = React.useCallback(async () => {
+    if (!supa || !userId) { foyerRef.current = null; setFoyer(null); setStatus('off'); return null; }
+    setStatus('connecting');
+    try {
+      const { data, error } = await supa.rpc('cn_mon_foyer');
+      if (error) { setStatus('error'); return null; }
+      const ligne = Array.isArray(data) ? data[0] : data;
+      if (!ligne || !ligne.foyer_id) { foyerRef.current = null; setFoyer(null); setStatus('off'); return null; }
+      const f = { id: ligne.foyer_id, code: ligne.code, nom: ligne.nom, membres: ligne.membres || [] };
+      foyerRef.current = f;
+      setFoyer(f);
+      return f;
+    } catch (e) { setStatus('error'); return null; }
+  }, [userId]);
+
+  /* Au lancement, les clés restées en attente repartent avec la valeur
+     locale — celle qui n'avait pas pu être envoyée. */
+  React.useEffect(() => {
+    const restantes = lireAttente();
+    if (!restantes.length) return;
+    const local = getLocalRef.current();
+    restantes.forEach(k => { if (local && local[k] !== undefined) queueRef.current[k] = local[k]; });
+    setEnAttente(Object.keys(queueRef.current).length);
+  }, []);
+
+  /* Session : on charge le foyer, on oublie ce qu'on croyait avoir vu. */
+  React.useEffect(() => {
+    seenRef.current = {};
+    if (!userId) { foyerRef.current = null; setFoyer(null); setStatus('off'); return; }
+    let vivant = true;
+    chargerFoyer().then(f => { if (vivant && f) { pull(f.id); flushRef.current(); } });
+    return () => { vivant = false; };
+  }, [userId, chargerFoyer, pull]);
+
+  /* Temps réel, avec rattrapage : si le WebSocket ne passe pas (réseau
+     d'entreprise, veille prolongée), le sondage prend le relais. */
+  React.useEffect(() => {
+    const f = foyer;
+    if (!supa || !f) return;
+    let vivant = true;
+
+    /* Les règles d'accès s'appliquent aussi au flux temps réel : sans jeton,
+       le serveur n'envoie rien et la synchro semblerait muette. */
+    try {
+      const jeton = session && session.access_token;
+      if (jeton && supa.realtime && supa.realtime.setAuth) supa.realtime.setAuth(jeton);
+    } catch (e) { /* la version du client s'en charge peut-être seule */ }
+
+    const canal = supa
+      .channel(`foyer:${f.id}`)
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'foyer_state', filter: `code=eq.${code}` },
+        { event: '*', schema: 'public', table: 'foyer_data', filter: `foyer_id=eq.${f.id}` },
         (payload) => {
-          const row = payload.new;
-          if (row && row.key) { applyRow(row.key, row.value); setLastSync(Date.now()); }
+          if (!payload.new) return;
+          applyRow(payload.new);
+          setLastSync(Date.now());
         })
-      .subscribe((s) => { if (!cancelled && s === 'SUBSCRIBED') setStatus('live'); });
+      .subscribe((s) => {
+        if (vivant && s === 'SUBSCRIBED' && !Object.keys(queueRef.current).length) setStatus('live');
+      });
 
-    /* Filet de sécurité : si le temps réel ne passe pas (réseau, config),
-       on rattrape au retour sur l'app et toutes les 25 s en avant-plan. */
-    const onVisible = () => { if (document.visibilityState === 'visible') pull(code); };
-    document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('online', onVisible);
-    const iv = setInterval(() => { if (document.visibilityState === 'visible') pull(code); }, 25000);
+    const reprise = () => {
+      if (document.visibilityState !== 'visible') return;
+      flushRef.current();
+      pull(f.id);
+    };
+    document.addEventListener('visibilitychange', reprise);
+    window.addEventListener('online', reprise);
+    const iv = setInterval(reprise, 25000);
 
     return () => {
-      cancelled = true;
+      vivant = false;
       clearInterval(iv);
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('online', onVisible);
-      supa.removeChannel(channel);
+      document.removeEventListener('visibilitychange', reprise);
+      window.removeEventListener('online', reprise);
+      supa.removeChannel(canal);
     };
-  }, [code, pull, applyRow]);
+  }, [foyer, applyRow, pull, session]);
 
-  /* Pousse une clé. Silencieux si aucun foyer n'est configuré : l'app
-     reste parfaitement utilisable en local. */
-  const push = React.useCallback(async (key, value) => {
-    if (!supa || !code || !SYNC_KEYS.includes(key)) return;
-    echoRef.current[key] = JSON.stringify(value);
-    try {
-      const { error } = await supa.from('foyer_state')
-        .upsert({ code, key, value, updated_at: new Date().toISOString() }, { onConflict: 'code,key' });
-      if (error) setStatus('error');
-      else { setStatus('live'); setLastSync(Date.now()); }
-    } catch (e) { setStatus('error'); }
-  }, [code]);
+  React.useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  /* Crée un foyer : le contenu local devient la référence partagée. */
-  const createFoyer = React.useCallback(async () => {
-    const newCode = cnGenerateCode();
+  /* ── Créer un foyer : le contenu de ce téléphone devient la référence. ── */
+  const createFoyer = React.useCallback(async (nom) => {
     if (!supa) return { ok: false, message: 'Synchronisation non configurée.' };
+    if (!userId) return { ok: false, message: 'Connectez-vous d’abord.' };
     try {
-      const local = getLocal();
-      const rows = SYNC_KEYS.map(k => ({ code: newCode, key: k, value: local[k], updated_at: new Date().toISOString() }));
-      rows.forEach(r => { echoRef.current[r.key] = JSON.stringify(r.value); });
-      const { error } = await supa.from('foyer_state').upsert(rows, { onConflict: 'code,key' });
+      const { data, error } = await supa.rpc('cn_creer_foyer', { p_nom: nom || 'Notre foyer' });
       if (error) return { ok: false, message: cnHumanError(error) };
-      localStorage.setItem(CN_FOYER_KEY, newCode);
-      setCode(newCode);
-      return { ok: true, code: newCode };
-    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
-  }, [getLocal]);
+      const ligne = Array.isArray(data) ? data[0] : data;
+      const f = { id: ligne.foyer_id, code: ligne.code, nom: ligne.nom, membres: [] };
+      foyerRef.current = f;
+      seenRef.current = {};
 
-  /* Rejoint un foyer : le contenu distant remplace le contenu local. */
-  const joinFoyer = React.useCallback(async (rawCode) => {
-    const theCode = cnNormalizeCode(rawCode);
-    if (theCode.length < 8) return { ok: false, message: 'Code incomplet (8 caractères attendus).' };
+      const local = getLocalRef.current() || {};
+      SYNC_KEYS.forEach(k => { if (local[k] !== undefined) queueRef.current[k] = local[k]; });
+      majAttente();
+      await flushRef.current();
+
+      const complet = await chargerFoyer();
+      return { ok: true, code: (complet || f).code };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, chargerFoyer, majAttente]);
+
+  /* ── Rejoindre : le contenu du foyer remplace celui de ce téléphone. ── */
+  const joinFoyer = React.useCallback(async (code) => {
+    const propre = brut(code);
+    if (propre.length < 8) return { ok: false, message: 'Code incomplet (8 caractères attendus).' };
     if (!supa) return { ok: false, message: 'Synchronisation non configurée.' };
+    if (!userId) return { ok: false, message: 'Connectez-vous d’abord.' };
     try {
-      const { data, error } = await supa.from('foyer_state').select('key,value').eq('code', theCode);
+      const { data, error } = await supa.rpc('cn_rejoindre_foyer', { p_code: propre });
       if (error) return { ok: false, message: cnHumanError(error) };
-      if (!data || !data.length) return { ok: false, message: 'Aucun foyer trouvé avec ce code.' };
-      echoRef.current = {};
-      data.forEach(row => onRemoteRef.current(row.key, row.value));
-      localStorage.setItem(CN_FOYER_KEY, theCode);
-      setCode(theCode);
-      return { ok: true, code: theCode };
+      const ligne = Array.isArray(data) ? data[0] : data;
+      if (!ligne || !ligne.foyer_id) return { ok: false, message: 'Aucun foyer ne porte ce code.' };
+
+      /* L'utilisateur a accepté le remplacement : ce qui restait en attente
+         sur ce téléphone n'a plus lieu d'être envoyé. */
+      queueRef.current = {};
+      seenRef.current = {};
+      majAttente();
+
+      const { data: lignes, error: err2 } = await supa.from('foyer_data')
+        .select('cle,valeur,updated_at,appareil').eq('foyer_id', ligne.foyer_id);
+      if (err2) return { ok: false, message: cnHumanError(err2) };
+      (lignes || []).forEach(r => {
+        if (!SYNC_KEYS.includes(r.cle)) return;
+        seenRef.current[r.cle] = cnInstant(r.updated_at);
+        onRemoteRef.current(r.cle, r.valeur);
+      });
+
+      const complet = await chargerFoyer();
+      setStatus('live');
+      setLastSync(Date.now());
+      try { localStorage.removeItem(CN_FOYER_KEY); } catch (e) { /* rien */ }
+      return { ok: true, code: (complet || ligne).code };
     } catch (e) { return { ok: false, message: cnHumanError(e) }; }
-  }, []);
+  }, [userId, chargerFoyer, majAttente]);
 
-  const leaveFoyer = React.useCallback(() => {
-    localStorage.removeItem(CN_FOYER_KEY);
-    setCode('');
-    setStatus('off');
-  }, []);
+  /* ── Quitter le foyer : retire l'appartenance, partout. ── */
+  const leaveFoyer = React.useCallback(async () => {
+    const f = foyerRef.current;
+    if (!supa || !f || !userId) return { ok: false, message: 'Aucun foyer actif.' };
+    try {
+      const { error } = await supa.from('foyer_members').delete()
+        .eq('foyer_id', f.id).eq('user_id', userId);
+      if (error) return { ok: false, message: cnHumanError(error) };
+      queueRef.current = {}; seenRef.current = {}; majAttente();
+      foyerRef.current = null; setFoyer(null); setStatus('off');
+      return { ok: true };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, majAttente]);
 
-  return { code, status, lastSync, push, createFoyer, joinFoyer, leaveFoyer, refresh: () => pull(code) };
+  return {
+    foyer,
+    code: foyer ? cnNormalizeCode(foyer.code) : '',
+    membres: foyer ? foyer.membres : [],
+    status, lastSync, enAttente,
+    push, createFoyer, joinFoyer, leaveFoyer,
+    refresh: () => { const f = foyerRef.current; if (f) { flushRef.current(); pull(f.id); } },
+    reloadFoyer: chargerFoyer,
+  };
 }
