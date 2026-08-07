@@ -173,6 +173,17 @@ drop policy if exists "donnees_membres" on foyer_data;
 create policy "donnees_membres" on foyer_data for all to authenticated
   using (cn_est_membre(foyer_id)) with check (cn_est_membre(foyer_id));
 
+-- Les règles ci-dessus disent qui a le droit de voir quelles lignes ; les
+-- droits ci-dessous disent qui a le droit de toucher la table. Il faut les
+-- deux. Supabase les accorde d'ordinaire tout seul aux nouvelles tables,
+-- mais un projet où ce réglage a été modifié refuserait tout avec un
+-- « permission denied » que rien dans les règles n'expliquerait.
+grant usage on schema public to authenticated;
+grant select, update                 on profiles      to authenticated;
+grant select, update                 on foyers        to authenticated;
+grant select, delete                 on foyer_members to authenticated;
+grant select, insert, update, delete on foyer_data    to authenticated;
+
 
 -- ── 6. Codes d'invitation ──
 -- Alphabet sans caractères ambigus (ni I, O, 0, 1) : un code se lit à voix
@@ -243,24 +254,34 @@ begin
     raise exception 'Connexion requise.';
   end if;
 
-  select * into cible from foyers where foyers.code = propre;
+  select f.* into cible from foyers f where f.code = propre;
   if not found then
     raise exception 'Aucun foyer ne porte ce code.';
   end if;
 
+  -- Toutes les colonnes sont préfixées : « foyer_id » est aussi le nom
+  -- d'une valeur de retour de cette fonction, et Postgres refuse de
+  -- trancher entre les deux.
+  --
   -- Une personne, un foyer. Sans cela, quelqu'un qui a touché « Créer mon
   -- foyer » par erreur avant de saisir le code se retrouverait membre des
   -- deux, et l'app continuerait de lui montrer le premier : elle croirait
   -- avoir rejoint alors que rien n'aurait changé à l'écran.
-  delete from foyer_members where user_id = moi and foyer_id <> cible.id;
+  delete from foyer_members fm
+  where fm.user_id = moi and fm.foyer_id <> cible.id;
 
   -- Un foyer que plus personne n'habite n'est joignable par personne.
+  -- Celui qu'on rejoint est mis hors de portée : à cet instant on n'y est
+  -- pas encore inscrit, et il serait emporté avec les autres.
   delete from foyers f
-  where not exists (select 1 from foyer_members m where m.foyer_id = f.id);
+  where f.id <> cible.id
+    and not exists (select 1 from foyer_members fm where fm.foyer_id = f.id);
 
   insert into foyer_members (foyer_id, user_id, role)
-  values (cible.id, moi, 'membre')
-  on conflict (foyer_id, user_id) do nothing;
+  select cible.id, moi, 'membre'
+  where not exists (
+    select 1 from foyer_members fm where fm.foyer_id = cible.id and fm.user_id = moi
+  );
 
   return query select cible.id, cible.code, cible.nom;
 end $$;
