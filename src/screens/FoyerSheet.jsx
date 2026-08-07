@@ -332,6 +332,13 @@ function CNSansFoyer({ sync, showToast }) {
         instantanément sur les autres téléphones.
       </p>
 
+      <div style={{ background: CN_C.oliveSoft, border: '1.5px solid #D3E0C4', borderRadius: CN_R.sm + 4, padding: '10px 12px', marginBottom: 14 }}>
+        <span style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: '#3C5030', lineHeight: 1.5 }}>
+          Si quelqu’un vous a déjà invité en indiquant cette adresse, vous n’avez rien à faire :
+          le foyer apparaîtra tout seul.
+        </span>
+      </div>
+
       {ancien && (
         <div style={{ background: '#FDF6E9', border: '1.5px solid #E8D9B8', borderRadius: CN_R.sm + 4, padding: '10px 12px', marginBottom: 14 }}>
           <span style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: '#7A6450', lineHeight: 1.5 }}>
@@ -357,11 +364,76 @@ function CNSansFoyer({ sync, showToast }) {
   );
 }
 
+/* ── Inviter par adresse ──
+   Aucun courriel n'est envoyé : l'adresse suffit. La personne qui se
+   connecte avec elle est rattachée d'elle-même au premier chargement. */
+function CNInviter({ sync, showToast }) {
+  const [email, setEmail] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [diag, setDiag] = React.useState(null);
+
+  const envoyer = async () => {
+    setBusy(true); setDiag(null);
+    const res = await sync.inviter(email);
+    setBusy(false);
+    if (res.ok) { setEmail(''); showToast('Adresse ajoutée au foyer'); }
+    else setDiag({ ok: false, message: res.message });
+  };
+
+  const invits = sync.invitations || [];
+
+  return (
+    <React.Fragment>
+      <div style={surtitre}>Inviter quelqu’un</div>
+      <p style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: CN_C.muted, lineHeight: 1.55, margin: '0 0 10px' }}>
+        Indiquez son adresse. Quand elle créera son compte — ou s’y connectera — avec cette adresse,
+        elle rejoindra le foyer d’elle-même. Rien à lui transmettre.
+      </p>
+      <CNChamp icone="mail" type="email" value={email} onChange={setEmail}
+        placeholder="son adresse électronique" autoComplete="off" onEnter={envoyer} />
+      <button style={{ ...btnPrimary, height: 46, opacity: busy || !email.trim() ? .45 : 1 }}
+        disabled={busy || !email.trim()} onClick={envoyer}>
+        <CNIcon name="plus" size={17} color={CN_C.card} /> {busy ? 'Un instant…' : 'Ajouter au foyer'}
+      </button>
+      <CNMessage diag={diag} />
+
+      {invits.length > 0 && (
+        <div style={{ marginTop: CN_S.md }}>
+          <div style={surtitre}>En attente de connexion</div>
+          <div style={{ background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: 14, overflow: 'hidden' }}>
+            {invits.map((i, n) => (
+              <div key={i.email} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px',
+                borderTop: n === 0 ? 'none' : `1px solid ${CN_C.hair}`,
+              }}>
+                <CNIcon name="clock" size={16} color={CN_C.faint} style={{ flexShrink: 0 }} />
+                <span style={{
+                  flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: 13, color: CN_C.body,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{i.email}</span>
+                <button onClick={async () => {
+                  const res = await sync.annulerInvitation(i.email);
+                  showToast(res.ok ? 'Invitation retirée' : res.message);
+                }} aria-label={`Retirer ${i.email}`}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 6, display: 'flex' }}>
+                  <CNIcon name="x" size={15} color={CN_C.faint} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
 /* ── Foyer actif ── */
 function CNFoyerActif({ auth, sync, showToast }) {
   const [busy, setBusy] = React.useState(false);
   const [diag, setDiag] = React.useState(null);
   const [confirmLeave, setConfirmLeave] = React.useState(false);
+  const [codeVisible, setCodeVisible] = React.useState(false);
+  const [retirer, setRetirer] = React.useState(null);
 
   const doTest = async () => {
     setBusy(true); setDiag(null);
@@ -379,23 +451,31 @@ function CNFoyerActif({ auth, sync, showToast }) {
 
   const moi = auth.user ? auth.user.id : null;
   const membres = sync.membres || [];
+  const chef = membres.find(m => m.role === 'fondateur');
+  const fondateur = chef ? (chef.prenom || chef.email) : '';
 
   return (
     <React.Fragment>
-      <div style={surtitre}>Code du foyer</div>
-      <button onClick={async () => showToast(await copyText(sync.code) ? 'Code copié' : 'Copie impossible')}
-        style={{
-          width: '100%', background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: 14,
-          padding: '18px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: CN_S.md, marginBottom: CN_S.sm,
-        }}>
-        <span style={{ fontFamily: CN_FONTS.mono, fontSize: 26, letterSpacing: '.14em', color: CN_C.ink }}>{sync.code}</span>
-        <CNIcon name="copy" size={17} color={CN_C.faint} />
-      </button>
-      <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: CN_C.muted, lineHeight: 1.55, marginBottom: CN_S.lg }}>
-        Sur l’autre téléphone : créer un compte, ouvrir <strong>Mon foyer</strong>, toucher
-        <strong> « J’ai déjà un code »</strong> et saisir celui-ci.
+      <div style={{
+        background: CN_C.sunk, borderRadius: 14, padding: '12px 14px', marginBottom: CN_S.lg,
+        display: 'flex', alignItems: 'center', gap: 11,
+      }}>
+        <CNIcon name="home" size={19} color={CN_C.olive} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontFamily: CN_FONTS.display, fontWeight: 700, fontSize: 15, color: CN_C.ink }}>
+            {sync.foyer.nom}
+          </span>
+          <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontSize: 12, color: CN_C.muted }}>
+            {sync.estFondateur ? 'Vous en êtes le fondateur' : `Vous en êtes membre${fondateur ? ` · foyer de ${fondateur}` : ''}`}
+          </span>
+        </span>
       </div>
+
+      {sync.estFondateur && (
+        <div style={{ marginBottom: CN_S.lg }}>
+          <CNInviter sync={sync} showToast={showToast} />
+        </div>
+      )}
 
       <div style={surtitre}>Membres</div>
       <div style={{ background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: 14, marginBottom: CN_S.lg, overflow: 'hidden' }}>
@@ -423,6 +503,31 @@ function CNFoyerActif({ auth, sync, showToast }) {
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>{m.role === 'fondateur' ? 'A créé le foyer' : m.email}</span>
             </span>
+            {sync.estFondateur && m.id !== moi && (
+              retirer === m.id ? (
+                <span style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button onClick={async () => {
+                    setRetirer(null);
+                    const res = await sync.retirerMembre(m.id);
+                    showToast(res.ok ? `${m.prenom || m.email} a été retiré` : res.message);
+                  }} style={{
+                    height: 32, padding: '0 12px', borderRadius: CN_R.pill, border: '1.5px solid #C0483F',
+                    background: '#C0483F', color: CN_C.card, fontFamily: CN_FONTS.body,
+                    fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                  }}>Retirer</button>
+                  <button onClick={() => setRetirer(null)} style={{
+                    height: 32, padding: '0 10px', borderRadius: CN_R.pill, border: `1.5px solid ${CN_C.edge}`,
+                    background: CN_C.card, color: CN_C.body, fontFamily: CN_FONTS.body,
+                    fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                  }}>Non</button>
+                </span>
+              ) : (
+                <button onClick={() => setRetirer(m.id)} aria-label={`Retirer ${m.prenom || m.email}`}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 6, display: 'flex', flexShrink: 0 }}>
+                  <CNIcon name="x" size={16} color={CN_C.faint} />
+                </button>
+              )
+            )}
           </div>
         ))}
       </div>
@@ -431,6 +536,29 @@ function CNFoyerActif({ auth, sync, showToast }) {
         <button style={btnGhost} disabled={busy} onClick={doTest}>
           <CNIcon name="refresh" size={15} color={CN_C.body} /> {busy ? 'Test en cours…' : 'Tester la connexion'}
         </button>
+
+        {/* Le code reste disponible en secours, replié : l'adresse suffit
+            désormais, et un code affiché en permanence invite à s'en servir
+            alors que c'est le chemin le plus fragile. */}
+        {!codeVisible ? (
+          <button style={lien} onClick={() => setCodeVisible(true)}>Voir le code du foyer</button>
+        ) : (
+          <div>
+            <div style={surtitre}>Code du foyer</div>
+            <button onClick={async () => showToast(await copyText(sync.code) ? 'Code copié' : 'Copie impossible')}
+              style={{
+                width: '100%', background: CN_C.card, border: `1.5px solid ${CN_C.rule}`, borderRadius: 14,
+                padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: CN_S.md,
+              }}>
+              <span style={{ fontFamily: CN_FONTS.mono, fontSize: 24, letterSpacing: '.14em', color: CN_C.ink }}>{sync.code}</span>
+              <CNIcon name="copy" size={17} color={CN_C.faint} />
+            </button>
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: 11.5, fontStyle: 'italic', color: CN_C.muted, marginTop: CN_S.sm, lineHeight: 1.5 }}>
+              À saisir dans « J’ai déjà un code ». Utile si l’adresse ne correspond pas à celle du compte créé.
+            </div>
+          </div>
+        )}
 
         <CNDiagnosticAppareil />
 
@@ -513,6 +641,26 @@ export function CNFoyerSheet({ open, onClose, auth, sync, showToast }) {
           }}>
             Le téléphone avait vidé les données du site. La session a été rouverte toute seule et le foyer
             retrouvé — rien à ressaisir. Le diagnostic plus bas dit pourquoi.
+          </div>
+        )}
+
+        {/* Invitation reçue alors qu'on a déjà un foyer : c'est un
+            déménagement, il ne peut pas se faire sans un geste. */}
+        {sync.invitationRecue && (
+          <div style={{
+            background: CN_C.brunSoft, border: '1.5px solid #E8D9B8', borderRadius: CN_R.md,
+            padding: '12px 14px', marginBottom: CN_S.md,
+          }}>
+            <div style={{ fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#7A6450', lineHeight: 1.55, marginBottom: 10 }}>
+              Vous êtes invité au foyer <strong>{sync.invitationRecue.nom}</strong>. En acceptant, vous quittez
+              le vôtre : le planning et les listes de cet appareil seront remplacés par les siens.
+            </div>
+            <button onClick={async () => {
+              const res = await sync.accepterInvitation(sync.invitationRecue.foyer_id);
+              showToast(res.ok ? 'Foyer rejoint' : res.message);
+            }} style={{ ...btnPrimary, height: 42, fontSize: 13.5 }}>
+              Rejoindre {sync.invitationRecue.nom}
+            </button>
           </div>
         )}
 

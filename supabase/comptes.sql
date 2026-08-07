@@ -287,49 +287,265 @@ begin
 end $$;
 
 
--- ── 9. Mon foyer ──
--- Un seul aller-retour au démarrage : le foyer et ses membres.
-create or replace function cn_mon_foyer()
-returns table (foyer_id uuid, code text, nom text, membres jsonb)
+-- ── 9. Invitations par adresse ──
+-- Le fondateur inscrit une adresse ; la personne qui se connecte avec cette
+-- adresse est rattachée au foyer sans code à transmettre ni courriel à
+-- envoyer. C'est l'adresse elle-même qui fait la clé.
+create table if not exists foyer_invitations (
+  foyer_id   uuid not null references foyers(id) on delete cascade,
+  email      text not null,                    -- toujours en minuscules
+  invite_par uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  primary key (foyer_id, email)
+);
+
+create index if not exists foyer_invitations_email_idx on foyer_invitations(email);
+
+-- L'adresse du compte connecté. Lue dans profiles plutôt que dans le jeton :
+-- une seule source, la même pour tout le monde.
+create or replace function cn_mon_email()
+returns text
 language sql
 security definer
 stable
 set search_path = public
 as $$
+  select lower(coalesce(p.email, '')) from profiles p where p.id = auth.uid();
+$$;
+
+create or replace function cn_est_fondateur(p_foyer uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from foyer_members m
+    where m.foyer_id = p_foyer and m.user_id = auth.uid() and m.role = 'fondateur'
+  );
+$$;
+
+alter table foyer_invitations enable row level security;
+
+-- Une invitation se voit des deux côtés : par les membres du foyer, et par
+-- la personne conviée.
+drop policy if exists "invitations_lecture" on foyer_invitations;
+create policy "invitations_lecture" on foyer_invitations for select to authenticated
+  using (cn_est_membre(foyer_id) or email = cn_mon_email());
+
+grant select on foyer_invitations to authenticated;
+
+
+-- ── 10. Mon foyer ──
+-- Un seul aller-retour au démarrage. La fonction commence par honorer une
+-- invitation en attente : c'est le moment où l'adresse suffit à rattacher.
+create or replace function cn_mon_foyer()
+returns table (
+  foyer_id uuid, code text, nom text, mon_role text,
+  membres jsonb, invitations jsonb, invitation_recue jsonb
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  moi      uuid := auth.uid();
+  mon_mail text := cn_mon_email();
+  actuel   uuid;
+  attendue uuid;
+begin
+  if moi is null then return; end if;
+
+  select m.foyer_id into actuel
+  from foyer_members m where m.user_id = moi
+  order by m.joined_at desc limit 1;
+
+  -- Sans foyer et attendu quelque part : on rattache, et l'invitation a
+  -- rempli son office. Avec un foyer déjà en place, on ne déplace personne
+  -- sans son accord : l'invitation reste en attente et l'app la propose.
+  if actuel is null and mon_mail <> '' then
+    select i.foyer_id into attendue
+    from foyer_invitations i where i.email = mon_mail
+    order by i.created_at limit 1;
+
+    if attendue is not null then
+      insert into foyer_members (foyer_id, user_id, role)
+      values (attendue, moi, 'membre')
+      on conflict do nothing;
+      delete from foyer_invitations i where i.email = mon_mail and i.foyer_id = attendue;
+      actuel := attendue;
+    end if;
+  end if;
+
+  if actuel is null then return; end if;
+
+  return query
   select
     f.id,
     f.code,
     f.nom,
+    (select m.role from foyer_members m where m.foyer_id = f.id and m.user_id = moi),
     coalesce(
       (select jsonb_agg(jsonb_build_object(
-                'id', p.id,
-                'prenom', p.prenom,
-                'email', p.email,
-                'role', m2.role
+                'id', p.id, 'prenom', p.prenom, 'email', p.email, 'role', m2.role
               ) order by m2.joined_at)
        from foyer_members m2
        join profiles p on p.id = m2.user_id
        where m2.foyer_id = f.id),
-      '[]'::jsonb
-    )
-  from foyer_members m
-  join foyers f on f.id = m.foyer_id
-  where m.user_id = auth.uid()
-  order by m.joined_at desc
-  limit 1;
-$$;
+      '[]'::jsonb),
+    coalesce(
+      (select jsonb_agg(jsonb_build_object('email', i.email, 'depuis', i.created_at)
+                order by i.created_at)
+       from foyer_invitations i where i.foyer_id = f.id),
+      '[]'::jsonb),
+    coalesce(
+      (select jsonb_build_object('foyer_id', a.id, 'nom', a.nom)
+       from foyer_invitations i
+       join foyers a on a.id = i.foyer_id
+       where i.email = mon_mail and i.foyer_id <> f.id
+       order by i.created_at limit 1),
+      'null'::jsonb)
+  from foyers f where f.id = actuel;
+end $$;
+
+
+-- ── 11. Gestion du foyer, réservée au fondateur ──
+create or replace function cn_inviter(p_email text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  moi    uuid := auth.uid();
+  propre text := lower(trim(coalesce(p_email, '')));
+  chez   uuid;
+begin
+  if moi is null then raise exception 'Connexion requise.'; end if;
+  if propre !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]{2,}$' then
+    raise exception 'Adresse électronique invalide.';
+  end if;
+
+  select m.foyer_id into chez from foyer_members m
+  where m.user_id = moi order by m.joined_at desc limit 1;
+  if chez is null then raise exception 'Créez d’abord votre foyer.'; end if;
+  if not cn_est_fondateur(chez) then
+    raise exception 'Seul le fondateur du foyer peut inviter.';
+  end if;
+  if propre = cn_mon_email() then
+    raise exception 'Cette adresse est la vôtre.';
+  end if;
+
+  -- Déjà présent : l'invitation n'aurait aucun effet, autant le dire.
+  if exists (select 1 from foyer_members m join profiles p on p.id = m.user_id
+             where m.foyer_id = chez and lower(p.email) = propre) then
+    raise exception 'Cette personne fait déjà partie du foyer.';
+  end if;
+
+  insert into foyer_invitations (foyer_id, email, invite_par)
+  values (chez, propre, moi)
+  on conflict (foyer_id, email) do nothing;
+end $$;
+
+create or replace function cn_annuler_invitation(p_email text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  moi    uuid := auth.uid();
+  propre text := lower(trim(coalesce(p_email, '')));
+  chez   uuid;
+begin
+  if moi is null then raise exception 'Connexion requise.'; end if;
+  select m.foyer_id into chez from foyer_members m
+  where m.user_id = moi order by m.joined_at desc limit 1;
+  if chez is null or not cn_est_fondateur(chez) then
+    raise exception 'Seul le fondateur du foyer peut retirer une invitation.';
+  end if;
+  delete from foyer_invitations i where i.foyer_id = chez and i.email = propre;
+end $$;
+
+create or replace function cn_retirer_membre(p_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  moi  uuid := auth.uid();
+  chez uuid;
+begin
+  if moi is null then raise exception 'Connexion requise.'; end if;
+  if p_user = moi then
+    raise exception 'Pour partir vous-même, quittez le foyer.';
+  end if;
+  select m.foyer_id into chez from foyer_members m
+  where m.user_id = moi order by m.joined_at desc limit 1;
+  if chez is null or not cn_est_fondateur(chez) then
+    raise exception 'Seul le fondateur du foyer peut retirer un membre.';
+  end if;
+  delete from foyer_members m where m.foyer_id = chez and m.user_id = p_user;
+end $$;
+
+-- Accepter une invitation quand on appartient déjà à un foyer : c'est un
+-- déménagement, il ne peut pas se faire dans le dos de l'intéressé.
+create or replace function cn_accepter_invitation(p_foyer uuid)
+returns table (foyer_id uuid, code text, nom text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  moi      uuid := auth.uid();
+  mon_mail text := cn_mon_email();
+  cible    foyers%rowtype;
+begin
+  if moi is null then raise exception 'Connexion requise.'; end if;
+  if not exists (select 1 from foyer_invitations i
+                 where i.foyer_id = p_foyer and i.email = mon_mail) then
+    raise exception 'Aucune invitation en cours pour cette adresse.';
+  end if;
+
+  select f.* into cible from foyers f where f.id = p_foyer;
+  if not found then raise exception 'Ce foyer n’existe plus.'; end if;
+
+  delete from foyer_members fm where fm.user_id = moi and fm.foyer_id <> cible.id;
+  delete from foyers f
+  where f.id <> cible.id
+    and not exists (select 1 from foyer_members fm where fm.foyer_id = f.id);
+
+  insert into foyer_members (foyer_id, user_id, role)
+  select cible.id, moi, 'membre'
+  where not exists (
+    select 1 from foyer_members fm where fm.foyer_id = cible.id and fm.user_id = moi
+  );
+  delete from foyer_invitations i where i.foyer_id = cible.id and i.email = mon_mail;
+
+  return query select cible.id, cible.code, cible.nom;
+end $$;
 
 
 -- Ces fonctions n'ont de sens que connecté.
-revoke execute on function cn_creer_foyer(text)    from anon;
-revoke execute on function cn_rejoindre_foyer(text) from anon;
-revoke execute on function cn_mon_foyer()          from anon;
-grant  execute on function cn_creer_foyer(text)    to authenticated;
-grant  execute on function cn_rejoindre_foyer(text) to authenticated;
-grant  execute on function cn_mon_foyer()          to authenticated;
+revoke execute on function cn_creer_foyer(text)         from anon;
+revoke execute on function cn_rejoindre_foyer(text)     from anon;
+revoke execute on function cn_mon_foyer()               from anon;
+revoke execute on function cn_inviter(text)             from anon;
+revoke execute on function cn_annuler_invitation(text)  from anon;
+revoke execute on function cn_retirer_membre(uuid)      from anon;
+revoke execute on function cn_accepter_invitation(uuid) from anon;
+grant  execute on function cn_creer_foyer(text)         to authenticated;
+grant  execute on function cn_rejoindre_foyer(text)     to authenticated;
+grant  execute on function cn_mon_foyer()               to authenticated;
+grant  execute on function cn_inviter(text)             to authenticated;
+grant  execute on function cn_annuler_invitation(text)  to authenticated;
+grant  execute on function cn_retirer_membre(uuid)      to authenticated;
+grant  execute on function cn_accepter_invitation(uuid) to authenticated;
 
 
--- ── 10. Diffusion temps réel ──
+-- ── 12. Diffusion temps réel ──
 alter table foyer_data replica identity full;
 
 do $$

@@ -216,7 +216,13 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
       if (error) { setStatus('error'); return null; }
       const ligne = Array.isArray(data) ? data[0] : data;
       if (!ligne || !ligne.foyer_id) { foyerRef.current = null; setFoyer(null); setStatus('off'); return null; }
-      const f = { id: ligne.foyer_id, code: ligne.code, nom: ligne.nom, membres: ligne.membres || [] };
+      const f = {
+        id: ligne.foyer_id, code: ligne.code, nom: ligne.nom,
+        monRole: ligne.mon_role || 'membre',
+        membres: ligne.membres || [],
+        invitations: ligne.invitations || [],
+        invitationRecue: ligne.invitation_recue || null,
+      };
       foyerRef.current = f;
       setFoyer(f);
       return f;
@@ -289,6 +295,27 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
 
   React.useEffect(() => () => clearTimeout(timerRef.current), []);
 
+  /* ── Remplacer le contenu local par celui d'un foyer ──
+     Gestes communs à « rejoindre » et « accepter une invitation » : ce qui
+     restait en attente d'envoi n'a plus lieu d'être, et tout ce que le
+     foyer contient prend la place de ce qu'il y avait ici. */
+  const adopterFoyer = React.useCallback(async (id) => {
+    queueRef.current = {};
+    seenRef.current = {};
+    majAttente();
+    const { data, error } = await supa.from('foyer_data')
+      .select('cle,valeur,updated_at,appareil').eq('foyer_id', id);
+    if (error) return cnHumanError(error);
+    (data || []).forEach(r => {
+      if (!SYNC_KEYS.includes(r.cle)) return;
+      seenRef.current[r.cle] = cnInstant(r.updated_at);
+      onRemoteRef.current(r.cle, r.valeur);
+    });
+    setStatus('live');
+    setLastSync(Date.now());
+    return null;
+  }, [majAttente]);
+
   /* ── Créer un foyer : le contenu de ce téléphone devient la référence. ── */
   const createFoyer = React.useCallback(async (nom) => {
     if (!supa) return { ok: false, message: 'Synchronisation non configurée.' };
@@ -323,28 +350,60 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
       const ligne = Array.isArray(data) ? data[0] : data;
       if (!ligne || !ligne.foyer_id) return { ok: false, message: 'Aucun foyer ne porte ce code.' };
 
-      /* L'utilisateur a accepté le remplacement : ce qui restait en attente
-         sur ce téléphone n'a plus lieu d'être envoyé. */
-      queueRef.current = {};
-      seenRef.current = {};
-      majAttente();
-
-      const { data: lignes, error: err2 } = await supa.from('foyer_data')
-        .select('cle,valeur,updated_at,appareil').eq('foyer_id', ligne.foyer_id);
-      if (err2) return { ok: false, message: cnHumanError(err2) };
-      (lignes || []).forEach(r => {
-        if (!SYNC_KEYS.includes(r.cle)) return;
-        seenRef.current[r.cle] = cnInstant(r.updated_at);
-        onRemoteRef.current(r.cle, r.valeur);
-      });
+      /* L'utilisateur a accepté le remplacement. */
+      const souci = await adopterFoyer(ligne.foyer_id);
+      if (souci) return { ok: false, message: souci };
 
       const complet = await chargerFoyer();
-      setStatus('live');
-      setLastSync(Date.now());
       try { localStorage.removeItem(CN_FOYER_KEY); } catch (e) { /* rien */ }
       return { ok: true, code: (complet || ligne).code };
     } catch (e) { return { ok: false, message: cnHumanError(e) }; }
-  }, [userId, chargerFoyer, majAttente]);
+  }, [userId, chargerFoyer, adopterFoyer]);
+
+  /* ── Inviter par adresse ──
+     Pas de courriel à envoyer : la personne qui se connecte avec cette
+     adresse est rattachée d'elle-même au premier chargement. */
+  const inviter = React.useCallback(async (email) => {
+    if (!supa || !userId) return { ok: false, message: 'Connectez-vous d’abord.' };
+    try {
+      const { error } = await supa.rpc('cn_inviter', { p_email: email });
+      if (error) return { ok: false, message: cnHumanError(error) };
+      await chargerFoyer();
+      return { ok: true };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, chargerFoyer]);
+
+  const annulerInvitation = React.useCallback(async (email) => {
+    if (!supa || !userId) return { ok: false, message: 'Connectez-vous d’abord.' };
+    try {
+      const { error } = await supa.rpc('cn_annuler_invitation', { p_email: email });
+      if (error) return { ok: false, message: cnHumanError(error) };
+      await chargerFoyer();
+      return { ok: true };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, chargerFoyer]);
+
+  const retirerMembre = React.useCallback(async (id) => {
+    if (!supa || !userId) return { ok: false, message: 'Connectez-vous d’abord.' };
+    try {
+      const { error } = await supa.rpc('cn_retirer_membre', { p_user: id });
+      if (error) return { ok: false, message: cnHumanError(error) };
+      await chargerFoyer();
+      return { ok: true };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, chargerFoyer]);
+
+  const accepterInvitation = React.useCallback(async (id) => {
+    if (!supa || !userId) return { ok: false, message: 'Connectez-vous d’abord.' };
+    try {
+      const { error } = await supa.rpc('cn_accepter_invitation', { p_foyer: id });
+      if (error) return { ok: false, message: cnHumanError(error) };
+      const souci = await adopterFoyer(id);
+      if (souci) return { ok: false, message: souci };
+      await chargerFoyer();
+      return { ok: true };
+    } catch (e) { return { ok: false, message: cnHumanError(e) }; }
+  }, [userId, chargerFoyer, adopterFoyer]);
 
   /* ── Quitter le foyer : retire l'appartenance, partout. ── */
   const leaveFoyer = React.useCallback(async () => {
@@ -364,8 +423,12 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
     foyer,
     code: foyer ? cnNormalizeCode(foyer.code) : '',
     membres: foyer ? foyer.membres : [],
+    invitations: foyer ? foyer.invitations : [],
+    invitationRecue: foyer ? foyer.invitationRecue : null,
+    estFondateur: !!(foyer && foyer.monRole === 'fondateur'),
     status, lastSync, enAttente,
     push, createFoyer, joinFoyer, leaveFoyer,
+    inviter, annulerInvitation, retirerMembre, accepterInvitation,
     refresh: () => { const f = foyerRef.current; if (f) { flushRef.current(); pull(f.id); } },
     reloadFoyer: chargerFoyer,
   };

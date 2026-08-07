@@ -34,12 +34,25 @@ Vercel du site. Elle ne sert qu'au lien « mot de passe oublié ».
 
 ## Ensuite, dans l'app
 
-1. Chacun ouvre **Mon foyer** et crée son compte.
-2. **Une seule personne** touche « Créer mon foyer ». Le contenu de *son*
-   téléphone devient la référence partagée — choisissez celui qui est à jour.
-3. L'autre touche « J'ai déjà un code » et saisit le code à huit caractères.
-   Son contenu local est remplacé par celui du foyer : c'est annoncé à
-   l'écran avant de valider.
+1. La personne dont le téléphone est à jour ouvre **Mon foyer**, crée son
+   compte, puis touche **« Créer mon foyer »**. Le contenu de *son*
+   téléphone devient la référence partagée. Elle en est le fondateur.
+2. Elle saisit l'**adresse** de l'autre dans « Inviter quelqu'un ».
+3. L'autre crée son compte **avec cette adresse**. Le foyer apparaît de
+   lui-même : rien à saisir, rien à recevoir. Son contenu local est
+   remplacé par celui du foyer.
+
+Aucun courriel n'est envoyé : c'est l'adresse qui fait la clé. Si l'adresse
+saisie ne correspond pas à celle du compte créé, le **code du foyer** reste
+disponible en secours, replié sous « Voir le code du foyer ».
+
+Le fondateur voit les membres et les invitations en attente, peut annuler
+une invitation et retirer un membre. Les autres membres voient la même
+liste, sans les commandes.
+
+Une invitation reçue alors qu'on appartient déjà à un foyer n'est jamais
+appliquée d'office : elle est proposée, avec la mention que le contenu
+local sera remplacé.
 
 ## Si la connexion se perd régulièrement sur un téléphone
 
