@@ -185,7 +185,27 @@ grant select, delete                 on foyer_members to authenticated;
 grant select, insert, update, delete on foyer_data    to authenticated;
 
 
--- ── 6. Codes d'invitation ──
+-- ── 6. Mise à niveau ──
+-- « create or replace » sait tout changer d'une fonction sauf la forme de
+-- ce qu'elle rend. Une fonction qui gagne une colonne fait donc échouer le
+-- script sur une base déjà installée, l'ancienne version reste en place, et
+-- l'app se retrouve devant une réponse à laquelle il manque des champs :
+-- elle prend le fondateur pour un simple membre et cache ses commandes.
+-- On efface donc les fonctions appelées par l'app avant de les réécrire.
+--
+-- Les fonctions citées par les règles d'accès (cn_est_membre,
+-- cn_partage_foyer) n'apparaissent pas ici : Postgres refuserait de les
+-- supprimer, et leur forme n'a pas bougé.
+drop function if exists cn_mon_foyer();
+drop function if exists cn_creer_foyer(text);
+drop function if exists cn_rejoindre_foyer(text);
+drop function if exists cn_inviter(text);
+drop function if exists cn_annuler_invitation(text);
+drop function if exists cn_retirer_membre(uuid);
+drop function if exists cn_accepter_invitation(uuid);
+
+
+-- ── 7. Codes d'invitation ──
 -- Alphabet sans caractères ambigus (ni I, O, 0, 1) : un code se lit à voix
 -- haute sans hésitation.
 create or replace function cn_genere_code()
@@ -210,7 +230,7 @@ begin
 end $$;
 
 
--- ── 7. Créer un foyer ──
+-- ── 8. Créer un foyer ──
 create or replace function cn_creer_foyer(p_nom text default 'Notre foyer')
 returns table (foyer_id uuid, code text, nom text)
 language plpgsql
@@ -236,7 +256,7 @@ begin
 end $$;
 
 
--- ── 8. Rejoindre un foyer ──
+-- ── 9. Rejoindre un foyer ──
 -- Passe par une fonction car les règles interdisent — à juste titre — de
 -- lire un foyer dont on n'est pas encore membre.
 create or replace function cn_rejoindre_foyer(p_code text)
@@ -287,7 +307,7 @@ begin
 end $$;
 
 
--- ── 9. Invitations par adresse ──
+-- ── 10. Invitations par adresse ──
 -- Le fondateur inscrit une adresse ; la personne qui se connecte avec cette
 -- adresse est rattachée au foyer sans code à transmettre ni courriel à
 -- envoyer. C'est l'adresse elle-même qui fait la clé.
@@ -337,7 +357,7 @@ create policy "invitations_lecture" on foyer_invitations for select to authentic
 grant select on foyer_invitations to authenticated;
 
 
--- ── 10. Mon foyer ──
+-- ── 11. Mon foyer ──
 -- Un seul aller-retour au démarrage. La fonction commence par honorer une
 -- invitation en attente : c'est le moment où l'adresse suffit à rattacher.
 create or replace function cn_mon_foyer()
@@ -410,7 +430,7 @@ begin
 end $$;
 
 
--- ── 11. Gestion du foyer, réservée au fondateur ──
+-- ── 12. Gestion du foyer, réservée au fondateur ──
 create or replace function cn_inviter(p_email text)
 returns void
 language plpgsql
@@ -545,7 +565,7 @@ grant  execute on function cn_retirer_membre(uuid)      to authenticated;
 grant  execute on function cn_accepter_invitation(uuid) to authenticated;
 
 
--- ── 12. Diffusion temps réel ──
+-- ── 13. Diffusion temps réel ──
 alter table foyer_data replica identity full;
 
 do $$
