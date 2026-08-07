@@ -456,6 +456,19 @@ function CNFoyerActif({ auth, sync, showToast }) {
 
   return (
     <React.Fragment>
+      {sync.schemaAncien && (
+        <div style={{
+          background: '#FBEFEE', border: '1.5px solid #EFD3D0', borderRadius: CN_R.md,
+          padding: '12px 14px', marginBottom: CN_S.md,
+          fontFamily: CN_FONTS.body, fontSize: 12.5, color: '#8A3A33', lineHeight: 1.55,
+        }}>
+          <strong>Le script SQL n’est pas à jour dans Supabase.</strong> La base répond sans dire qui
+          est le fondateur, donc l’app ne peut afficher ni invitation ni gestion des membres. Repassez
+          <strong> comptes.sql</strong> en entier dans le SQL Editor, puis rouvrez cet écran. Aucune
+          correction faite dans la base n’aura d’effet tant que ce n’est pas fait.
+        </div>
+      )}
+
       <div style={{
         background: CN_C.sunk, borderRadius: 14, padding: '12px 14px', marginBottom: CN_S.lg,
         display: 'flex', alignItems: 'center', gap: 11,

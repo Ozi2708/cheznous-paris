@@ -216,8 +216,15 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
       if (error) { setStatus('error'); return null; }
       const ligne = Array.isArray(data) ? data[0] : data;
       if (!ligne || !ligne.foyer_id) { foyerRef.current = null; setFoyer(null); setStatus('off'); return null; }
+      /* Une réponse sans « mon_role » vient d'une version antérieure du
+         script SQL. Sans ce garde-fou, l'app repliait silencieusement sur
+         « membre » et cachait les commandes du fondateur : le symptôme ne
+         désignait pas sa cause, et aucune correction dans la base n'y
+         changeait rien. On le dit maintenant. */
+      const ancien = ligne.mon_role === undefined;
       const f = {
         id: ligne.foyer_id, code: ligne.code, nom: ligne.nom,
+        schemaAncien: ancien,
         monRole: ligne.mon_role || 'membre',
         membres: ligne.membres || [],
         invitations: ligne.invitations || [],
@@ -426,6 +433,7 @@ export function useFoyerSync({ session, onRemote, getLocal }) {
     invitations: foyer ? foyer.invitations : [],
     invitationRecue: foyer ? foyer.invitationRecue : null,
     estFondateur: !!(foyer && foyer.monRole === 'fondateur'),
+    schemaAncien: !!(foyer && foyer.schemaAncien),
     status, lastSync, enAttente,
     push, createFoyer, joinFoyer, leaveFoyer,
     inviter, annulerInvitation, retirerMembre, accepterInvitation,
