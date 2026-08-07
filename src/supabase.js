@@ -153,8 +153,13 @@ export function cnHumanError(err) {
   if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('load failed') || m.includes('timeout')) {
     return "Réseau injoignable. L'app continue de fonctionner : vos modifications partiront à la reconnexion.";
   }
-  if (m.includes('invalid login credentials')) return 'Adresse ou mot de passe incorrect.';
-  if (m.includes('email not confirmed')) return "Compte pas encore confirmé : ouvrez le lien reçu par courriel.";
+  /* Supabase renvoie parfois ce message générique pour un compte créé mais
+     pas encore confirmé : on nomme les deux causes plutôt que d'envoyer
+     l'utilisateur douter de son mot de passe. */
+  if (m.includes('invalid login credentials')) {
+    return 'Adresse ou mot de passe incorrect. Si vous venez de créer ce compte, ouvrez d’abord le lien de confirmation reçu par courriel.';
+  }
+  if (m.includes('email not confirmed')) return "Compte créé, mais pas encore confirmé : ouvrez le lien reçu par courriel.";
   if (m.includes('user already registered') || m.includes('already been registered')) {
     return 'Un compte existe déjà avec cette adresse — connectez-vous plutôt.';
   }

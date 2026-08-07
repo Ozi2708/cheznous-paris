@@ -132,7 +132,16 @@ export function useAuth() {
       const { data, error } = await supa.auth.signUp({
         email: email.trim().toLowerCase(),
         password: mdp,
-        options: { data: { prenom: (prenom || '').trim() } },
+        options: {
+          data: { prenom: (prenom || '').trim() },
+          /* Sans cette adresse, le lien de confirmation retombe sur le
+             « Site URL » du projet Supabase — souvent une adresse de
+             déploiement Vercel, gardée par un écran de connexion Vercel.
+             En donnant l'adresse d'où part l'inscription, le lien revient
+             là où l'utilisateur se trouve, et la session s'ouvre au
+             retour sans qu'il ait à se reconnecter. */
+          emailRedirectTo: window.location.origin,
+        },
       });
       if (error) return { ok: false, message: cnHumanError(error) };
       /* Sans session en retour, Supabase attend une confirmation par courriel. */
