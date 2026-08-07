@@ -400,6 +400,22 @@ begin
 
   if actuel is null then return; end if;
 
+  -- Un foyer sans fondateur ne peut plus être administré par personne :
+  -- ni invitation, ni retrait. Cela arrive si le fondateur est parti, ou
+  -- si l'appartenance a été créée par un chemin qui ne pose pas le rôle.
+  -- Le plus ancien membre reprend alors la maison.
+  if not exists (
+    select 1 from foyer_members m where m.foyer_id = actuel and m.role = 'fondateur'
+  ) then
+    update foyer_members m set role = 'fondateur'
+    where m.foyer_id = actuel
+      and m.user_id = (
+        select m2.user_id from foyer_members m2
+        where m2.foyer_id = actuel
+        order by m2.joined_at, m2.user_id limit 1
+      );
+  end if;
+
   return query
   select
     f.id,
