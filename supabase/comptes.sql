@@ -9,6 +9,21 @@
 -- ─────────────────────────────────────────────────────────────
 
 
+-- ── 0. Version ──
+-- Le script est long, et le SQL Editor annule tout dès la moindre erreur :
+-- on ne peut pas savoir de l'extérieur si une exécution a abouti. Cette
+-- fonction le dit. Après « Run », lancez :
+--
+--     select cn_version();
+--
+-- Si la date qui revient n'est pas celle-ci, le script n'est pas passé —
+-- regardez le message d'erreur rouge, il porte la cause.
+drop function if exists cn_version();
+create function cn_version() returns text
+language sql immutable as $$ select '2026-08-07-d'::text $$;
+grant execute on function cn_version() to authenticated, anon;
+
+
 -- ── 1. Profils ──
 -- Une ligne par compte, créée automatiquement à l'inscription.
 create table if not exists profiles (

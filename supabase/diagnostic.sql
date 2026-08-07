@@ -3,6 +3,13 @@
 -- Ne modifie rien : ces requêtes se contentent de regarder.
 -- ─────────────────────────────────────────────────────────────
 
+-- 0. Le script installé est-il à jour ? À lancer en premier : tant que la
+--    réponse n'est pas la version attendue, le reste ne veut rien dire.
+select cn_version() as version_installee;
+
+select array_to_string(proargnames, ', ') as colonnes_de_cn_mon_foyer
+from pg_proc where proname = 'cn_mon_foyer';
+
 -- 1. Les comptes existants, et s'ils sont confirmés.
 select u.email,
        u.email_confirmed_at is not null as confirme,
