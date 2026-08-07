@@ -248,6 +248,16 @@ begin
     raise exception 'Aucun foyer ne porte ce code.';
   end if;
 
+  -- Une personne, un foyer. Sans cela, quelqu'un qui a touché « Créer mon
+  -- foyer » par erreur avant de saisir le code se retrouverait membre des
+  -- deux, et l'app continuerait de lui montrer le premier : elle croirait
+  -- avoir rejoint alors que rien n'aurait changé à l'écran.
+  delete from foyer_members where user_id = moi and foyer_id <> cible.id;
+
+  -- Un foyer que plus personne n'habite n'est joignable par personne.
+  delete from foyers f
+  where not exists (select 1 from foyer_members m where m.foyer_id = f.id);
+
   insert into foyer_members (foyer_id, user_id, role)
   values (cible.id, moi, 'membre')
   on conflict (foyer_id, user_id) do nothing;
@@ -284,7 +294,7 @@ as $$
   from foyer_members m
   join foyers f on f.id = m.foyer_id
   where m.user_id = auth.uid()
-  order by m.joined_at
+  order by m.joined_at desc
   limit 1;
 $$;
 
