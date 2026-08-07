@@ -287,6 +287,64 @@ export function cnCreateProduct(courses, name) {
   return { courses: { ...courses, custom: [...(courses.custom || []), product] }, product };
 }
 
+/* ── Plats déjà approvisionnés ──
+   Les lignes de recettes ne sont pas rangées dans le panier : elles sont
+   recalculées depuis la semaine à chaque affichage. Valider une sortie ne
+   pouvait donc pas les en retirer — elles revenaient aussitôt, et la liste
+   du vendredi contenait encore les plats achetés le vendredi d'avant.
+
+   Un plat porte désormais la date de la sortie qui l'a couvert. Il quitte
+   la liste de courses sans quitter le planning : on continue de cuisiner
+   samedi midi ce qu'on a acheté la semaine passée. Ce qu'on ajoute après
+   la sortie n'est pas tamponné, et alimente la liste suivante.
+
+   Le bac « à caser » ne contenait que des identifiants ; il accepte
+   maintenant aussi des objets, et sait relire l'ancienne forme. */
+export function cnPendingList(pending) {
+  return (pending || [])
+    .map(e => (typeof e === 'string' ? { id: e } : e))
+    .filter(e => e && e.id);
+}
+
+/* Les plats qui alimentent encore la liste de courses. */
+export function cnAPourvoir(week, pending) {
+  return [
+    ...Object.values(week || {}).filter(e => e && !e.shopped).map(e => e.id),
+    ...cnPendingList(pending).filter(e => !e.shopped).map(e => e.id),
+  ];
+}
+
+export function cnCouverts(week, pending) {
+  return Object.values(week || {}).filter(e => e && e.shopped).length
+    + cnPendingList(pending).filter(e => e.shopped).length;
+}
+
+/* Tamponne tout ce qui est planifié à cet instant. Un plat déjà tamponné
+   garde sa date d'origine : elle dit de quelle sortie il vient. */
+export function cnTamponner(week, pending, jour) {
+  const j = jour == null ? cnToday() : jour;
+  const w = {};
+  Object.entries(week || {}).forEach(([k, e]) => { w[k] = e ? { ...e, shopped: e.shopped || j } : e; });
+  return {
+    week: w,
+    pending: cnPendingList(pending).map(e => ({ ...e, shopped: e.shopped || j })),
+  };
+}
+
+/* Retour en arrière : tout redevient à acheter. */
+export function cnDetamponner(week, pending) {
+  const w = {};
+  Object.entries(week || {}).forEach(([k, e]) => {
+    if (!e) { w[k] = e; return; }
+    const { shopped, ...reste } = e;
+    w[k] = reste;
+  });
+  return {
+    week: w,
+    pending: cnPendingList(pending).map(({ shopped, ...reste }) => reste),
+  };
+}
+
 /* ── Validation d'une sortie courses ──
    Le geste unique qui nourrit l'apprentissage : tout ce qui est coché est
    enregistré comme acheté aujourd'hui. Les ajouts libres deviennent des

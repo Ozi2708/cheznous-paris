@@ -18,7 +18,8 @@ import { CNFoyerSheet } from './screens/FoyerSheet.jsx';
 import { CNCoursesListScreen } from './screens/CoursesListScreen.jsx';
 import { CNCoursesRadarScreen } from './screens/CoursesRadarScreen.jsx';
 import { CNCoursesProductsScreen } from './screens/CoursesProductsScreen.jsx';
-import { CN_COURSES_EMPTY, CN_CART_EMPTY, cnCartLines, cnFinishTrip } from './courses.js';
+import { CN_COURSES_EMPTY, CN_CART_EMPTY, cnCartLines, cnFinishTrip,
+  cnPendingList, cnAPourvoir, cnCouverts, cnTamponner, cnDetamponner } from './courses.js';
 import { useFoyerSync } from './sync.js';
 import { useAuth } from './auth.js';
 
@@ -187,7 +188,8 @@ export function CNApp() {
   const planPending = (r, idx) => navigate({ plan: { id: r.id, pendingIdx: idx } });
   const removePending = (idx) => setPending(pending.filter((_, i) => i !== idx));
   const commitMenu = (ids) => {
-    setPending([...pending, ...ids]);
+    /* Ajoutés après la sortie courses : donc pas tamponnés, donc à acheter. */
+    setPending([...cnPendingList(pending), ...ids.map(id => ({ id }))]);
     navigate({ tab: 'week', screen: 'tab', recipeId: null }, { replace: true });
     showToast(`${ids.length} plat${ids.length > 1 ? 's' : ''} ajouté${ids.length > 1 ? 's' : ''} à la semaine`);
   };
@@ -201,12 +203,12 @@ export function CNApp() {
 
   const byId = React.useMemo(() => Object.fromEntries(recipes.map(r => [r.id, r])), [recipes]);
   const recipe = recipes.find(r => r.id === recipeId) || null;
-  const shopRecipes = [
-    ...Object.values(week).filter(Boolean).map(e => e.id),
-    ...pending,
-  ].map(id => byId[id]).filter(Boolean);
+  /* Seuls les plats pas encore approvisionnés alimentent la liste : ceux
+     couverts par la dernière sortie restent au planning sans y revenir. */
+  const shopRecipes = cnAPourvoir(week, pending).map(id => byId[id]).filter(Boolean);
+  const platsCouverts = cnCouverts(week, pending);
   const isDark = (screen === 'cook' && t.cookTheme === 'olive') || screen === 'batchcook';
-  const weekCount = Object.values(week).filter(e => e && !e.done).length + pending.length;
+  const weekCount = Object.values(week).filter(e => e && !e.done).length + cnPendingList(pending).length;
   const dayIndex = Math.floor(Date.now() / 86400000);
   const cartCount = React.useMemo(
     () => cnCartLines(cart, shopRecipes, courses, purchases).total, [cart, shopRecipes, courses, purchases]);
@@ -220,7 +222,24 @@ export function CNApp() {
     setPurchases(res.purchases);
     setCourses(res.courses);
     setCart(res.cart);
-    showToast(`${res.count} article${res.count > 1 ? 's' : ''} enregistré${res.count > 1 ? 's' : ''} — rythmes mis à jour`);
+    /* Les plats planifiés à cet instant sont désormais couverts : ils
+       sortent de la liste sans sortir du planning. */
+    const tampon = cnTamponner(week, pending, dayIndex);
+    const nbPlats = shopRecipes.length;
+    setWeek(tampon.week);
+    setPending(tampon.pending);
+    showToast(
+      `${res.count} article${res.count > 1 ? 's' : ''} enregistré${res.count > 1 ? 's' : ''}`
+      + (nbPlats ? ` · ${nbPlats} plat${nbPlats > 1 ? 's' : ''} approvisionné${nbPlats > 1 ? 's' : ''}` : '')
+    );
+  };
+
+  /* « Je n'avais pas fini » : tout redevient à acheter. */
+  const reprendrePlats = () => {
+    const remis = cnDetamponner(week, pending);
+    setWeek(remis.week);
+    setPending(remis.pending);
+    showToast('Plats remis dans la liste');
   };
 
   /* ── Navigation branchée sur l'History API ──
@@ -314,6 +333,7 @@ export function CNApp() {
               {tab === 'liste' && <CNCoursesListScreen cart={cart} setCart={setCart} recipes={shopRecipes}
                 courses={courses} setCourses={setCourses} purchases={purchases} onFinish={finishTrip} showToast={showToast}
                 bottomInset={tabBarH} onGoRadar={() => navigate({ tab: 'radar', screen: 'tab' })}
+                platsCouverts={platsCouverts} onReprendrePlats={reprendrePlats}
                 onOpenRecipe={(id) => { setPortions(2); navigate({ screen: 'recipe', recipeId: id, ctxIds: null }); }} />}
               {tab === 'radar' && <CNCoursesRadarScreen cart={cart} setCart={setCart} recipes={shopRecipes}
                 courses={courses} setCourses={setCourses} purchases={purchases} showToast={showToast}

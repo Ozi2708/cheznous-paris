@@ -2,6 +2,7 @@ import React from 'react';
 import { CN_FONTS, chMeta, CNIcon } from '../helpers.jsx';
 import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS, CN_SLOTS } from '../utils.js';
 import { useAllRecipes } from '../recipes.js';
+import { cnPendingList } from '../courses.js';
 
 function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
   const [q, setQ] = React.useState('');
@@ -54,7 +55,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
   const entries = Object.values(week).filter(Boolean);
   const nDone = entries.filter(e => e.done).length;
   const todayIdx = (new Date().getDay() + 6) % 7;
-  const pendingRecipes = pending.map(id => byId[id]).filter(Boolean);
+  const pendingRecipes = cnPendingList(pending).map(e => byId[e.id]).filter(Boolean);
 
   const setSlot = (day, slot, val) => setWeek({ ...week, [day + '-' + slot]: val });
 
@@ -182,7 +183,20 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
                       <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#767066', width: 34, flexShrink: 0 }}>{slot.label}</span>
                       <button onClick={() => onOpen(r)} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
                         <span style={{ display: 'block', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 13, color: done ? '#767066' : '#1A1918', lineHeight: 1.3, textDecoration: done ? 'line-through' : 'none' }}>{r.title}</span>
-                        <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: CN_FONTS.mono, fontSize: 10.5, color: '#767066' }}>{r.totalMin}′ · {r.nutrition.kcal} kcal</span>
+                          {/* Dit pourquoi ce plat n'apparaît plus dans la liste de courses. */}
+                          {entry.shopped && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 3, borderRadius: 9999,
+                              background: '#EDF1E7', padding: '1px 7px',
+                              fontFamily: CN_FONTS.body, fontSize: 9.5, fontWeight: 600,
+                              letterSpacing: '.06em', textTransform: 'uppercase', color: '#506741',
+                            }}>
+                              <CNIcon name="basket" size={10} color="#506741" strokeWidth={2.2} /> courses faites
+                            </span>
+                          )}
+                        </span>
                       </button>
                       <button onClick={() => setSlot(day, slot.id, { ...entry, done: !done })} aria-label={done ? 'Marquer non cuisiné' : 'Marquer cuisiné'} style={{
                         width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',

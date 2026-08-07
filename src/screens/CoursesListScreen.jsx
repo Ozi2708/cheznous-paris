@@ -372,7 +372,7 @@ function CNQtySheet({ line, onClose, onSet, onRemove, onOpenRecipe, onUncheck })
   );
 }
 
-export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar, onOpenRecipe }) {
+export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourses, purchases, onFinish, showToast, bottomInset = 0, onGoRadar, onOpenRecipe, platsCouverts = 0, onReprendrePlats }) {
   const [editKey, setEditKey] = React.useState(null);
   const [focusRayon, setFocusRayon] = React.useState(null);   // un rayon à la fois, quand la liste est longue
   const [showDone, setShowDone] = React.useState(false);
@@ -530,6 +530,28 @@ export function CNCoursesListScreen({ cart, setCart, recipes, courses, setCourse
         ) : (
           <div style={{ fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.muted, fontStyle: 'italic', marginTop: 2, marginBottom: 14 }}>
             Rien à acheter pour le moment.
+          </div>
+        )}
+
+        {/* Sans cette ligne, des plats disparaîtraient de la liste sans qu'on
+            sache pourquoi. Elle dit ce qui est déjà couvert, et défait la
+            dernière sortie si elle a été validée trop tôt. */}
+        {platsCouverts > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14,
+            background: CN_C.sunk, borderRadius: CN_R.md, padding: '10px 12px',
+          }}>
+            <CNIcon name="check" size={15} color={CN_C.olive} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, minWidth: 0, fontFamily: CN_FONTS.body, fontSize: CN_T.small, color: CN_C.body, lineHeight: 1.5 }}>
+              {platsCouverts} plat{platsCouverts > 1 ? 's' : ''} du planning {platsCouverts > 1 ? 'sont déjà approvisionnés' : 'est déjà approvisionné'}
+              {' '}— {platsCouverts > 1 ? 'ils ne reviennent pas' : 'il ne revient pas'} dans la liste.
+            </span>
+            {onReprendrePlats && (
+              <button onClick={onReprendrePlats} style={{
+                border: 'none', background: 'none', cursor: 'pointer', padding: '4px 2px', flexShrink: 0,
+                fontFamily: CN_FONTS.body, fontSize: CN_T.micro + 1, color: CN_C.muted, textDecoration: 'underline',
+              }}>Remettre</button>
+            )}
           </div>
         )}
 
