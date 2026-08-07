@@ -1,6 +1,6 @@
 import React from 'react';
 import { CN_FONTS, CNIcon } from './helpers.jsx';
-import { CN_EMPTY_FILTERS, cnBatchList } from './utils.js';
+import { CN_EMPTY_FILTERS, cnBatchList, CN_S2, cnBasculer, cnWeekEntries, cnEstS2 } from './utils.js';
 import { useAllRecipes, cnSetUserRecipes, cnUserRecipes, cnAddUserRecipe, CN_MYRECIPES_KEY } from './recipes.js';
 import { CNImportScreen } from './screens/ImportScreen.jsx';
 import { CNPlanWeekSheet } from './ds-components.jsx';
@@ -208,7 +208,7 @@ export function CNApp() {
   const shopRecipes = cnAPourvoir(week, pending).map(id => byId[id]).filter(Boolean);
   const platsCouverts = cnCouverts(week, pending);
   const isDark = (screen === 'cook' && t.cookTheme === 'olive') || screen === 'batchcook';
-  const weekCount = Object.values(week).filter(e => e && !e.done).length + cnPendingList(pending).length;
+  const weekCount = cnWeekEntries(week).filter(([, e]) => !e.done).length + cnPendingList(pending).length;
   const dayIndex = Math.floor(Date.now() / 86400000);
   const cartCount = React.useMemo(
     () => cnCartLines(cart, shopRecipes, courses, purchases).total, [cart, shopRecipes, courses, purchases]);
@@ -233,6 +233,29 @@ export function CNApp() {
       + (nbPlats ? ` · ${nbPlats} plat${nbPlats > 1 ? 's' : ''} approvisionné${nbPlats > 1 ? 's' : ''}` : '')
     );
   };
+
+  /* ── Passage à la semaine suivante ──
+     Au lancement et au retour sur l'app : si le lundi a été franchi et que
+     la semaine d'après contient quelque chose, elle prend la place de la
+     semaine en cours. Le tampon « courses faites » suit les plats — ils ont
+     été achetés vendredi, ils n'ont rien à faire dans la prochaine liste. */
+  const weekRef = React.useRef(week); weekRef.current = week;
+  React.useEffect(() => {
+    const regarder = () => {
+      if (document.visibilityState !== 'visible') return;
+      const neuf = cnBasculer(weekRef.current);
+      if (!neuf) return;
+      const avant = cnWeekEntries(weekRef.current).filter(([k]) => cnEstS2(k)).length;
+      setWeek(neuf);
+      if (avant) showToast('Nouvelle semaine — le planning suivant a pris la place');
+    };
+    regarder();
+    document.addEventListener('visibilitychange', regarder);
+    /* Une app laissée ouverte doit basculer aussi : on regarde chaque heure. */
+    const iv = setInterval(regarder, 3600000);
+    return () => { document.removeEventListener('visibilitychange', regarder); clearInterval(iv); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* « Je n'avais pas fini » : tout redevient à acheter. */
   const reprendrePlats = () => {
@@ -409,7 +432,8 @@ export function CNApp() {
             if (!planRecipe) return;
             setWeek({ ...week, [slotKey]: { id: planRecipe.id, done: false } });
             if (planPendingIdx != null) setPending(pending.filter((_, i) => i !== planPendingIdx));
-            const label = slotKey.replace('-', ' ').toLowerCase();
+            const jour = slotKey.replace(CN_S2, '').replace('-', ' ').toLowerCase();
+            const label = cnEstS2(slotKey) ? `${jour} (semaine prochaine)` : jour;
             const title = planRecipe.title.length > 24 ? planRecipe.title.slice(0, 23) + '…' : planRecipe.title;
             showToast(`${title} → ${label}`);
           }} />

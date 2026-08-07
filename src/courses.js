@@ -6,7 +6,7 @@
    Les ingrédients des recettes ne sont jamais stockés : ils sont recalculés
    depuis la semaine, donc toujours à jour. */
 
-import { cnShoppingList, cnCleanName, cnIngKey } from './utils.js';
+import { cnShoppingList, cnCleanName, cnIngKey, cnWeekEntries } from './utils.js';
 import { CN_SEED_PRODUCTS, CN_RAYONS, cnRayon, cnProdNorm, cnIsJunkIngredient, cnUnitFor,
   cnBuyQty, cnBuyName, cnPriceFor, cnFormatEuro, cnRayonOrNull, cnDriveLine } from './courses-data.js';
 
@@ -306,25 +306,28 @@ export function cnPendingList(pending) {
     .filter(e => e && e.id);
 }
 
-/* Les plats qui alimentent encore la liste de courses. */
+/* Les plats qui alimentent encore la liste de courses — les deux semaines
+   confondues : on achète pour la semaine en cours et pour la suivante. */
 export function cnAPourvoir(week, pending) {
   return [
-    ...Object.values(week || {}).filter(e => e && !e.shopped).map(e => e.id),
+    ...cnWeekEntries(week).filter(([, e]) => !e.shopped).map(([, e]) => e.id),
     ...cnPendingList(pending).filter(e => !e.shopped).map(e => e.id),
   ];
 }
 
 export function cnCouverts(week, pending) {
-  return Object.values(week || {}).filter(e => e && e.shopped).length
+  return cnWeekEntries(week).filter(([, e]) => e.shopped).length
     + cnPendingList(pending).filter(e => e.shopped).length;
 }
 
 /* Tamponne tout ce qui est planifié à cet instant. Un plat déjà tamponné
-   garde sa date d'origine : elle dit de quelle sortie il vient. */
+   garde sa date d'origine : elle dit de quelle sortie il vient.
+   Les clés qui ne sont pas des repas — l'ancre de semaine — sont recopiées
+   telles quelles : les tamponner en ferait des objets vides. */
 export function cnTamponner(week, pending, jour) {
   const j = jour == null ? cnToday() : jour;
-  const w = {};
-  Object.entries(week || {}).forEach(([k, e]) => { w[k] = e ? { ...e, shopped: e.shopped || j } : e; });
+  const w = { ...(week || {}) };
+  cnWeekEntries(week).forEach(([k, e]) => { w[k] = { ...e, shopped: e.shopped || j }; });
   return {
     week: w,
     pending: cnPendingList(pending).map(e => ({ ...e, shopped: e.shopped || j })),
@@ -333,12 +336,8 @@ export function cnTamponner(week, pending, jour) {
 
 /* Retour en arrière : tout redevient à acheter. */
 export function cnDetamponner(week, pending) {
-  const w = {};
-  Object.entries(week || {}).forEach(([k, e]) => {
-    if (!e) { w[k] = e; return; }
-    const { shopped, ...reste } = e;
-    w[k] = reste;
-  });
+  const w = { ...(week || {}) };
+  cnWeekEntries(week).forEach(([k, e]) => { const { shopped, ...reste } = e; w[k] = reste; });
   return {
     week: w,
     pending: cnPendingList(pending).map(({ shopped, ...reste }) => reste),

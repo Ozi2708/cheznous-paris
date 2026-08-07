@@ -1,12 +1,16 @@
 import React from 'react';
 import { CN_FONTS } from './helpers.jsx';
-import { CN_DAYS } from './utils.js';
+import { CN_DAYS, cnCle, cnWeekPart } from './utils.js';
 
 /* Bottom-sheet de choix du jour + créneau pour ajouter une recette à la semaine.
    Partagé entre la fiche recette et le quick-add (Bibliothèque / Favoris). */
 export function CNPlanWeekSheet({ open, onClose, recipe, week, onPlan }) {
   const [justPlanned, setJustPlanned] = React.useState(null);
-  React.useEffect(() => { if (!open) setJustPlanned(null); }, [open]);
+  /* Le même choix que dans le planning : sans lui, on ne pourrait poser un
+     plat de la semaine d'après que depuis un seul écran. */
+  const [suivante, setSuivante] = React.useState(false);
+  React.useEffect(() => { if (!open) { setJustPlanned(null); setSuivante(false); } }, [open]);
+  const vue = React.useMemo(() => cnWeekPart(week, suivante), [week, suivante]);
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 200, pointerEvents: open ? 'auto' : 'none' }} aria-hidden={!open}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,25,24,.4)', opacity: open ? 1 : 0, transition: 'opacity .25s ease' }}></div>
@@ -21,17 +25,32 @@ export function CNPlanWeekSheet({ open, onClose, recipe, week, onPlan }) {
       }}>
         <div style={{ width: 38, height: 4, borderRadius: 99, background: '#D5CEBE', margin: '0 auto 14px' }}></div>
         <div style={{ fontFamily: CN_FONTS.display, fontWeight: 800, fontSize: 19, color: '#1A1918', marginBottom: 4 }}>Ajouter à ma semaine</div>
-        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginBottom: 14 }}>{recipe && recipe.title}</div>
+        <div style={{ fontFamily: CN_FONTS.body, fontSize: 12, fontStyle: 'italic', color: '#8C8780', marginBottom: 12 }}>{recipe && recipe.title}</div>
+
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          {[{ s2: false, label: 'Cette semaine' }, { s2: true, label: 'Semaine prochaine' }].map(o => {
+            const on = suivante === o.s2;
+            return (
+              <button key={o.label} onClick={() => setSuivante(o.s2)} style={{
+                flex: 1, minHeight: 36, borderRadius: 9999, cursor: 'pointer',
+                border: `1.5px solid ${on ? '#506741' : '#D5CEBE'}`,
+                background: on ? '#506741' : '#FFFFFF', color: on ? '#FFFFFF' : '#3C3830',
+                fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12, transition: 'all .15s ease',
+              }}>{o.label}</button>
+            );
+          })}
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {CN_DAYS.map(day => (
             <div key={day} style={{ display: 'grid', gridTemplateColumns: '76px 1fr 1fr', gap: 8, alignItems: 'center' }}>
               <span style={{ fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', color: '#8C8780' }}>{day}</span>
               {['midi', 'soir'].map(slot => {
                 const key = day + '-' + slot;
-                const taken = week && week[key];
+                const taken = vue[key];
                 const isHere = justPlanned === key;
                 return (
-                  <button key={slot} onClick={() => { onPlan(key); setJustPlanned(key); setTimeout(onClose, 450); }} style={{
+                  <button key={slot} onClick={() => { onPlan(cnCle(day, slot, suivante)); setJustPlanned(key); setTimeout(onClose, 450); }} style={{
                     height: 38, borderRadius: 9999, cursor: 'pointer', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12,
                     border: `1.5px solid ${isHere ? '#506741' : taken ? '#EEE8DC' : '#D5CEBE'}`,
                     background: isHere ? '#506741' : taken ? '#F5F2EC' : '#FFFFFF',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CN_FONTS, chMeta, CNIcon } from '../helpers.jsx';
-import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS, CN_SLOTS } from '../utils.js';
+import { cnApplyFilters, CN_EMPTY_FILTERS, CN_DAYS, CN_SLOTS,
+  cnCle, cnEstS2, cnWeekPart, cnWeekEntries } from '../utils.js';
 import { useAllRecipes } from '../recipes.js';
 import { cnPendingList } from '../courses.js';
 
@@ -50,14 +51,33 @@ function CNPickerSheet({ open, onClose, onPick, slotLabel }) {
 export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMenu, onPlanPending, onRemovePending }) {
   const [picking, setPicking] = React.useState(null);
   const [cleaning, setCleaning] = React.useState(false);
+  /* Quelle des deux semaines est à l'écran. Les courses du vendredi portent
+     sur la suivante ; le planning doit pouvoir la recevoir sans déloger ce
+     qu'on mange encore samedi. */
+  const [suivante, setSuivante] = React.useState(false);
   const all = useAllRecipes();
   const byId = React.useMemo(() => Object.fromEntries(all.map(r => [r.id, r])), [all]);
-  const entries = Object.values(week).filter(Boolean);
+
+  /* L'écran ne travaille que sur la semaine affichée, en clés simples. */
+  const vue = React.useMemo(() => cnWeekPart(week, suivante), [week, suivante]);
+  const entries = Object.values(vue);
   const nDone = entries.filter(e => e.done).length;
   const todayIdx = (new Date().getDay() + 6) % 7;
   const pendingRecipes = cnPendingList(pending).map(e => byId[e.id]).filter(Boolean);
 
-  const setSlot = (day, slot, val) => setWeek({ ...week, [day + '-' + slot]: val });
+  const setSlot = (day, slot, val) => setWeek({ ...week, [cnCle(day, slot, suivante)]: val });
+
+  /* Ne vider que la semaine regardée : « Tout vider » sur la semaine en
+     cours ne doit pas emporter ce qu'on a préparé pour la suivante. */
+  const viderVue = (garder) => {
+    const w = { ...week };
+    cnWeekEntries(week).forEach(([k, e]) => {
+      if (cnEstS2(k) !== !!suivante) return;
+      if (!garder(e)) delete w[k];
+    });
+    setWeek(w);
+    setCleaning(false);
+  };
 
   return (
     <div data-screen-label="Ma semaine" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FAFAF8', position: 'relative' }}>
@@ -83,12 +103,12 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
           {cleaning && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               {nDone > 0 && (
-                <button onClick={() => { const w = {}; Object.entries(week).forEach(([k, v]) => { if (v && !v.done) w[k] = v; }); setWeek(w); setCleaning(false); }} style={{
+                <button onClick={() => viderVue(e => !e.done)} style={{
                   minHeight: 32, borderRadius: 9999, padding: '5px 13px', cursor: 'pointer', border: '1.5px solid #506741',
                   background: '#506741', color: '#FFFFFF', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11.5,
                 }}>Retirer les {nDone} cuisinés</button>
               )}
-              <button onClick={() => { setWeek({}); setCleaning(false); }} style={{
+              <button onClick={() => viderVue(() => false)} style={{
                 minHeight: 32, borderRadius: 9999, padding: '5px 13px', cursor: 'pointer', border: '1.5px solid #D5CEBE',
                 background: '#FFFFFF', color: '#3C3830', fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 11.5,
               }}>Tout vider</button>
@@ -100,7 +120,47 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
         </div>
       </div>
 
+      {/* Les deux semaines, toujours visibles ensemble : c'est ce qui permet
+          de préparer la suivante le vendredi sans déloger le repas de samedi. */}
+      <div style={{ flexShrink: 0, display: 'flex', gap: 6, padding: '10px 20px 2px' }}>
+        {[{ s2: false, label: 'Cette semaine' }, { s2: true, label: 'Semaine prochaine' }].map(o => {
+          const on = suivante === o.s2;
+          const n = Object.keys(cnWeekPart(week, o.s2)).length;
+          return (
+            <button key={o.label} onClick={() => { setSuivante(o.s2); setCleaning(false); }} style={{
+              flex: 1, minHeight: 38, borderRadius: 9999, cursor: 'pointer',
+              border: `1.5px solid ${on ? '#506741' : '#D5CEBE'}`,
+              background: on ? '#506741' : '#FFFFFF', color: on ? '#FFFFFF' : '#3C3830',
+              fontFamily: CN_FONTS.body, fontWeight: 600, fontSize: 12.5,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all .15s ease',
+            }}>
+              {o.label}
+              {n > 0 && (
+                <span style={{
+                  fontFamily: CN_FONTS.mono, fontSize: 10.5,
+                  color: on ? 'rgba(255,255,255,.75)' : '#8C8780',
+                }}>{n}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 20px 120px' }}>
+        {suivante && (
+          <div style={{
+            display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 16,
+            background: '#F9F1E7', border: '1.5px solid #E8D9B8', borderRadius: 12, padding: '10px 12px',
+          }}>
+            <CNIcon name="basket" size={15} color="#8A6B4A" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span style={{ fontFamily: CN_FONTS.body, fontSize: 12, color: '#7A6450', lineHeight: 1.5 }}>
+              Ces plats entrent dans la liste de courses au même titre que ceux de cette semaine.
+              Lundi, ils prendront leur place ici.
+            </span>
+          </div>
+        )}
+
         {onComposeMenu && (
           <button onClick={onComposeMenu} style={{
             width: '100%', marginBottom: pendingRecipes.length ? 14 : 18, height: 50, borderRadius: 12, cursor: 'pointer',
@@ -145,7 +205,8 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
         )}
 
         {CN_DAYS.map((day, di) => {
-          const isToday = di === todayIdx;
+          /* « Aujourd'hui » n'a de sens que sur la semaine en cours. */
+          const isToday = !suivante && di === todayIdx;
           return (
             <div key={day} style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -156,7 +217,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {CN_SLOTS.map(slot => {
                   const key = day + '-' + slot.id;
-                  const entry = week[key];
+                  const entry = vue[key];
                   const r = entry && byId[entry.id];
                   if (!r) return (
                     <button key={slot.id} onClick={() => setPicking({ day, slot: slot.id })} style={{
@@ -222,7 +283,7 @@ export function CNWeekScreen({ week, setWeek, onOpen, pending = [], onComposeMen
 
       <CNPickerSheet open={!!picking} onClose={() => setPicking(null)}
         slotLabel={picking ? picking.day + ' ' + picking.slot : ''}
-        onPick={(r) => { if (picking) { setWeek({ ...week, [picking.day + '-' + picking.slot]: { id: r.id, done: false } }); setPicking(null); } }} />
+        onPick={(r) => { if (picking) { setSlot(picking.day, picking.slot, { id: r.id, done: false }); setPicking(null); } }} />
     </div>
   );
 }

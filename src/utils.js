@@ -30,6 +30,68 @@ export function cnCountActive(f) {
 export const CN_DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 export const CN_SLOTS = [{ id: 'midi', label: 'Midi' }, { id: 'soir', label: 'Soir' }];
 
+/* ── Deux semaines dans une seule structure ──
+   Le planning tenait quatorze créneaux nommés « Lundi-midi ». Les courses se
+   faisant le vendredi pour la semaine d'après, ces créneaux étaient encore
+   occupés par la semaine en cours : impossible d'y poser le repas suivant.
+
+   La semaine d'après réutilise donc les mêmes noms, préfixés. Les clés
+   existantes restent la semaine en cours : rien à migrer, et un planning
+   déjà rempli s'ouvre inchangé.
+
+   « __ancre » retient le lundi de la semaine que le planning représente.
+   Ce n'est pas un créneau : tout parcours passe par cnWeekEntries, qui
+   l'écarte, sans quoi il serait compté comme un repas. */
+export const CN_S2 = 's2:';
+export const CN_ANCRE = '__ancre';
+
+export const cnCle = (day, slot, suivante) => (suivante ? CN_S2 : '') + day + '-' + slot;
+export const cnEstS2 = (k) => String(k).startsWith(CN_S2);
+
+/* Les vrais repas, et eux seuls. */
+export function cnWeekEntries(week) {
+  return Object.entries(week || {}).filter(([k, e]) => k !== CN_ANCRE && e && e.id);
+}
+
+/* Une seule des deux semaines, ramenée à des clés simples : l'écran qui
+   l'affiche n'a pas à savoir laquelle il montre. */
+export function cnWeekPart(week, suivante) {
+  const out = {};
+  cnWeekEntries(week).forEach(([k, e]) => {
+    if (cnEstS2(k) === !!suivante) out[suivante ? k.slice(CN_S2.length) : k] = e;
+  });
+  return out;
+}
+
+/* Le lundi de la semaine en cours, en numéro de jour. */
+export function cnLundiCourant(maintenant) {
+  const ms = maintenant == null ? Date.now() : maintenant;
+  const idx = (new Date(ms).getDay() + 6) % 7;      // lundi = 0
+  return Math.floor(ms / 86400000) - idx;
+}
+
+/* ── Passage à la semaine suivante ──
+   Rend le planning à jour, ou null s'il n'y a rien à faire.
+
+   La bascule n'a lieu que si quelque chose a été planifié pour la semaine
+   d'après. Sans cette condition, un planning tenu à l'ancienne — roulant,
+   qu'on remplit au fil des jours — se viderait tout seul chaque lundi. */
+export function cnBasculer(week, maintenant) {
+  const ancre = cnLundiCourant(maintenant);
+  const w = week || {};
+  if (w[CN_ANCRE] === ancre) return null;
+
+  const suivantes = cnWeekEntries(w).filter(([k]) => cnEstS2(k));
+  if (w[CN_ANCRE] == null || !suivantes.length) return { ...w, [CN_ANCRE]: ancre };
+
+  /* Les repas de la semaine d'après deviennent ceux de la semaine en cours,
+     leur tampon « courses faites » avec eux : ils ont été achetés vendredi,
+     ils n'ont rien à faire dans la prochaine liste. */
+  const neuf = { [CN_ANCRE]: ancre };
+  suivantes.forEach(([k, e]) => { neuf[k.slice(CN_S2.length)] = e; });
+  return neuf;
+}
+
 export function cnNextFreeSlot(week) {
   const todayIdx = (new Date().getDay() + 6) % 7;
   for (let off = 0; off < 7; off++) {
